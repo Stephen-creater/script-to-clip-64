@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "./components/Layout/MainLayout";
 import ProjectLibrary from "./pages/ProjectLibrary";
 import Materials from "./pages/Materials";
+import VideoLibrary from "./pages/VideoLibrary";
 import Editor from "./pages/Editor";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/" element={<MainLayout />}>
             <Route index element={<ProjectLibrary />} />
             <Route path="materials" element={<Materials />} />
+            <Route path="video-library" element={<VideoLibrary />} />
             <Route path="editor/:id?" element={<Editor />} />
             <Route path="settings" element={<Settings />} />
           </Route>

@@ -9,17 +9,21 @@ import {
   Download,
   Save,
   Menu,
-  X
+  X,
+  Film
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ExportVideoModal } from "@/components/Editor/ExportVideoModal";
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
   const location = useLocation();
 
   const navigation = [
     { name: "项目库", href: "/", icon: FolderOpen },
     { name: "素材库", href: "/materials", icon: Video },
+    { name: "成片库", href: "/video-library", icon: Film },
     { name: "设置", href: "/settings", icon: Settings },
   ];
 
@@ -85,7 +89,7 @@ const MainLayout = () => {
                 <Play size={16} className="mr-2" />
                 预览
               </Button>
-              <Button size="sm" className="bg-gradient-primary">
+              <Button size="sm" className="bg-gradient-primary" onClick={() => setExportModalOpen(true)}>
                 <Download size={16} className="mr-2" />
                 导出视频
               </Button>
@@ -98,6 +102,12 @@ const MainLayout = () => {
           <Outlet />
         </div>
       </div>
+
+      {/* Export Video Modal */}
+      <ExportVideoModal 
+        isOpen={exportModalOpen} 
+        onClose={() => setExportModalOpen(false)} 
+      />
     </div>
   );
 };
