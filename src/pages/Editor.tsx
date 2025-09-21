@@ -86,16 +86,17 @@ const Editor = () => {
               <p className="text-xs mt-2 text-white/40">点击预览按钮查看效果</p>
             </div>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center">
-              <div className="text-white/40 text-center">
-                <p className="text-sm mb-2">预览模式</p>
-                <p className="text-xs">分段 {currentSegmentIndex + 1}/{segments.length}</p>
-                <p className="text-xs mt-1">{segments[currentSegmentIndex]?.name}</p>
+            <>
+              <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center">
+                <div className="text-white/40 text-center">
+                  <p className="text-sm mb-2">预览模式</p>
+                  <p className="text-xs">分段 {currentSegmentIndex + 1}/{segments.length}</p>
+                  <p className="text-xs mt-1">{segments[currentSegmentIndex]?.name}</p>
+                </div>
               </div>
-            </div>
+              {renderPreviewOverlays()}
+            </>
           )}
-          
-          {renderPreviewOverlays()}
         </div>
         
         {/* Preview Controls */}
