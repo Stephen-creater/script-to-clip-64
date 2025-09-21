@@ -126,9 +126,16 @@ const SegmentTable = () => {
     setSegments(updatedSegments);
   };
 
+  const renumberSegments = (segmentList: Segment[]) => {
+    return segmentList.map((segment, index) => ({
+      ...segment,
+      name: `分段${index + 1}`
+    }));
+  };
+
   const handleAddNewSegment = () => {
     const newSegment: Segment = {
-      id: (segments.length + 1).toString(),
+      id: Date.now().toString(), // Use timestamp for unique ID
       name: `分段${segments.length + 1}`,
       type: "口播",
       video: "",
@@ -138,7 +145,8 @@ const SegmentTable = () => {
       sticker: "未设置",
       audio: ""
     };
-    setSegments([...segments, newSegment]);
+    const newSegments = renumberSegments([...segments, newSegment]);
+    setSegments(newSegments);
   };
 
   const handleImportScript = () => {
@@ -146,7 +154,7 @@ const SegmentTable = () => {
     if (scriptText) {
       const lines = scriptText.split('\n').filter(line => line.trim());
       const newSegments = lines.map((line, index) => ({
-        id: (segments.length + index + 1).toString(),
+        id: (Date.now() + index).toString(), // Use timestamp + index for unique IDs
         name: `分段${segments.length + index + 1}`,
         type: "口播",
         video: "",
@@ -156,14 +164,16 @@ const SegmentTable = () => {
         sticker: "未设置", 
         audio: ""
       }));
-      setSegments([...segments, ...newSegments]);
+      const allSegments = renumberSegments([...segments, ...newSegments]);
+      setSegments(allSegments);
     }
   };
 
   const handleBatchDelete = () => {
     if (selectedSegments.length === 0) return;
-    const updatedSegments = segments.filter(segment => !selectedSegments.includes(segment.id));
-    setSegments(updatedSegments);
+    const filteredSegments = segments.filter(segment => !selectedSegments.includes(segment.id));
+    const renumberedSegments = renumberSegments(filteredSegments);
+    setSegments(renumberedSegments);
     setSelectedSegments([]);
   };
 
