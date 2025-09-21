@@ -38,7 +38,7 @@ const Editor = () => {
     if (!currentSegment) return null;
 
     return (
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none z-10">
         {/* Subtitle */}
         {currentSegment.script && (
           <div 
