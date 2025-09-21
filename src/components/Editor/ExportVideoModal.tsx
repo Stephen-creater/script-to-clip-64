@@ -5,10 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, Download } from "lucide-react";
-import { AnimatedTextModal } from "./AnimatedTextModal";
+import { ChevronLeft, Download, Upload } from "lucide-react";
 import { SubtitleModal } from "./SubtitleModal";
-import { StickerModal } from "./StickerModal";
 
 interface ExportVideoModalProps {
   isOpen: boolean;
@@ -23,13 +21,14 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
   // Global style settings
   const [globalSettings, setGlobalSettings] = useState({
     subtitle: "未设置",
-    animatedText: "未设置", 
-    sticker: "未设置"
+    bgm: "未选择"
   });
+  
+  const [bgmFile, setBgmFile] = useState<File | null>(null);
 
   // Modal states for global settings
   const [activeModal, setActiveModal] = useState<{
-    type: 'animatedText' | 'subtitle' | 'sticker' | null;
+    type: 'subtitle' | null;
   }>({ type: null });
 
   const handleBack = () => {
@@ -48,8 +47,19 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
     onClose();
   };
 
-  const openGlobalModal = (type: 'animatedText' | 'subtitle' | 'sticker') => {
+  const openGlobalModal = (type: 'subtitle') => {
     setActiveModal({ type });
+  };
+
+  const handleBgmUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setBgmFile(file);
+      setGlobalSettings(prev => ({
+        ...prev,
+        bgm: file.name
+      }));
+    }
   };
 
   const closeGlobalModal = () => {
@@ -127,27 +137,24 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">花字</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className={globalSettings.animatedText !== "未设置" ? "border-gray-400" : ""}
-                      onClick={() => openGlobalModal('animatedText')}
-                    >
-                      {globalSettings.animatedText}
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">贴纸</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className={globalSettings.sticker !== "未设置" ? "border-gray-400" : ""}
-                      onClick={() => openGlobalModal('sticker')}
-                    >
-                      {globalSettings.sticker}
-                    </Button>
+                    <span className="text-sm">BGM配乐</span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        onChange={handleBgmUpload}
+                        className="hidden"
+                        id="bgm-upload"
+                      />
+                      <label htmlFor="bgm-upload">
+                        <Button variant="outline" size="sm" asChild>
+                          <span className="cursor-pointer">
+                            <Upload size={14} className="mr-1" />
+                            {globalSettings.bgm}
+                          </span>
+                        </Button>
+                      </label>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -173,28 +180,8 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
       </Dialog>
 
       {/* Global Style Modals */}
-      {activeModal.type === 'animatedText' && (
-        <AnimatedTextModal
-          isOpen={true}
-          onClose={closeGlobalModal}
-          segmentId="global"
-          onSubmit={(id, data) => {
-            updateGlobalSetting('animatedText', data);
-            closeGlobalModal();
-          }}
-        />
-      )}
-      
       {activeModal.type === 'subtitle' && (
         <SubtitleModal
-          isOpen={true}
-          onClose={closeGlobalModal}
-          segmentId="global"
-        />
-      )}
-      
-      {activeModal.type === 'sticker' && (
-        <StickerModal
           isOpen={true}
           onClose={closeGlobalModal}
           segmentId="global"
