@@ -57,6 +57,22 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        editor: {
+          grid: "hsl(var(--editor-grid))",
+          hover: "hsl(var(--editor-hover))",
+          selected: "hsl(var(--editor-selected))",
+        },
+        preview: {
+          bg: "hsl(var(--preview-bg))",
+        },
+      },
+      backgroundImage: {
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-secondary": "var(--gradient-secondary)",
+      },
+      boxShadow: {
+        "tech": "var(--shadow-tech)",
+        "card": "var(--shadow-card)",
       },
       borderRadius: {
         lg: "var(--radius)",

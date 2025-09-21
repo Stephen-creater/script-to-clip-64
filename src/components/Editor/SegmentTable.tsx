@@ -1,0 +1,253 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  GripVertical, 
+  Plus, 
+  Upload, 
+  Wand2, 
+  Settings2,
+  FileText,
+  Volume2
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface Segment {
+  id: string;
+  name: string;
+  type: string;
+  video: string;
+  script: string;
+  animatedText: string;
+  subtitleStyle: string;
+  transition: string;
+  sticker: string;
+}
+
+const SegmentTable = () => {
+  const [segments, setSegments] = useState<Segment[]>([
+    {
+      id: "1",
+      name: "分段1",
+      type: "开头",
+      video: "素材组：开头",
+      script: "El secreto que nadie te cuenta sobre los trenes en España",
+      animatedText: "未设置",
+      subtitleStyle: "未设置",
+      transition: "未设置",
+      sticker: "1组"
+    },
+    {
+      id: "2",
+      name: "分段8",
+      type: "口播",
+      video: "素材组：西班牙风景",
+      script: "los asientos vacíos son pérdidas",
+      animatedText: "未设置",
+      subtitleStyle: "未设置",
+      transition: "未设置",
+      sticker: "未设置"
+    },
+    {
+      id: "3",
+      name: "分段10",
+      type: "口播",
+      video: "素材组：西班牙风景",
+      script: "Para recuperar costes",
+      animatedText: "未设置",
+      subtitleStyle: "未设置",
+      transition: "未设置",
+      sticker: "未设置"
+    },
+    {
+      id: "4",
+      name: "分段13",
+      type: "口播",
+      video: "素材组：西班牙风景",
+      script: "La compañía mete estos billetes en canales ocultos",
+      animatedText: "未设置",
+      subtitleStyle: "未设置",
+      transition: "未设置",
+      sticker: "未设置"
+    },
+    {
+      id: "5",
+      name: "分段14",
+      type: "口播",
+      video: "素材组：火车",
+      script: "con descuentos de hasta el 80%",
+      animatedText: "80%",
+      subtitleStyle: "未设置",
+      transition: "未设置",
+      sticker: "未设置"
+    }
+  ]);
+
+  const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
+
+  const handleSelectSegment = (segmentId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedSegments([...selectedSegments, segmentId]);
+    } else {
+      setSelectedSegments(selectedSegments.filter(id => id !== segmentId));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedSegments(segments.map(s => s.id));
+    } else {
+      setSelectedSegments([]);
+    }
+  };
+
+  return (
+    <div className="flex-1 bg-background p-6">
+      {/* Action Buttons */}
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm">
+            <Plus size={16} className="mr-2" />
+            添加新分段
+          </Button>
+          <Button variant="outline" size="sm">
+            <FileText size={16} className="mr-2" />
+            导入文案
+          </Button>
+          <Button size="sm" className="bg-gradient-primary">
+            <Volume2 size={16} className="mr-2" />
+            一键生成音频
+          </Button>
+        </div>
+        
+        {selectedSegments.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              已选择 {selectedSegments.length} 个分段
+            </span>
+            <Button variant="destructive" size="sm">
+              批量删除
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Table */}
+      <div className="bg-card rounded-lg border border-border overflow-hidden shadow-card">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-editor-grid border-b border-border">
+              <tr>
+                <th className="w-12 p-3 text-left">
+                  <Checkbox
+                    checked={selectedSegments.length === segments.length}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </th>
+                <th className="w-8 p-3"></th>
+                <th className="min-w-[160px] p-3 text-left text-sm font-medium text-foreground">分段名称</th>
+                <th className="min-w-[180px] p-3 text-left text-sm font-medium text-foreground">画面</th>
+                <th className="min-w-[320px] p-3 text-left text-sm font-medium text-foreground">文案</th>
+                <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">花字</th>
+                <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">字幕样式</th>
+                <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">转场</th>
+                <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">贴纸</th>
+              </tr>
+            </thead>
+            <tbody>
+              {segments.map((segment, index) => (
+                <tr 
+                  key={segment.id}
+                  className={cn(
+                    "border-b border-border hover:bg-editor-hover transition-colors",
+                    selectedSegments.includes(segment.id) && "bg-editor-selected/10"
+                  )}
+                >
+                  <td className="p-3">
+                    <Checkbox
+                      checked={selectedSegments.includes(segment.id)}
+                      onCheckedChange={(checked) => handleSelectSegment(segment.id, !!checked)}
+                    />
+                  </td>
+                  <td className="p-3">
+                    <GripVertical size={16} className="text-muted-foreground cursor-grab" />
+                  </td>
+                  <td className="p-3">
+                    <div className="space-y-2">
+                      <Input
+                        value={segment.name}
+                        className="text-sm border-0 bg-transparent p-0 font-medium"
+                        readOnly
+                      />
+                      <Select value={segment.type}>
+                        <SelectTrigger className="h-8 text-xs bg-secondary">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="开头">开头</SelectItem>
+                          <SelectItem value="口播">口播</SelectItem>
+                          <SelectItem value="产品展示">产品展示</SelectItem>
+                          <SelectItem value="结尾">结尾</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </td>
+                  <td className="p-3">
+                    <Button variant="outline" size="sm" className="w-full justify-start">
+                      <Upload size={14} className="mr-2" />
+                      {segment.video}
+                    </Button>
+                  </td>
+                  <td className="p-3">
+                    <Textarea
+                      value={segment.script}
+                      className="min-h-[60px] text-sm resize-none border-0 bg-transparent p-0"
+                      readOnly
+                    />
+                  </td>
+                  <td className="p-3">
+                    <Button variant="outline" size="sm" className="w-full justify-start">
+                      <Wand2 size={14} className="mr-2" />
+                      {segment.animatedText}
+                    </Button>
+                  </td>
+                  <td className="p-3">
+                    <Button variant="outline" size="sm" className="w-full justify-start">
+                      <Settings2 size={14} className="mr-2" />
+                      {segment.subtitleStyle}
+                    </Button>
+                  </td>
+                  <td className="p-3">
+                    <Button variant="outline" size="sm" className="w-full justify-start">
+                      <Settings2 size={14} className="mr-2" />
+                      {segment.transition}
+                    </Button>
+                  </td>
+                  <td className="p-3">
+                    <Button variant="outline" size="sm" className="w-full justify-start">
+                      <Settings2 size={14} className="mr-2" />
+                      {segment.sticker}
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Add Segment Button */}
+      <div className="mt-4 text-center">
+        <Button variant="outline" className="w-full">
+          <Plus size={16} className="mr-2" />
+          添加
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default SegmentTable;
