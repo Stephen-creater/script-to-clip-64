@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,7 +31,11 @@ interface Segment {
   audio: string;
 }
 
-const SegmentTable = () => {
+interface SegmentTableProps {
+  onSegmentsChange?: (segments: Segment[]) => void;
+}
+
+const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
   const [segments, setSegments] = useState<Segment[]>([
     {
       id: "1",
@@ -89,6 +93,13 @@ const SegmentTable = () => {
       audio: ""
     }
   ]);
+
+  // Notify parent component when segments change
+  useEffect(() => {
+    if (onSegmentsChange) {
+      onSegmentsChange(segments);
+    }
+  }, [segments, onSegmentsChange]);
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
