@@ -185,6 +185,19 @@ const SegmentTable = () => {
     setActiveModal({ type: null, segmentId: null });
   };
 
+  const updateSegmentAnimatedText = (segmentId: string, data: any) => {
+    setSegments(prevSegments => 
+      prevSegments.map(segment => 
+        segment.id === segmentId 
+          ? { 
+              ...segment, 
+              animatedText: data.content || "未设置"
+            }
+          : segment
+      )
+    );
+  };
+
   return (
     <div className="flex-1 bg-background p-6">
       {/* Action Buttons */}
@@ -355,6 +368,7 @@ const SegmentTable = () => {
           isOpen={true}
           onClose={closeModal}
           segmentId={activeModal.segmentId!}
+          onSubmit={updateSegmentAnimatedText}
         />
       )}
       
