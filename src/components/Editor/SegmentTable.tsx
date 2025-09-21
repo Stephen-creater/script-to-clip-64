@@ -126,6 +126,47 @@ const SegmentTable = () => {
     setSegments(updatedSegments);
   };
 
+  const handleAddNewSegment = () => {
+    const newSegment: Segment = {
+      id: (segments.length + 1).toString(),
+      name: `分段${segments.length + 1}`,
+      type: "口播",
+      video: "",
+      script: "",
+      animatedText: "未设置",
+      subtitleStyle: "未设置", 
+      sticker: "未设置",
+      audio: ""
+    };
+    setSegments([...segments, newSegment]);
+  };
+
+  const handleImportScript = () => {
+    const scriptText = prompt("请粘贴要导入的文案（每行一个分段）:");
+    if (scriptText) {
+      const lines = scriptText.split('\n').filter(line => line.trim());
+      const newSegments = lines.map((line, index) => ({
+        id: (segments.length + index + 1).toString(),
+        name: `分段${segments.length + index + 1}`,
+        type: "口播",
+        video: "",
+        script: line.trim(),
+        animatedText: "未设置",
+        subtitleStyle: "未设置",
+        sticker: "未设置", 
+        audio: ""
+      }));
+      setSegments([...segments, ...newSegments]);
+    }
+  };
+
+  const handleBatchDelete = () => {
+    if (selectedSegments.length === 0) return;
+    const updatedSegments = segments.filter(segment => !selectedSegments.includes(segment.id));
+    setSegments(updatedSegments);
+    setSelectedSegments([]);
+  };
+
   const openModal = (type: 'animatedText' | 'subtitle' | 'sticker', segmentId: string) => {
     setActiveModal({ type, segmentId });
   };
@@ -139,11 +180,11 @@ const SegmentTable = () => {
       {/* Action Buttons */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleAddNewSegment}>
             <Plus size={16} className="mr-2" />
             添加新分段
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleImportScript}>
             <FileText size={16} className="mr-2" />
             导入文案
           </Button>
@@ -158,7 +199,7 @@ const SegmentTable = () => {
             <span className="text-sm text-muted-foreground">
               已选择 {selectedSegments.length} 个分段
             </span>
-            <Button variant="destructive" size="sm">
+            <Button variant="destructive" size="sm" onClick={handleBatchDelete}>
               批量删除
             </Button>
           </div>
@@ -292,7 +333,7 @@ const SegmentTable = () => {
 
       {/* Add Segment Button */}
       <div className="mt-4 text-center">
-        <Button variant="outline" className="w-full">
+        <Button variant="outline" className="w-full" onClick={handleAddNewSegment}>
           <Plus size={16} className="mr-2" />
           添加
         </Button>
