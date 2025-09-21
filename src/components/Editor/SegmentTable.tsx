@@ -27,7 +27,6 @@ interface Segment {
   script: string;
   animatedText: string;
   subtitleStyle: string;
-  transition: string;
   sticker: string;
   audio: string;
 }
@@ -42,7 +41,6 @@ const SegmentTable = () => {
       script: "El secreto que nadie te cuenta sobre los trenes en España",
       animatedText: "未设置",
       subtitleStyle: "未设置",
-      transition: "未设置",
       sticker: "1组",
       audio: ""
     },
@@ -54,7 +52,6 @@ const SegmentTable = () => {
       script: "los asientos vacíos son pérdidas",
       animatedText: "未设置",
       subtitleStyle: "未设置",
-      transition: "未设置",
       sticker: "未设置",
       audio: ""
     },
@@ -66,7 +63,6 @@ const SegmentTable = () => {
       script: "Para recuperar costes",
       animatedText: "未设置",
       subtitleStyle: "未设置",
-      transition: "未设置",
       sticker: "未设置",
       audio: ""
     },
@@ -78,7 +74,6 @@ const SegmentTable = () => {
       script: "La compañía mete estos billetes en canales ocultos",
       animatedText: "未设置",
       subtitleStyle: "未设置",
-      transition: "未设置",
       sticker: "未设置",
       audio: ""
     },
@@ -90,7 +85,6 @@ const SegmentTable = () => {
       script: "con descuentos de hasta el 80%",
       animatedText: "80%",
       subtitleStyle: "未设置",
-      transition: "未设置",
       sticker: "未设置",
       audio: ""
     }
@@ -189,7 +183,6 @@ const SegmentTable = () => {
                 <th className="min-w-[320px] p-3 text-left text-sm font-medium text-foreground">文案</th>
                 <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">花字</th>
                 <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">字幕样式</th>
-                <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">转场</th>
                 <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">贴纸</th>
                 <th className="min-w-[120px] p-3 text-left text-sm font-medium text-foreground">音频</th>
               </tr>
@@ -265,12 +258,6 @@ const SegmentTable = () => {
                     >
                       <Settings2 size={14} className="mr-2" />
                       {segment.subtitleStyle}
-                    </Button>
-                  </td>
-                  <td className="p-3">
-                    <Button variant="outline" size="sm" className="w-full justify-start">
-                      <Settings2 size={14} className="mr-2" />
-                      {segment.transition}
                     </Button>
                   </td>
                   <td className="p-3">

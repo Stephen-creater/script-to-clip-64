@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AnimatedTextModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface AnimatedTextModalProps {
 
 export const AnimatedTextModal = ({ isOpen, onClose, segmentId }: AnimatedTextModalProps) => {
   const [formData, setFormData] = useState({
+    content: "",
     style: "",
     font: "",
     fontSize: "",
@@ -33,33 +35,61 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId }: AnimatedTextMo
         
         <div className="space-y-6 py-4">
           <div className="space-y-2">
-            <Label htmlFor="style">花字样式</Label>
+            <Label htmlFor="content">花字内容</Label>
             <Input
-              id="style"
-              placeholder="请选择"
-              value={formData.style}
-              onChange={(e) => setFormData(prev => ({ ...prev, style: e.target.value }))}
+              id="content"
+              placeholder="请输入花字内容"
+              value={formData.content}
+              onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="style">花字样式</Label>
+            <Select value={formData.style} onValueChange={(value) => setFormData(prev => ({ ...prev, style: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="请选择" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="shadow">阴影</SelectItem>
+                <SelectItem value="outline">描边</SelectItem>
+                <SelectItem value="gradient">渐变</SelectItem>
+                <SelectItem value="glow">发光</SelectItem>
+                <SelectItem value="3d">3D效果</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="font">花字字体</Label>
-            <Input
-              id="font"
-              placeholder="请选择"
-              value={formData.font}
-              onChange={(e) => setFormData(prev => ({ ...prev, font: e.target.value }))}
-            />
+            <Select value={formData.font} onValueChange={(value) => setFormData(prev => ({ ...prev, font: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="请选择" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="songti">宋体</SelectItem>
+                <SelectItem value="heiti">黑体</SelectItem>
+                <SelectItem value="kaiti">楷体</SelectItem>
+                <SelectItem value="fangsong">仿宋</SelectItem>
+                <SelectItem value="lihei">丽黑</SelectItem>
+                <SelectItem value="yuanti">圆体</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="fontSize">字体大小</Label>
-            <Input
-              id="fontSize"
-              placeholder="请输入"
-              value={formData.fontSize}
-              onChange={(e) => setFormData(prev => ({ ...prev, fontSize: e.target.value }))}
-            />
+            <Select value={formData.fontSize} onValueChange={(value) => setFormData(prev => ({ ...prev, fontSize: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="请选择" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="small">小号 (24px)</SelectItem>
+                <SelectItem value="medium">中号 (32px)</SelectItem>
+                <SelectItem value="large">大号 (48px)</SelectItem>
+                <SelectItem value="xlarge">特大号 (64px)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
