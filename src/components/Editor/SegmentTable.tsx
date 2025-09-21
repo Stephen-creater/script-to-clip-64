@@ -11,9 +11,13 @@ import {
   Wand2, 
   Settings2,
   FileText,
-  Volume2
+  Volume2,
+  Music
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AnimatedTextModal } from "./AnimatedTextModal";
+import { SubtitleModal } from "./SubtitleModal";
+import { StickerModal } from "./StickerModal";
 
 interface Segment {
   id: string;
@@ -25,6 +29,7 @@ interface Segment {
   subtitleStyle: string;
   transition: string;
   sticker: string;
+  audio: string;
 }
 
 const SegmentTable = () => {
@@ -38,7 +43,8 @@ const SegmentTable = () => {
       animatedText: "未设置",
       subtitleStyle: "未设置",
       transition: "未设置",
-      sticker: "1组"
+      sticker: "1组",
+      audio: ""
     },
     {
       id: "2",
@@ -49,7 +55,8 @@ const SegmentTable = () => {
       animatedText: "未设置",
       subtitleStyle: "未设置",
       transition: "未设置",
-      sticker: "未设置"
+      sticker: "未设置",
+      audio: ""
     },
     {
       id: "3",
@@ -60,7 +67,8 @@ const SegmentTable = () => {
       animatedText: "未设置",
       subtitleStyle: "未设置",
       transition: "未设置",
-      sticker: "未设置"
+      sticker: "未设置",
+      audio: ""
     },
     {
       id: "4",
@@ -71,7 +79,8 @@ const SegmentTable = () => {
       animatedText: "未设置",
       subtitleStyle: "未设置",
       transition: "未设置",
-      sticker: "未设置"
+      sticker: "未设置",
+      audio: ""
     },
     {
       id: "5",
@@ -82,11 +91,16 @@ const SegmentTable = () => {
       animatedText: "80%",
       subtitleStyle: "未设置",
       transition: "未设置",
-      sticker: "未设置"
+      sticker: "未设置",
+      audio: ""
     }
   ]);
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
+  const [activeModal, setActiveModal] = useState<{
+    type: 'animatedText' | 'subtitle' | 'sticker' | null;
+    segmentId: string | null;
+  }>({ type: null, segmentId: null });
 
   const handleSelectSegment = (segmentId: string, checked: boolean) => {
     if (checked) {
@@ -104,6 +118,28 @@ const SegmentTable = () => {
     }
   };
 
+  const handleGenerateAudio = () => {
+    // Generate audio for all segments with scripts
+    const updatedSegments = segments.map(segment => {
+      if (segment.script && !segment.audio) {
+        return {
+          ...segment,
+          audio: `audio_${segment.id}.mp3`
+        };
+      }
+      return segment;
+    });
+    setSegments(updatedSegments);
+  };
+
+  const openModal = (type: 'animatedText' | 'subtitle' | 'sticker', segmentId: string) => {
+    setActiveModal({ type, segmentId });
+  };
+
+  const closeModal = () => {
+    setActiveModal({ type: null, segmentId: null });
+  };
+
   return (
     <div className="flex-1 bg-background p-6">
       {/* Action Buttons */}
@@ -117,7 +153,7 @@ const SegmentTable = () => {
             <FileText size={16} className="mr-2" />
             导入文案
           </Button>
-          <Button size="sm" className="bg-gradient-primary">
+          <Button size="sm" className="bg-gradient-primary" onClick={handleGenerateAudio}>
             <Volume2 size={16} className="mr-2" />
             一键生成音频
           </Button>
@@ -155,6 +191,7 @@ const SegmentTable = () => {
                 <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">字幕样式</th>
                 <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">转场</th>
                 <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">贴纸</th>
+                <th className="min-w-[120px] p-3 text-left text-sm font-medium text-foreground">音频</th>
               </tr>
             </thead>
             <tbody>
@@ -209,13 +246,23 @@ const SegmentTable = () => {
                     />
                   </td>
                   <td className="p-3">
-                    <Button variant="outline" size="sm" className="w-full justify-start">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={() => openModal('animatedText', segment.id)}
+                    >
                       <Wand2 size={14} className="mr-2" />
                       {segment.animatedText}
                     </Button>
                   </td>
                   <td className="p-3">
-                    <Button variant="outline" size="sm" className="w-full justify-start">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={() => openModal('subtitle', segment.id)}
+                    >
                       <Settings2 size={14} className="mr-2" />
                       {segment.subtitleStyle}
                     </Button>
@@ -227,10 +274,27 @@ const SegmentTable = () => {
                     </Button>
                   </td>
                   <td className="p-3">
-                    <Button variant="outline" size="sm" className="w-full justify-start">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={() => openModal('sticker', segment.id)}
+                    >
                       <Settings2 size={14} className="mr-2" />
                       {segment.sticker}
                     </Button>
+                  </td>
+                  <td className="p-3">
+                    {segment.audio ? (
+                      <Button variant="outline" size="sm" className="w-full justify-start">
+                        <Music size={14} className="mr-2" />
+                        {segment.audio}
+                      </Button>
+                    ) : (
+                      <div className="text-xs text-muted-foreground text-center py-2">
+                        未生成
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -246,6 +310,31 @@ const SegmentTable = () => {
           添加
         </Button>
       </div>
+
+      {/* Modals */}
+      {activeModal.type === 'animatedText' && (
+        <AnimatedTextModal
+          isOpen={true}
+          onClose={closeModal}
+          segmentId={activeModal.segmentId!}
+        />
+      )}
+      
+      {activeModal.type === 'subtitle' && (
+        <SubtitleModal
+          isOpen={true}
+          onClose={closeModal}
+          segmentId={activeModal.segmentId!}
+        />
+      )}
+      
+      {activeModal.type === 'sticker' && (
+        <StickerModal
+          isOpen={true}
+          onClose={closeModal}
+          segmentId={activeModal.segmentId!}
+        />
+      )}
     </div>
   );
 };
