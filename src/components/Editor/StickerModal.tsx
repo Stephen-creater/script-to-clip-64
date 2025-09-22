@@ -3,7 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Search, Plus, Folder, Music } from "lucide-react";
 
 interface StickerModalProps {
   isOpen: boolean;
@@ -31,6 +33,7 @@ const publicStickers = [
 export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStickers, setSelectedStickers] = useState<string[]>([]);
+  const [soundEffect, setSoundEffect] = useState("");
 
   const handleStickerSelect = (stickerId: string) => {
     setSelectedStickers(prev => 
@@ -182,6 +185,53 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
             </div>
           </TabsContent>
         </Tabs>
+
+        <div className="space-y-4 border-t border-border pt-4">
+          <div className="space-y-2">
+            <Label htmlFor="soundEffect">音效选择</Label>
+            <div className="space-y-3">
+              <Select value={soundEffect} onValueChange={setSoundEffect}>
+                <SelectTrigger>
+                  <SelectValue placeholder="请选择音效文件夹" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="folder1">
+                    <div className="flex items-center gap-2">
+                      <Folder size={16} />
+                      <span>搞笑音效</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="folder2">
+                    <div className="flex items-center gap-2">
+                      <Folder size={16} />
+                      <span>转场音效</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="folder3">
+                    <div className="flex items-center gap-2">
+                      <Folder size={16} />
+                      <span>环境音效</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="folder4">
+                    <div className="flex items-center gap-2">
+                      <Folder size={16} />
+                      <span>特效音效</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex items-start gap-2 p-3 bg-muted rounded-lg">
+                <Music size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-medium mb-1">音效说明：</p>
+                  <p>• 音效出现时间与贴纸出现时间同步</p>
+                  <p>• 音效播放时长为音效文件本身的时长</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
