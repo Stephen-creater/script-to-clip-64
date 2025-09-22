@@ -35,7 +35,7 @@ const ProjectLibrary = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
 
-  const projects: Project[] = [
+  const [projects, setProjects] = useState<Project[]>([
     {
       id: '1',
       name: '西班牙火车旅行',
@@ -73,7 +73,7 @@ const ProjectLibrary = () => {
       lastModified: '2024-01-12',
       template: true
     }
-  ];
+  ]);
 
   const templates = [
     { id: 't1', name: '产品介绍模板', segments: 4, description: '适合产品特性介绍的节奏结构' },
@@ -109,15 +109,24 @@ const ProjectLibrary = () => {
   };
 
   const handleCopyProject = (projectId: string) => {
-    // Create a copy of the project with a new ID and name
-    console.log(`Copying project ${projectId}`);
-    // In a real app, this would call an API to duplicate the project
+    const originalProject = projects.find(p => p.id === projectId);
+    if (originalProject) {
+      const newProject: Project = {
+        ...originalProject,
+        id: Date.now().toString(), // Generate unique ID
+        name: `${originalProject.name}副本`,
+        lastModified: new Date().toISOString().split('T')[0], // Today's date
+        status: 'draft' // New copy starts as draft
+      };
+      
+      // Add the new project at the beginning of the list
+      setProjects(prev => [newProject, ...prev]);
+    }
   };
 
   const handleDeleteProject = (projectId: string) => {
     if (confirm('确定要删除这个项目吗？此操作无法撤销。')) {
-      console.log(`Deleting project ${projectId}`);
-      // In a real app, this would call an API to delete the project
+      setProjects(prev => prev.filter(p => p.id !== projectId));
     }
   };
 
