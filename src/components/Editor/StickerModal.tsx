@@ -86,8 +86,8 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
         <Tabs defaultValue="private" className="w-full">
           <div className="flex items-center justify-between mb-4">
             <TabsList>
-              <TabsTrigger value="private">私有贴纸(0)</TabsTrigger>
-              <TabsTrigger value="public">公共贴纸(1)</TabsTrigger>
+              <TabsTrigger value="private">营销类(0)</TabsTrigger>
+              <TabsTrigger value="public">装饰类(1)</TabsTrigger>
             </TabsList>
             
             <div className="relative">
@@ -103,9 +103,9 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
 
           <div className="flex gap-4 mb-4">
             <Button variant={searchQuery === '' ? "default" : "outline"} size="sm">全部</Button>
-            <Button variant="outline" size="sm">时间</Button>
-            <Button variant="outline" size="sm">七夕</Button>
-            <Button variant="outline" size="sm">优惠票</Button>
+            <Button variant="outline" size="sm">品牌+钩子</Button>
+            <Button variant="outline" size="sm">便宜车票</Button>
+            <Button variant="outline" size="sm">优惠码</Button>
           </div>
 
           <TabsContent value="private" className="space-y-4">
