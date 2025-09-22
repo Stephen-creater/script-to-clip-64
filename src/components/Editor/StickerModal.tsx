@@ -76,10 +76,6 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm">
-                <Plus size={16} className="mr-2" />
-                分组1
-              </Button>
               <span className="text-sm text-muted-foreground">
                 导出尺寸: 1080*1920
               </span>
@@ -113,17 +109,83 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
           </div>
 
           <TabsContent value="private" className="space-y-4">
-            <StickerGrid stickers={privateStickers} />
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <StickerGrid stickers={privateStickers} />
+              </div>
+              {selectedStickers.length > 0 && (
+                <div className="w-48 border-l border-border pl-4">
+                  <h4 className="text-sm font-medium mb-3">预览</h4>
+                  <div className="relative bg-black rounded-lg" style={{ aspectRatio: '9/16', height: '200px' }}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg">
+                      {selectedStickers.map((stickerId, index) => {
+                        const sticker = [...privateStickers, ...publicStickers].find(s => s.id === stickerId);
+                        if (!sticker) return null;
+                        return (
+                          <div 
+                            key={stickerId}
+                            className="absolute bg-white/20 border border-white/30 rounded px-2 py-1 text-xs text-white"
+                            style={{
+                              top: `${20 + index * 15}%`,
+                              right: `${10 + index * 5}%`,
+                              transform: `rotate(${index * 5 - 10}deg)`
+                            }}
+                          >
+                            贴纸{index + 1}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    已选择 {selectedStickers.length} 个贴纸
+                  </div>
+                </div>
+              )}
+            </div>
           </TabsContent>
           
           <TabsContent value="public" className="space-y-4">
-            <StickerGrid stickers={publicStickers} />
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <StickerGrid stickers={publicStickers} />
+              </div>
+              {selectedStickers.length > 0 && (
+                <div className="w-48 border-l border-border pl-4">
+                  <h4 className="text-sm font-medium mb-3">预览</h4>
+                  <div className="relative bg-black rounded-lg" style={{ aspectRatio: '9/16', height: '200px' }}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg">
+                      {selectedStickers.map((stickerId, index) => {
+                        const sticker = [...privateStickers, ...publicStickers].find(s => s.id === stickerId);
+                        if (!sticker) return null;
+                        return (
+                          <div 
+                            key={stickerId}
+                            className="absolute bg-white/20 border border-white/30 rounded px-2 py-1 text-xs text-white"
+                            style={{
+                              top: `${20 + index * 15}%`,
+                              right: `${10 + index * 5}%`,
+                              transform: `rotate(${index * 5 - 10}deg)`
+                            }}
+                          >
+                            贴纸{index + 1}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    已选择 {selectedStickers.length} 个贴纸
+                  </div>
+                </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
 
         <div className="flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
-            0 提示: 组内贴片随机展示
+            支持多选贴纸，可重叠显示
           </div>
           <div className="flex gap-3">
             <Button variant="outline" onClick={onClose}>

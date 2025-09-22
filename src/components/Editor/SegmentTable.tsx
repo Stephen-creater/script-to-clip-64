@@ -253,7 +253,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
                 <th className="min-w-[180px] p-3 text-left text-sm font-medium text-foreground">画面</th>
                 <th className="min-w-[320px] p-3 text-left text-sm font-medium text-foreground">文案</th>
                 <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">花字</th>
-                <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">贴纸</th>
+                <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">视频贴纸</th>
                 <th className="min-w-[120px] p-3 text-left text-sm font-medium text-foreground">音频</th>
               </tr>
             </thead>
