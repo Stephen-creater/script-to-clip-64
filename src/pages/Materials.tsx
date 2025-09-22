@@ -295,34 +295,43 @@ const Materials = () => {
 
         {/* Materials Grid/List */}
         {viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {materials.map((material) => (
-              <div
-                key={material.id}
-                className={cn(
-                  "bg-card border border-border rounded-lg p-3 hover:shadow-card transition-all cursor-pointer",
-                  selectedItems.includes(material.id) && "ring-2 ring-primary"
-                )}
-              >
-                <div className="relative mb-2">
-                  <Checkbox
-                    className="absolute top-2 left-2 z-10"
-                    checked={selectedItems.includes(material.id)}
-                    onCheckedChange={(checked) => handleSelectItem(material.id, !!checked)}
-                  />
-                  <div className="aspect-video bg-muted rounded flex items-center justify-center">
-                    {getFileIcon(material.type)}
-                  </div>
-                  {material.duration && (
-                    <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1 rounded">
-                      {material.duration}
-                    </span>
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Checkbox
+                checked={selectedItems.length === materials.length && materials.length > 0}
+                onCheckedChange={handleSelectAll}
+              />
+              <span className="text-sm text-muted-foreground">全选</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {materials.map((material) => (
+                <div
+                  key={material.id}
+                  className={cn(
+                    "bg-card border border-border rounded-lg p-3 hover:shadow-card transition-all cursor-pointer",
+                    selectedItems.includes(material.id) && "ring-2 ring-primary"
                   )}
+                >
+                  <div className="relative mb-2">
+                    <Checkbox
+                      className="absolute top-2 left-2 z-10"
+                      checked={selectedItems.includes(material.id)}
+                      onCheckedChange={(checked) => handleSelectItem(material.id, !!checked)}
+                    />
+                    <div className="aspect-video bg-muted rounded flex items-center justify-center">
+                      {getFileIcon(material.type)}
+                    </div>
+                    {material.duration && (
+                      <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1 rounded">
+                        {material.duration}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-sm font-medium truncate">{material.name}</h3>
+                  <p className="text-xs text-muted-foreground">{material.size}</p>
                 </div>
-                <h3 className="text-sm font-medium truncate">{material.name}</h3>
-                <p className="text-xs text-muted-foreground">{material.size}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         ) : (
           <div className="bg-card rounded-lg border border-border overflow-hidden">
