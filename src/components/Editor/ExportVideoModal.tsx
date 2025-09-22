@@ -118,46 +118,39 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
                 />
               </div>
 
-              {/* Global Settings Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">全局样式配置</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">字幕样式</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className={globalSettings.subtitle !== "未设置" ? "border-teal-500 text-teal-600" : ""}
-                      onClick={() => openGlobalModal('subtitle')}
-                    >
-                      {globalSettings.subtitle}
-                    </Button>
+              {/* Import Copy and Settings Buttons */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="flex-1">
+                    导入文案
+                  </Button>
+                  <Button 
+                    variant="default"
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={() => openGlobalModal('subtitle')}
+                  >
+                    字幕全局设置
+                  </Button>
+                  <div className="flex items-center">
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleBgmUpload}
+                      className="hidden"
+                      id="bgm-upload"
+                    />
+                    <label htmlFor="bgm-upload">
+                      <Button variant="default" size="sm" asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+                        <span className="cursor-pointer">
+                          <Upload size={14} className="mr-1" />
+                          BGM配乐
+                        </span>
+                      </Button>
+                    </label>
                   </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">BGM配乐</span>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="file"
-                        accept="audio/*"
-                        onChange={handleBgmUpload}
-                        className="hidden"
-                        id="bgm-upload"
-                      />
-                      <label htmlFor="bgm-upload">
-                        <Button variant="outline" size="sm" asChild>
-                          <span className="cursor-pointer">
-                            <Upload size={14} className="mr-1" />
-                            {globalSettings.bgm}
-                          </span>
-                        </Button>
-                      </label>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
