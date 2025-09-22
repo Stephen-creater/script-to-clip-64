@@ -74,7 +74,7 @@ const Editor = () => {
     <div className="flex h-full">
       {/* Video Preview */}
       <div className="w-1/3 bg-preview-bg border-r border-border p-6">
-        <div className="relative bg-black rounded-lg aspect-video flex items-center justify-center overflow-hidden">
+        <div className="relative bg-black rounded-lg flex items-center justify-center overflow-hidden mx-auto" style={{ aspectRatio: '9/16', maxHeight: '70vh', width: 'auto' }}>
           {!isPreviewMode ? (
             <div className="text-white/60 text-center">
               <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
