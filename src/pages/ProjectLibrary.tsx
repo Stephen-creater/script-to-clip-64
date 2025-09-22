@@ -43,7 +43,7 @@ const ProjectLibrary = () => {
       duration: '45.6s',
       segments: 5,
       status: 'completed',
-      lastModified: '2024-01-15'
+      lastModified: '2024-01-15 14:30'
     },
     {
       id: '2',
@@ -52,7 +52,7 @@ const ProjectLibrary = () => {
       duration: '32.4s',
       segments: 4,
       status: 'draft',
-      lastModified: '2024-01-14'
+      lastModified: '2024-01-14 16:45'
     },
     {
       id: '3',
@@ -61,7 +61,7 @@ const ProjectLibrary = () => {
       duration: '58.2s',
       segments: 6,
       status: 'processing',
-      lastModified: '2024-01-13'
+      lastModified: '2024-01-13 09:20'
     },
     {
       id: '4',
@@ -70,7 +70,7 @@ const ProjectLibrary = () => {
       duration: '40.0s',
       segments: 4,
       status: 'completed',
-      lastModified: '2024-01-12',
+      lastModified: '2024-01-12 11:15',
       template: true
     }
   ]);
@@ -111,11 +111,14 @@ const ProjectLibrary = () => {
   const handleCopyProject = (projectId: string) => {
     const originalProject = projects.find(p => p.id === projectId);
     if (originalProject) {
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      
       const newProject: Project = {
         ...originalProject,
         id: Date.now().toString(), // Generate unique ID
         name: `${originalProject.name}副本`,
-        lastModified: new Date().toISOString().split('T')[0], // Today's date
+        lastModified: timestamp, // Today's date with time
         status: 'draft' // New copy starts as draft
       };
       

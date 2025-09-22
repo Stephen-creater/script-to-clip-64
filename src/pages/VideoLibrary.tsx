@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Search, 
   Play, 
@@ -25,6 +26,7 @@ const VideoLibrary = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFolder, setSelectedFolder] = useState('all');
   const [expandedFolders, setExpandedFolders] = useState<string[]>(['recent']);
+  const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [folders, setFolders] = useState<FolderItem[]>([
     { id: 'all', name: '全部视频', count: 2 },
     { id: 'recent', name: '最近导出', count: 2, hasChildren: true, children: [
@@ -40,7 +42,7 @@ const VideoLibrary = () => {
       name: "西班牙-脚本1_导出版本1",
       duration: "45.6秒",
       size: "12.5MB",
-      createdAt: "2024-01-15",
+      createdAt: "2024-01-15 14:30",
       thumbnail: ""
     },
     {
@@ -48,7 +50,7 @@ const VideoLibrary = () => {
       name: "西班牙-脚本1_导出版本2",
       duration: "43.2秒",
       size: "11.8MB",
-      createdAt: "2024-01-14",
+      createdAt: "2024-01-14 16:45",
       thumbnail: ""
     }
   ]);
@@ -56,6 +58,28 @@ const VideoLibrary = () => {
   const filteredVideos = videos.filter(video =>
     video.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleVideoSelect = (videoId: string) => {
+    setSelectedVideos(prev => 
+      prev.includes(videoId) 
+        ? prev.filter(id => id !== videoId)
+        : [...prev, videoId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedVideos.length === filteredVideos.length) {
+      setSelectedVideos([]);
+    } else {
+      setSelectedVideos(filteredVideos.map(video => video.id));
+    }
+  };
+
+  const handleBatchDelete = () => {
+    // TODO: Implement batch delete logic
+    console.log('Delete videos:', selectedVideos);
+    setSelectedVideos([]);
+  };
 
   const handleFolderCreate = (name: string, parentId?: string) => {
     const newFolder: FolderItem = {
@@ -170,6 +194,30 @@ const VideoLibrary = () => {
         />
       </div>
 
+      {/* Batch Actions */}
+      {filteredVideos.length > 0 && (
+        <div className="flex items-center justify-between mb-6 p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              checked={selectedVideos.length === filteredVideos.length}
+              onCheckedChange={handleSelectAll}
+            />
+            <span className="text-sm text-muted-foreground">
+              {selectedVideos.length > 0 ? `已选择 ${selectedVideos.length} 个视频` : "全选"}
+            </span>
+          </div>
+          {selectedVideos.length > 0 && (
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={handleBatchDelete}
+            >
+              批量删除
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
@@ -203,6 +251,14 @@ const VideoLibrary = () => {
         {filteredVideos.map((video) => (
           <Card key={video.id} className="group hover:shadow-lg transition-shadow">
             <CardContent className="p-4">
+              {/* Checkbox */}
+              <div className="flex items-center justify-between mb-3">
+                <Checkbox
+                  checked={selectedVideos.includes(video.id)}
+                  onCheckedChange={() => handleVideoSelect(video.id)}
+                />
+              </div>
+
               {/* Video Thumbnail */}
               <div className="aspect-video bg-muted rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
                 <div className="text-muted-foreground">
@@ -236,7 +292,7 @@ const VideoLibrary = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-2 pt-2">
                   <Button size="sm" variant="outline" className="flex-1">
                     <Download size={14} className="mr-1" />
                     下载
