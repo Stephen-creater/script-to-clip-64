@@ -6,7 +6,7 @@ import {
   Search, 
   Play, 
   Download, 
-  MoreHorizontal,
+  Trash2,
   Calendar,
   Clock
 } from "lucide-react";
@@ -211,7 +211,7 @@ const VideoLibrary = () => {
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                   <Button size="sm" variant="secondary">
                     <Play size={16} className="mr-2" />
-                    播放
+                    预览
                   </Button>
                 </div>
               </div>
@@ -242,7 +242,8 @@ const VideoLibrary = () => {
                     下载
                   </Button>
                   <Button size="sm" variant="outline">
-                    <MoreHorizontal size={14} />
+                    <Trash2 size={14} className="mr-1" />
+                    删除
                   </Button>
                 </div>
               </div>
