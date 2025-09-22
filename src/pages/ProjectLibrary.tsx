@@ -35,6 +35,7 @@ const ProjectLibrary = () => {
   const navigate = useNavigate();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>('all');
 
   const [projects, setProjects] = useState<Project[]>([
     {
@@ -77,6 +78,22 @@ const ProjectLibrary = () => {
   ]);
 
   const templates = projects.filter(p => p.template);
+
+  // Filter projects based on selected filter
+  const filteredProjects = projects.filter(project => {
+    switch (filterStatus) {
+      case 'completed':
+        return project.status === 'completed';
+      case 'draft':
+        return project.status === 'draft';
+      case 'processing':
+        return project.status === 'processing';
+      case 'template':
+        return project.template === true;
+      default:
+        return true; // Show all projects
+    }
+  });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -209,7 +226,7 @@ const ProjectLibrary = () => {
           />
         </div>
         
-        <Select defaultValue="all">
+        <Select defaultValue="all" onValueChange={setFilterStatus}>
           <SelectTrigger className="w-40">
             <Filter size={16} className="mr-2" />
             <SelectValue />
@@ -218,6 +235,7 @@ const ProjectLibrary = () => {
             <SelectItem value="all">全部项目</SelectItem>
             <SelectItem value="completed">已完成</SelectItem>
             <SelectItem value="draft">草稿</SelectItem>
+            <SelectItem value="processing">处理中</SelectItem>
             <SelectItem value="template">模板</SelectItem>
           </SelectContent>
         </Select>
@@ -225,7 +243,7 @@ const ProjectLibrary = () => {
 
       {/* Projects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {projects.map((project) => (
+        {filteredProjects.map((project) => (
           <Card key={project.id} className="hover:shadow-card transition-all group">
             <CardHeader className="p-0">
               <div className="relative">
