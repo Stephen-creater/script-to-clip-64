@@ -20,11 +20,8 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
   
   // Global style settings
   const [globalSettings, setGlobalSettings] = useState({
-    subtitle: "未设置",
-    bgm: "未选择"
+    subtitle: "未设置"
   });
-  
-  const [bgmFile, setBgmFile] = useState<File | null>(null);
 
   // Modal states for global settings
   const [activeModal, setActiveModal] = useState<{
@@ -49,17 +46,6 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
 
   const openGlobalModal = (type: 'subtitle') => {
     setActiveModal({ type });
-  };
-
-  const handleBgmUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setBgmFile(file);
-      setGlobalSettings(prev => ({
-        ...prev,
-        bgm: file.name
-      }));
-    }
   };
 
   const closeGlobalModal = () => {
@@ -118,39 +104,25 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
                 />
               </div>
 
-              {/* Import Copy and Settings Buttons */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    导入文案
-                  </Button>
-                  <Button 
-                    variant="default"
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                    onClick={() => openGlobalModal('subtitle')}
-                  >
-                    字幕全局设置
-                  </Button>
-                  <div className="flex items-center">
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      onChange={handleBgmUpload}
-                      className="hidden"
-                      id="bgm-upload"
-                    />
-                    <label htmlFor="bgm-upload">
-                      <Button variant="default" size="sm" asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                        <span className="cursor-pointer">
-                          <Upload size={14} className="mr-1" />
-                          BGM配乐
-                        </span>
-                      </Button>
-                    </label>
+              {/* Global Settings Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">全局样式配置</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">字幕样式</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className={globalSettings.subtitle !== "未设置" ? "border-teal-500 text-teal-600" : ""}
+                      onClick={() => openGlobalModal('subtitle')}
+                    >
+                      {globalSettings.subtitle}
+                    </Button>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">

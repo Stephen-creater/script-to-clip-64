@@ -222,6 +222,28 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
             <Settings2 size={16} className="mr-2" />
             字幕全局设置
           </Button>
+          <div className="flex items-center">
+            <input
+              type="file"
+              accept="audio/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  console.log("BGM上传:", file.name);
+                }
+              }}
+              className="hidden"
+              id="bgm-upload"
+            />
+            <label htmlFor="bgm-upload">
+              <Button variant="default" size="sm" asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+                <span className="cursor-pointer">
+                  <Music size={16} className="mr-2" />
+                  BGM配乐
+                </span>
+              </Button>
+            </label>
+          </div>
         </div>
         
         {selectedSegments.length > 0 && (
