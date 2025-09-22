@@ -10,7 +10,8 @@ import {
   Save,
   Menu,
   X,
-  Film
+  Film,
+  ArrowLeft
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ExportVideoModal } from "@/components/Editor/ExportVideoModal";
@@ -84,6 +85,12 @@ const MainLayout = () => {
                 <Save size={16} className="mr-2" />
                 保存
               </Button>
+              <Link to="/">
+                <Button variant="outline" size="sm">
+                  <ArrowLeft size={16} className="mr-2" />
+                  返回
+                </Button>
+              </Link>
             </div>
             <div className="flex items-center gap-2">
               <Button 
