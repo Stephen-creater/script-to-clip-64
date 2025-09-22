@@ -214,7 +214,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
             <FileText size={16} className="mr-2" />
             导入文案
           </Button>
-          <Button size="sm" className="bg-gradient-primary" onClick={handleGenerateAudio}>
+          <Button variant="outline" size="sm" className="hover:bg-gradient-primary hover:text-white hover:border-transparent" onClick={handleGenerateAudio}>
             <Volume2 size={16} className="mr-2" />
             一键生成音频
           </Button>
@@ -236,7 +236,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
               id="bgm-upload"
             />
             <label htmlFor="bgm-upload">
-              <Button variant="default" size="sm" asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button variant="outline" size="sm" asChild className="hover:bg-blue-600 hover:text-white hover:border-blue-600">
                 <span className="cursor-pointer">
                   <Music size={16} className="mr-2" />
                   BGM配乐
