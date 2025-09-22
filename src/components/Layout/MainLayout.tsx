@@ -18,6 +18,7 @@ import { ExportVideoModal } from "@/components/Editor/ExportVideoModal";
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const location = useLocation();
 
   const navigation = [
@@ -85,7 +86,11 @@ const MainLayout = () => {
               </Button>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant={previewOpen ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setPreviewOpen(!previewOpen)}
+              >
                 <Play size={16} className="mr-2" />
                 预览
               </Button>
@@ -99,7 +104,7 @@ const MainLayout = () => {
 
         {/* Content Area */}
         <div className="flex-1 overflow-hidden">
-          <Outlet />
+          <Outlet context={{ previewOpen }} />
         </div>
       </div>
 

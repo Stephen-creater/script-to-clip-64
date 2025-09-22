@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
 import SegmentTable from "@/components/Editor/SegmentTable";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -16,6 +17,7 @@ interface Segment {
 }
 
 const Editor = () => {
+  const { previewOpen } = useOutletContext<{ previewOpen: boolean }>();
   const [isPlaying, setIsPlaying] = useState(false);
   const [segments, setSegments] = useState<Segment[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
@@ -122,90 +124,94 @@ const Editor = () => {
 
   return (
     <div className="flex h-full">
-      {/* Video Preview */}
-      <div className="w-1/3 bg-preview-bg border-r border-border p-6">
-        <div className="relative bg-black rounded-lg flex items-center justify-center overflow-hidden mx-auto" style={{ aspectRatio: '9/16', maxHeight: '70vh', width: 'auto' }}>
-          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center">
-            <div className="text-white/40 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
-                {isPlaying ? (
-                  <Pause size={24} className="text-white/60" />
-                ) : (
-                  <Play size={24} className="text-white/60 ml-1" />
-                )}
+      {/* Segment Table */}
+      <div className={previewOpen ? "flex-1" : "w-full"}>
+        <SegmentTable onSegmentsChange={handleSegmentsChange} />
+      </div>
+
+      {/* Video Preview - Only show when previewOpen is true */}
+      {previewOpen && (
+        <div className="w-1/3 bg-preview-bg border-l border-border p-6 flex-shrink-0">
+          <div className="relative bg-black rounded-lg flex items-center justify-center overflow-hidden mx-auto" style={{ aspectRatio: '9/16', maxHeight: '70vh', width: 'auto' }}>
+            <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center">
+              <div className="text-white/40 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
+                  {isPlaying ? (
+                    <Pause size={24} className="text-white/60" />
+                  ) : (
+                    <Play size={24} className="text-white/60 ml-1" />
+                  )}
+                </div>
+                <p className="text-sm">视频预览区域</p>
+                <p className="text-xs mt-2 text-white/40">{formatTime(currentTime)} / {formatTime(totalDuration)}</p>
               </div>
-              <p className="text-sm">视频预览区域</p>
-              <p className="text-xs mt-2 text-white/40">{formatTime(currentTime)} / {formatTime(totalDuration)}</p>
             </div>
+            {renderPreviewOverlays()}
           </div>
-          {renderPreviewOverlays()}
-        </div>
-        
-        {/* Video Controls */}
-        <div className="mt-6 space-y-4">
-          {/* Timeline Slider */}
-          <div className="space-y-2">
-            <Slider
-              value={[currentTime]}
-              onValueChange={handleTimeChange}
-              max={totalDuration}
-              step={0.1}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(totalDuration)}</span>
+          
+          {/* Video Controls */}
+          <div className="mt-6 space-y-4">
+            {/* Timeline Slider */}
+            <div className="space-y-2">
+              <Slider
+                value={[currentTime]}
+                onValueChange={handleTimeChange}
+                max={totalDuration}
+                step={0.1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(totalDuration)}</span>
+              </div>
+            </div>
+            
+            {/* Play Controls */}
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={skipBackward}
+              >
+                <SkipBack size={16} />
+              </Button>
+              <Button
+                variant={isPlaying ? "default" : "outline"}
+                size="sm"
+                onClick={togglePlayPause}
+                className="px-6"
+              >
+                {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={skipForward}
+              >
+                <SkipForward size={16} />
+              </Button>
             </div>
           </div>
           
-          {/* Play Controls */}
-          <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={skipBackward}
-            >
-              <SkipBack size={16} />
-            </Button>
-            <Button
-              variant={isPlaying ? "default" : "outline"}
-              size="sm"
-              onClick={togglePlayPause}
-              className="px-6"
-            >
-              {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={skipForward}
-            >
-              <SkipForward size={16} />
-            </Button>
-          </div>
-        </div>
-        
-        <div className="bg-card p-4 rounded-lg border border-border mt-6">
-          <h3 className="text-sm font-medium mb-3">项目信息</h3>
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <div className="flex justify-between">
-              <span>总时长:</span>
-              <span>{formatTime(totalDuration)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>分段数:</span>
-              <span>{segments.length}个</span>
-            </div>
-            <div className="flex justify-between">
-              <span>当前播放:</span>
-              <span>{getCurrentSegment()?.name || '-'}</span>
+          <div className="bg-card p-4 rounded-lg border border-border mt-6">
+            <h3 className="text-sm font-medium mb-3">项目信息</h3>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <div className="flex justify-between">
+                <span>总时长:</span>
+                <span>{formatTime(totalDuration)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>分段数:</span>
+                <span>{segments.length}个</span>
+              </div>
+              <div className="flex justify-between">
+                <span>当前播放:</span>
+                <span>{getCurrentSegment()?.name || '-'}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Segment Table */}
-      <SegmentTable onSegmentsChange={handleSegmentsChange} />
+      )}
     </div>
   );
 };
