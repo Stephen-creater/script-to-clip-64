@@ -15,7 +15,8 @@ import {
   Calendar,
   Clock,
   Video,
-  FileText
+  FileText,
+  Star
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -75,11 +76,7 @@ const ProjectLibrary = () => {
     }
   ]);
 
-  const templates = [
-    { id: 't1', name: '产品介绍模板', segments: 4, description: '适合产品特性介绍的节奏结构' },
-    { id: 't2', name: '教程讲解模板', segments: 6, description: '步骤清晰的教学视频结构' },
-    { id: 't3', name: '营销推广模板', segments: 5, description: '吸引眼球的营销视频节奏' },
-  ];
+  const templates = projects.filter(p => p.template);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -119,7 +116,8 @@ const ProjectLibrary = () => {
         id: Date.now().toString(), // Generate unique ID
         name: `${originalProject.name}副本`,
         lastModified: timestamp, // Today's date with time
-        status: 'draft' // New copy starts as draft
+        status: 'draft', // New copy starts as draft
+        template: false // Copy is not a template by default
       };
       
       // Add the new project at the beginning of the list
@@ -131,6 +129,14 @@ const ProjectLibrary = () => {
     if (confirm('确定要删除这个项目吗？此操作无法撤销。')) {
       setProjects(prev => prev.filter(p => p.id !== projectId));
     }
+  };
+
+  const handleSaveAsTemplate = (projectId: string) => {
+    setProjects(prev => prev.map(p => 
+      p.id === projectId 
+        ? { ...p, template: true }
+        : p
+    ));
   };
 
   return (
@@ -283,6 +289,15 @@ const ProjectLibrary = () => {
                   onClick={() => handleDeleteProject(project.id)}
                 >
                   <Trash2 size={14} />
+                  删除
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleSaveAsTemplate(project.id)}
+                >
+                  <Star size={14} />
+                  存为模板
                 </Button>
               </div>
             </CardFooter>
@@ -311,7 +326,7 @@ const ProjectLibrary = () => {
                     <div>
                       <h3 className="font-semibold">{template.name}</h3>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {template.description}
+                        时长: {template.duration} • 最后修改: {template.lastModified}
                       </p>
                     </div>
                     <Badge variant="outline">
