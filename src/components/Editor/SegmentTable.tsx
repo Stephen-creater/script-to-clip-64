@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { AnimatedTextModal } from "./AnimatedTextModal";
 import { GlobalSubtitleModal } from "./GlobalSubtitleModal";
 import { StickerModal } from "./StickerModal";
+import { BgmModal } from "./BgmModal";
 
 interface Segment {
   id: string;
@@ -97,7 +98,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
-    type: 'animatedText' | 'sticker' | 'globalSubtitle' | null;
+    type: 'animatedText' | 'sticker' | 'globalSubtitle' | 'bgm' | null;
     segmentId: string | null;
   }>({ type: null, segmentId: null });
 
@@ -180,7 +181,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
     setSelectedSegments([]);
   };
 
-  const openModal = (type: 'animatedText' | 'sticker' | 'globalSubtitle', segmentId?: string) => {
+  const openModal = (type: 'animatedText' | 'sticker' | 'globalSubtitle' | 'bgm', segmentId?: string) => {
     setActiveModal({ type, segmentId: segmentId || null });
   };
 
@@ -222,28 +223,10 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
             <Settings2 size={16} className="mr-2" />
             字幕全局设置
           </Button>
-          <div className="flex items-center">
-            <input
-              type="file"
-              accept="audio/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  console.log("BGM上传:", file.name);
-                }
-              }}
-              className="hidden"
-              id="bgm-upload"
-            />
-            <label htmlFor="bgm-upload">
-              <Button variant="outline" size="sm" asChild className="hover:bg-blue-600 hover:text-white hover:border-blue-600">
-                <span className="cursor-pointer">
-                  <Music size={16} className="mr-2" />
-                  BGM配乐
-                </span>
-              </Button>
-            </label>
-          </div>
+          <Button variant="outline" size="sm" className="hover:bg-blue-600 hover:text-white hover:border-blue-600" onClick={() => openModal('bgm')}>
+            <Music size={16} className="mr-2" />
+            BGM配乐
+          </Button>
         </div>
         
         {selectedSegments.length > 0 && (
@@ -388,6 +371,17 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
           isOpen={true}
           onClose={closeModal}
           segmentId={activeModal.segmentId!}
+        />
+      )}
+      
+      {activeModal.type === 'bgm' && (
+        <BgmModal
+          isOpen={true}
+          onClose={closeModal}
+          onSelect={(bgm) => {
+            console.log("BGM选择:", bgm);
+            // Handle BGM selection here
+          }}
         />
       )}
     </div>
