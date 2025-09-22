@@ -280,26 +280,13 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
                   <td className="p-3">
                     <GripVertical size={16} className="text-muted-foreground cursor-grab" />
                   </td>
-                  <td className="p-3">
-                    <div className="space-y-2">
-                      <Input
-                        value={segment.name}
-                        className="text-sm border-0 bg-transparent p-0 font-medium"
-                        readOnly
-                      />
-                      <Select value={segment.type}>
-                        <SelectTrigger className="h-8 text-xs bg-secondary">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="开头">开头</SelectItem>
-                          <SelectItem value="口播">口播</SelectItem>
-                          <SelectItem value="产品展示">产品展示</SelectItem>
-                          <SelectItem value="结尾">结尾</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </td>
+                   <td className="p-3">
+                     <Input
+                       value={segment.name}
+                       className="text-sm border-0 bg-transparent p-0 font-medium"
+                       readOnly
+                     />
+                   </td>
                   <td className="p-3">
                     <Button variant="outline" size="sm" className="w-full justify-start">
                       <Upload size={14} className="mr-2" />
