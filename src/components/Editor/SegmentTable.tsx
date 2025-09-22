@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatedTextModal } from "./AnimatedTextModal";
-import { SubtitleModal } from "./SubtitleModal";
+import { GlobalSubtitleModal } from "./GlobalSubtitleModal";
 import { StickerModal } from "./StickerModal";
 
 interface Segment {
@@ -26,7 +26,6 @@ interface Segment {
   video: string;
   script: string;
   animatedText: string;
-  subtitleStyle: string;
   sticker: string;
   audio: string;
 }
@@ -42,9 +41,8 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
       name: "分段1",
       type: "口播",
       video: "",
-      script: "",
+      script: "1",
       animatedText: "未设置",
-      subtitleStyle: "未设置",
       sticker: "未设置",
       audio: ""
     },
@@ -53,9 +51,8 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
       name: "分段2",
       type: "口播",
       video: "",
-      script: "",
+      script: "2",
       animatedText: "未设置",
-      subtitleStyle: "未设置",
       sticker: "未设置",
       audio: ""
     },
@@ -64,9 +61,8 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
       name: "分段3",
       type: "口播",
       video: "",
-      script: "",
+      script: "3",
       animatedText: "未设置",
-      subtitleStyle: "未设置",
       sticker: "未设置",
       audio: ""
     },
@@ -75,9 +71,8 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
       name: "分段4",
       type: "口播",
       video: "",
-      script: "",
+      script: "4",
       animatedText: "未设置",
-      subtitleStyle: "未设置",
       sticker: "未设置",
       audio: ""
     },
@@ -86,9 +81,8 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
       name: "分段5",
       type: "口播",
       video: "",
-      script: "",
+      script: "5",
       animatedText: "未设置",
-      subtitleStyle: "未设置",
       sticker: "未设置",
       audio: ""
     }
@@ -103,7 +97,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
-    type: 'animatedText' | 'subtitle' | 'sticker' | null;
+    type: 'animatedText' | 'sticker' | 'globalSubtitle' | null;
     segmentId: string | null;
   }>({ type: null, segmentId: null });
 
@@ -149,12 +143,11 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
       id: Date.now().toString(), // Use timestamp for unique ID
       name: `分段${segments.length + 1}`,
       type: "口播",
-      video: "",
-      script: "",
-      animatedText: "未设置",
-      subtitleStyle: "未设置", 
-      sticker: "未设置",
-      audio: ""
+        video: "",
+        script: "",
+        animatedText: "未设置",
+        sticker: "未设置",
+        audio: ""
     };
     const newSegments = renumberSegments([...segments, newSegment]);
     setSegments(newSegments);
@@ -171,8 +164,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
         video: "",
         script: line.trim(),
         animatedText: "未设置",
-        subtitleStyle: "未设置",
-        sticker: "未设置", 
+        sticker: "未设置",
         audio: ""
       }));
       const allSegments = renumberSegments([...segments, ...newSegments]);
@@ -188,8 +180,8 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
     setSelectedSegments([]);
   };
 
-  const openModal = (type: 'animatedText' | 'subtitle' | 'sticker', segmentId: string) => {
-    setActiveModal({ type, segmentId });
+  const openModal = (type: 'animatedText' | 'sticker' | 'globalSubtitle', segmentId?: string) => {
+    setActiveModal({ type, segmentId: segmentId || null });
   };
 
   const closeModal = () => {
@@ -226,6 +218,10 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
             <Volume2 size={16} className="mr-2" />
             一键生成音频
           </Button>
+          <Button variant="outline" size="sm" onClick={() => openModal('globalSubtitle')}>
+            <Settings2 size={16} className="mr-2" />
+            字幕全局设置
+          </Button>
         </div>
         
         {selectedSegments.length > 0 && (
@@ -257,7 +253,6 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
                 <th className="min-w-[180px] p-3 text-left text-sm font-medium text-foreground">画面</th>
                 <th className="min-w-[320px] p-3 text-left text-sm font-medium text-foreground">文案</th>
                 <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">花字</th>
-                <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">字幕样式</th>
                 <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">贴纸</th>
                 <th className="min-w-[120px] p-3 text-left text-sm font-medium text-foreground">音频</th>
               </tr>
@@ -316,17 +311,6 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
                       variant="outline" 
                       size="sm" 
                       className="w-full justify-start"
-                      onClick={() => openModal('subtitle', segment.id)}
-                    >
-                      <Settings2 size={14} className="mr-2" />
-                      {segment.subtitleStyle}
-                    </Button>
-                  </td>
-                  <td className="p-3">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full justify-start"
                       onClick={() => openModal('sticker', segment.id)}
                     >
                       <Settings2 size={14} className="mr-2" />
@@ -370,11 +354,10 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
         />
       )}
       
-      {activeModal.type === 'subtitle' && (
-        <SubtitleModal
+      {activeModal.type === 'globalSubtitle' && (
+        <GlobalSubtitleModal
           isOpen={true}
           onClose={closeModal}
-          segmentId={activeModal.segmentId!}
         />
       )}
       

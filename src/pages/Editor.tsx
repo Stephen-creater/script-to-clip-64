@@ -10,7 +10,6 @@ interface Segment {
   video: string;
   script: string;
   animatedText: string;
-  subtitleStyle: string;
   sticker: string;
   audio: string;
 }
