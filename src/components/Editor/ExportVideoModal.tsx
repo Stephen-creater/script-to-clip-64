@@ -17,7 +17,7 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
   const [step, setStep] = useState<'main' | 'settings' | 'folderSelect'>('main');
   const [exportPath, setExportPath] = useState("0918");
   const [quantity, setQuantity] = useState("1");
-  const [filename, setFilename] = useState("1");
+  
   const [newFolderName, setNewFolderName] = useState("");
   
   // Mock folder data - in real app this would come from API
@@ -136,15 +136,6 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
                 />
               </div>
 
-              {/* Video filename */}
-              <div className="space-y-2">
-                <Label className="text-sm">视频文件名称</Label>
-                <Input 
-                  value="1"
-                  readOnly
-                  className="bg-muted"
-                />
-              </div>
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
