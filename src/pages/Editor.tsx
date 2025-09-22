@@ -146,10 +146,6 @@ const Editor = () => {
               <span>分段数:</span>
               <span>{segments.length}个</span>
             </div>
-            <div className="flex justify-between">
-              <span>分辨率:</span>
-              <span>1920x1080</span>
-            </div>
           </div>
         </div>
       </div>
