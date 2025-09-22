@@ -14,10 +14,19 @@ interface ExportVideoModalProps {
 }
 
 export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => {
-  const [step, setStep] = useState<'main' | 'settings'>('main');
+  const [step, setStep] = useState<'main' | 'settings' | 'folderSelect'>('main');
   const [exportPath, setExportPath] = useState("0918");
   const [quantity, setQuantity] = useState("1");
+  const [filename, setFilename] = useState("1");
+  const [newFolderName, setNewFolderName] = useState("");
   
+  // Mock folder data - in real app this would come from API
+  const [folders] = useState([
+    { id: 1, name: "0918", videoCount: 12 },
+    { id: 2, name: "中秋节活动", videoCount: 8 },
+    { id: 3, name: "国庆推广", videoCount: 5 }
+  ]);
+
   // Global style settings
   const [globalSettings, setGlobalSettings] = useState({
     subtitle: "未设置"
@@ -31,11 +40,30 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
   const handleBack = () => {
     if (step === 'settings') {
       setStep('main');
+    } else if (step === 'folderSelect') {
+      setStep('main');
     }
   };
 
   const handleSettingsClick = () => {
     setStep('settings');
+  };
+
+  const handleFolderSelect = () => {
+    setStep('folderSelect');
+  };
+
+  const handleSelectFolder = (folderName: string) => {
+    setExportPath(folderName);
+    setStep('main');
+  };
+
+  const handleCreateFolder = () => {
+    if (newFolderName.trim()) {
+      setExportPath(newFolderName);
+      setNewFolderName("");
+      setStep('main');
+    }
   };
 
   const handleExport = () => {
@@ -65,13 +93,13 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
         <DialogContent className="max-w-md">
           <DialogHeader>
             <div className="flex items-center gap-2">
-              {step === 'settings' && (
+              {(step === 'settings' || step === 'folderSelect') && (
                 <Button variant="ghost" size="sm" onClick={handleBack}>
                   <ChevronLeft size={16} />
                 </Button>
               )}
               <DialogTitle>
-                {step === 'main' ? '导出' : '全局样式设置'}
+                {step === 'main' ? '导出' : step === 'folderSelect' ? '选择文件夹' : '全局样式设置'}
               </DialogTitle>
             </div>
           </DialogHeader>
@@ -87,7 +115,11 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
                     onChange={(e) => setExportPath(e.target.value)}
                     className="flex-1"
                   />
-                  <Button variant="outline" className="bg-teal-500 text-white hover:bg-teal-600">
+                  <Button 
+                    variant="outline" 
+                    className="bg-teal-500 text-white hover:bg-teal-600"
+                    onClick={handleFolderSelect}
+                  >
                     选择
                   </Button>
                 </div>
@@ -104,25 +136,15 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
                 />
               </div>
 
-              {/* Global Settings Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">全局样式配置</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">字幕样式</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className={globalSettings.subtitle !== "未设置" ? "border-teal-500 text-teal-600" : ""}
-                      onClick={() => openGlobalModal('subtitle')}
-                    >
-                      {globalSettings.subtitle}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Video filename */}
+              <div className="space-y-2">
+                <Label className="text-sm">视频文件名称</Label>
+                <Input 
+                  value="1"
+                  readOnly
+                  className="bg-muted"
+                />
+              </div>
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
@@ -133,6 +155,43 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
                   <Download size={16} className="mr-2" />
                   导出
                 </Button>
+              </div>
+            </div>
+          ) : step === 'folderSelect' ? (
+            <div className="space-y-4">
+              {/* Existing Folders */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">现有文件夹</Label>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {folders.map((folder) => (
+                    <div key={folder.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent cursor-pointer" onClick={() => handleSelectFolder(folder.name)}>
+                      <div>
+                        <p className="font-medium">{folder.name}</p>
+                        <p className="text-xs text-muted-foreground">{folder.videoCount} 个视频</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Create New Folder */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">新建文件夹</Label>
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="输入文件夹名称"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={handleCreateFolder}
+                    disabled={!newFolderName.trim()}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    创建
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (
