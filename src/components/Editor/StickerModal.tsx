@@ -221,6 +221,20 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
                   </SelectItem>
                 </SelectContent>
               </Select>
+              <div className="space-y-2">
+                <Label htmlFor="volume">音量</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="volume"
+                    type="number"
+                    min="0"
+                    max="100"
+                    defaultValue="50"
+                    className="flex-1"
+                  />
+                  <span className="text-sm text-muted-foreground">%</span>
+                </div>
+              </div>
               <div className="flex items-start gap-2 p-3 bg-muted rounded-lg">
                 <Music size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
                 <div className="text-sm text-muted-foreground">
