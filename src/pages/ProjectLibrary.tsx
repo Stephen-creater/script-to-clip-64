@@ -134,7 +134,7 @@ const ProjectLibrary = () => {
   const handleSaveAsTemplate = (projectId: string) => {
     setProjects(prev => prev.map(p => 
       p.id === projectId 
-        ? { ...p, template: true }
+        ? { ...p, template: !p.template }
         : p
     ));
   };
@@ -277,10 +277,10 @@ const ProjectLibrary = () => {
                   variant="outline" 
                   size="sm" 
                   className="flex-1 text-xs"
-                  onClick={() => handleCopyProject(project.id)}
+                  onClick={() => handleSaveAsTemplate(project.id)}
                 >
-                  <Copy size={12} className="mr-1" />
-                  复制
+                  <Star size={12} className="mr-1" />
+                  存为模板
                 </Button>
                 <Button 
                   variant="outline" 
@@ -295,10 +295,10 @@ const ProjectLibrary = () => {
                   variant="outline" 
                   size="sm" 
                   className="flex-1 text-xs"
-                  onClick={() => handleSaveAsTemplate(project.id)}
+                  onClick={() => handleCopyProject(project.id)}
                 >
-                  <Star size={12} className="mr-1" />
-                  存为模板
+                  <Copy size={12} className="mr-1" />
+                  复制
                 </Button>
               </div>
             </CardFooter>
