@@ -9,7 +9,6 @@ import {
   Plus, 
   Search, 
   Filter,
-  MoreVertical,
   Play,
   Copy,
   Trash2,
@@ -107,6 +106,19 @@ const ProjectLibrary = () => {
   const handleSelectTemplate = (templateId: string) => {
     navigate(`/editor/new?template=${templateId}`);
     setTemplateDialogOpen(false);
+  };
+
+  const handleCopyProject = (projectId: string) => {
+    // Create a copy of the project with a new ID and name
+    console.log(`Copying project ${projectId}`);
+    // In a real app, this would call an API to duplicate the project
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    if (confirm('确定要删除这个项目吗？此操作无法撤销。')) {
+      console.log(`Deleting project ${projectId}`);
+      // In a real app, this would call an API to delete the project
+    }
   };
 
   return (
@@ -219,14 +231,9 @@ const ProjectLibrary = () => {
             </CardHeader>
             
             <CardContent className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <CardTitle className="text-base font-semibold truncate flex-1">
-                  {project.name}
-                </CardTitle>
-                <Button variant="ghost" size="sm" className="ml-2">
-                  <MoreVertical size={16} />
-                </Button>
-              </div>
+              <CardTitle className="text-base font-semibold truncate mb-2">
+                {project.name}
+              </CardTitle>
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -248,11 +255,21 @@ const ProjectLibrary = () => {
 
             <CardFooter className="p-4 pt-0">
               <div className="flex gap-2 w-full">
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => handleCopyProject(project.id)}
+                >
                   <Copy size={14} className="mr-1" />
                   复制
                 </Button>
-                <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-destructive-foreground">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  onClick={() => handleDeleteProject(project.id)}
+                >
                   <Trash2 size={14} />
                 </Button>
               </div>
