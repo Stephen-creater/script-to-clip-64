@@ -16,7 +16,9 @@ import {
   FileImage,
   FileAudio,
   Trash2,
-  Move
+  Move,
+  ChevronRight,
+  ChevronDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,15 +36,20 @@ const Materials = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [selectedFolder, setSelectedFolder] = useState('all');
+  const [expandedFolders, setExpandedFolders] = useState<string[]>(['videos']);
 
   const folders = [
     { id: 'all', name: '全部素材', count: 156 },
-    { id: 'videos', name: '视频素材', count: 89 },
+    { id: 'videos', name: '视频素材', count: 89, hasChildren: true },
     { id: 'images', name: '图片素材', count: 45 },
     { id: 'audio', name: '音频素材', count: 22 },
-    { id: 'spain', name: '西班牙风景', count: 12 },
-    { id: 'trains', name: '火车素材', count: 8 },
-    { id: 'intro', name: '开头素材', count: 6 },
+  ];
+
+  const videoSubfolders = [
+    { id: 'train_0807', name: '0807火车', count: 12 },
+    { id: 'ai_generated', name: 'AI生成素材', count: 18 },
+    { id: 'window_view', name: '车窗外风景', count: 25 },
+    { id: 'station_staff', name: '车站工作人员', count: 15 },
   ];
 
   const materials: MaterialItem[] = [
@@ -125,6 +132,21 @@ const Materials = () => {
     }
   };
 
+  const toggleFolder = (folderId: string) => {
+    if (expandedFolders.includes(folderId)) {
+      setExpandedFolders(expandedFolders.filter(id => id !== folderId));
+    } else {
+      setExpandedFolders([...expandedFolders, folderId]);
+    }
+  };
+
+  const handleFolderClick = (folderId: string, hasChildren?: boolean) => {
+    if (hasChildren) {
+      toggleFolder(folderId);
+    }
+    setSelectedFolder(folderId);
+  };
+
   return (
     <div className="flex h-full">
       {/* Left Sidebar - Folders */}
@@ -138,21 +160,51 @@ const Materials = () => {
 
         <div className="space-y-1">
           {folders.map((folder) => (
-            <div
-              key={folder.id}
-              className={cn(
-                "flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors",
-                selectedFolder === folder.id
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-secondary"
-              )}
-              onClick={() => setSelectedFolder(folder.id)}
-            >
-              <div className="flex items-center gap-2">
-                <Folder size={16} />
-                <span className="text-sm">{folder.name}</span>
+            <div key={folder.id}>
+              <div
+                className={cn(
+                  "flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors",
+                  selectedFolder === folder.id
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-secondary"
+                )}
+                onClick={() => handleFolderClick(folder.id, folder.hasChildren)}
+              >
+                <div className="flex items-center gap-2">
+                  {folder.hasChildren && (
+                    expandedFolders.includes(folder.id) ? 
+                      <ChevronDown size={14} /> : 
+                      <ChevronRight size={14} />
+                  )}
+                  <Folder size={16} />
+                  <span className="text-sm">{folder.name}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">{folder.count}</span>
               </div>
-              <span className="text-xs text-muted-foreground">{folder.count}</span>
+              
+              {/* Nested folders for videos */}
+              {folder.id === 'videos' && expandedFolders.includes('videos') && (
+                <div className="ml-6 space-y-1 mt-1">
+                  {videoSubfolders.map((subfolder) => (
+                    <div
+                      key={subfolder.id}
+                      className={cn(
+                        "flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors",
+                        selectedFolder === subfolder.id
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-secondary"
+                      )}
+                      onClick={() => setSelectedFolder(subfolder.id)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Folder size={14} />
+                        <span className="text-sm">{subfolder.name}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{subfolder.count}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
