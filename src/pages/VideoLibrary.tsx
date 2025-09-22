@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  FolderPlus, 
   Search, 
   Play, 
   Download, 
@@ -11,6 +10,7 @@ import {
   Calendar,
   Clock
 } from "lucide-react";
+import FolderSidebar, { FolderItem } from "@/components/FolderManagement/FolderSidebar";
 
 interface VideoItem {
   id: string;
@@ -23,6 +23,17 @@ interface VideoItem {
 
 const VideoLibrary = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFolder, setSelectedFolder] = useState('all');
+  const [expandedFolders, setExpandedFolders] = useState<string[]>(['recent']);
+  const [folders, setFolders] = useState<FolderItem[]>([
+    { id: 'all', name: '全部视频', count: 2 },
+    { id: 'recent', name: '最近导出', count: 2, hasChildren: true, children: [
+      { id: 'project1', name: '西班牙项目', count: 2, parentId: 'recent' },
+      { id: 'project2', name: '法国项目', count: 0, parentId: 'recent' }
+    ]},
+    { id: 'archived', name: '已归档', count: 0 },
+  ]);
+  
   const [videos] = useState<VideoItem[]>([
     {
       id: "1",
@@ -46,19 +57,107 @@ const VideoLibrary = () => {
     video.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleFolderCreate = (name: string, parentId?: string) => {
+    const newFolder: FolderItem = {
+      id: Date.now().toString(),
+      name,
+      count: 0,
+      parentId
+    };
+
+    if (parentId) {
+      // Add as child folder
+      setFolders(prev => prev.map(folder => {
+        if (folder.id === parentId) {
+          return {
+            ...folder,
+            hasChildren: true,
+            children: [...(folder.children || []), newFolder]
+          };
+        }
+        if (folder.children) {
+          return {
+            ...folder,
+            children: folder.children.map(child => 
+              child.id === parentId ? {
+                ...child,
+                hasChildren: true,
+                children: [...(child.children || []), newFolder]
+              } : child
+            )
+          };
+        }
+        return folder;
+      }));
+    } else {
+      // Add as root folder
+      setFolders(prev => [...prev, newFolder]);
+    }
+  };
+
+  const handleFolderRename = (folderId: string, newName: string) => {
+    const updateFolder = (folders: FolderItem[]): FolderItem[] => {
+      return folders.map(folder => {
+        if (folder.id === folderId) {
+          return { ...folder, name: newName };
+        }
+        if (folder.children) {
+          return { ...folder, children: updateFolder(folder.children) };
+        }
+        return folder;
+      });
+    };
+    setFolders(updateFolder);
+  };
+
+  const handleFolderDelete = (folderId: string) => {
+    const removeFolder = (folders: FolderItem[]): FolderItem[] => {
+      return folders.filter(folder => {
+        if (folder.id === folderId) {
+          return false;
+        }
+        if (folder.children) {
+          folder.children = removeFolder(folder.children);
+        }
+        return true;
+      });
+    };
+    setFolders(removeFolder);
+    if (selectedFolder === folderId) {
+      setSelectedFolder('all');
+    }
+  };
+
+  const handleFolderToggle = (folderId: string) => {
+    if (expandedFolders.includes(folderId)) {
+      setExpandedFolders(expandedFolders.filter(id => id !== folderId));
+    } else {
+      setExpandedFolders([...expandedFolders, folderId]);
+    }
+  };
+
   return (
-    <div className="p-6 h-full bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">成片库</h1>
-          <p className="text-muted-foreground mt-1">管理您导出的视频文件</p>
+    <div className="flex h-full">
+      <FolderSidebar
+        folders={folders}
+        selectedFolder={selectedFolder}
+        expandedFolders={expandedFolders}
+        onFolderSelect={setSelectedFolder}
+        onFolderToggle={handleFolderToggle}
+        onFolderCreate={handleFolderCreate}
+        onFolderRename={handleFolderRename}
+        onFolderDelete={handleFolderDelete}
+        title="视频文件夹"
+      />
+
+      <div className="flex-1 p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">成片库</h1>
+            <p className="text-muted-foreground mt-1">管理您导出的视频文件</p>
+          </div>
         </div>
-        <Button>
-          <FolderPlus size={16} className="mr-2" />
-          新建文件夹
-        </Button>
-      </div>
 
       {/* Search Bar */}
       <div className="relative mb-6">
@@ -152,16 +251,17 @@ const VideoLibrary = () => {
         ))}
       </div>
 
-      {/* Empty State */}
-      {filteredVideos.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-muted-foreground mb-2">
-            <Play size={48} className="mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium">暂无视频文件</p>
-            <p className="text-sm">导出您的第一个视频作品吧</p>
+        {/* Empty State */}
+        {filteredVideos.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-muted-foreground mb-2">
+              <Play size={48} className="mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">暂无视频文件</p>
+              <p className="text-sm">导出您的第一个视频作品吧</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
