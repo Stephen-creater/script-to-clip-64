@@ -277,6 +277,15 @@ const ProjectLibrary = () => {
                   variant="outline" 
                   size="sm" 
                   className="flex-1 text-xs"
+                  onClick={() => handleCopyProject(project.id)}
+                >
+                  <Copy size={12} className="mr-1" />
+                  复制
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 text-xs"
                   onClick={() => handleSaveAsTemplate(project.id)}
                 >
                   <Star size={12} className="mr-1" />
@@ -290,15 +299,6 @@ const ProjectLibrary = () => {
                 >
                   <Trash2 size={12} className="mr-1" />
                   删除
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1 text-xs"
-                  onClick={() => handleCopyProject(project.id)}
-                >
-                  <Copy size={12} className="mr-1" />
-                  复制
                 </Button>
               </div>
             </CardFooter>
