@@ -272,31 +272,32 @@ const ProjectLibrary = () => {
             </CardContent>
 
             <CardFooter className="p-4 pt-0">
-              <div className="flex gap-2 w-full">
+              <div className="flex gap-1 w-full">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="flex-1"
+                  className="flex-1 text-xs"
                   onClick={() => handleCopyProject(project.id)}
                 >
-                  <Copy size={14} className="mr-1" />
+                  <Copy size={12} className="mr-1" />
                   复制
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  className="flex-1 text-xs text-destructive hover:bg-destructive hover:text-destructive-foreground"
                   onClick={() => handleDeleteProject(project.id)}
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={12} className="mr-1" />
                   删除
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
+                  className="flex-1 text-xs"
                   onClick={() => handleSaveAsTemplate(project.id)}
                 >
-                  <Star size={14} />
+                  <Star size={12} className="mr-1" />
                   存为模板
                 </Button>
               </div>
