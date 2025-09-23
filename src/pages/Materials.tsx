@@ -27,6 +27,7 @@ interface MaterialItem {
   duration?: string;
   size: string;
   date: string;
+  folderId: string;
 }
 
 const Materials = () => {
@@ -60,7 +61,8 @@ const Materials = () => {
       thumbnail: '/placeholder.svg',
       duration: '00:15',
       size: '45.2 MB',
-      date: '2024-01-15'
+      date: '2024-01-15',
+      folderId: 'train_0807'
     },
     {
       id: '2',
@@ -68,7 +70,8 @@ const Materials = () => {
       type: 'image',
       thumbnail: '/placeholder.svg',
       size: '2.3 MB',
-      date: '2024-01-14'
+      date: '2024-01-14',
+      folderId: 'images'
     },
     {
       id: '3',
@@ -77,7 +80,8 @@ const Materials = () => {
       thumbnail: '/placeholder.svg',
       duration: '02:30',
       size: '3.8 MB',
-      date: '2024-01-13'
+      date: '2024-01-13',
+      folderId: 'audio'
     },
     {
       id: '4',
@@ -86,7 +90,8 @@ const Materials = () => {
       thumbnail: '/placeholder.svg',
       duration: '00:08',
       size: '28.5 MB',
-      date: '2024-01-12'
+      date: '2024-01-12',
+      folderId: 'train_0807'
     },
     {
       id: '5',
@@ -95,7 +100,8 @@ const Materials = () => {
       thumbnail: '/placeholder.svg',
       duration: '00:20',
       size: '67.8 MB',
-      date: '2024-01-11'
+      date: '2024-01-11',
+      folderId: 'window_view'
     },
     {
       id: '6',
@@ -103,9 +109,55 @@ const Materials = () => {
       type: 'image',
       thumbnail: '/placeholder.svg',
       size: '1.8 MB',
-      date: '2024-01-10'
+      date: '2024-01-10',
+      folderId: 'images'
+    },
+    {
+      id: '7',
+      name: 'AI生成火车.mp4',
+      type: 'video',
+      thumbnail: '/placeholder.svg',
+      duration: '00:12',
+      size: '34.1 MB',
+      date: '2024-01-09',
+      folderId: 'ai_generated'
+    },
+    {
+      id: '8',
+      name: '车站工作人员.mp4',
+      type: 'video',
+      thumbnail: '/placeholder.svg',
+      duration: '00:25',
+      size: '58.3 MB',
+      date: '2024-01-08',
+      folderId: 'station_staff'
     }
   ];
+
+  // Filter materials based on selected folder
+  const getFilteredMaterials = () => {
+    if (selectedFolder === 'all') {
+      return materials;
+    }
+    
+    // Check if it's a parent folder
+    if (selectedFolder === 'videos') {
+      return materials.filter(m => ['train_0807', 'ai_generated', 'window_view', 'station_staff'].includes(m.folderId));
+    }
+    
+    if (selectedFolder === 'images') {
+      return materials.filter(m => m.type === 'image');
+    }
+    
+    if (selectedFolder === 'audio') {
+      return materials.filter(m => m.type === 'audio');
+    }
+    
+    // For specific subfolders
+    return materials.filter(m => m.folderId === selectedFolder);
+  };
+
+  const filteredMaterials = getFilteredMaterials();
 
   const getFileIcon = (type: string) => {
     switch (type) {
@@ -126,7 +178,7 @@ const Materials = () => {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedItems(materials.map(m => m.id));
+      setSelectedItems(filteredMaterials.map(m => m.id));
     } else {
       setSelectedItems([]);
     }
@@ -298,13 +350,13 @@ const Materials = () => {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Checkbox
-                checked={selectedItems.length === materials.length && materials.length > 0}
+                checked={selectedItems.length === filteredMaterials.length && filteredMaterials.length > 0}
                 onCheckedChange={handleSelectAll}
               />
               <span className="text-sm text-muted-foreground">全选</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {materials.map((material) => (
+              {filteredMaterials.map((material) => (
                 <div
                   key={material.id}
                   className={cn(
@@ -340,7 +392,7 @@ const Materials = () => {
                 <tr>
                   <th className="w-12 p-3 text-left">
                     <Checkbox
-                      checked={selectedItems.length === materials.length}
+                      checked={selectedItems.length === filteredMaterials.length && filteredMaterials.length > 0}
                       onCheckedChange={handleSelectAll}
                     />
                   </th>
@@ -353,7 +405,7 @@ const Materials = () => {
                 </tr>
               </thead>
               <tbody>
-                {materials.map((material) => (
+                {filteredMaterials.map((material) => (
                   <tr
                     key={material.id}
                     className={cn(
