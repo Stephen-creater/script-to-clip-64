@@ -247,6 +247,16 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
     );
   };
 
+  const updateSegmentName = (segmentId: string, name: string) => {
+    setSegments(prevSegments => 
+      prevSegments.map(segment => 
+        segment.id === segmentId 
+          ? { ...segment, name }
+          : segment
+      )
+    );
+  };
+
   return (
     <div className="flex-1 bg-background p-6">
       {/* Action Buttons */}
@@ -351,8 +361,9 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                    <td className="p-3">
                      <Input
                        value={segment.name}
-                       className="text-sm border-0 bg-transparent p-0 font-medium"
-                       readOnly
+                       onChange={(e) => updateSegmentName(segment.id, e.target.value)}
+                       className="text-sm border-0 bg-transparent p-0 font-medium focus:border-border focus:bg-background/50"
+                       placeholder="分段名称"
                      />
                    </td>
                   <td className="p-3">
