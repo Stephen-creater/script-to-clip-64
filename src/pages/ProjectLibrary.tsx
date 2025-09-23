@@ -242,7 +242,7 @@ const ProjectLibrary = () => {
           {/* Projects Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProjects.map((project) => (
-          <Card key={project.id} className="hover:shadow-card transition-all group">
+          <Card key={project.id} className="hover:shadow-card transition-all group flex flex-col">
             <CardHeader className="p-0">
               <div className="relative">
                 <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
@@ -264,7 +264,7 @@ const ProjectLibrary = () => {
               </div>
             </CardHeader>
             
-            <CardContent className="p-4">
+            <CardContent className="p-4 flex-1">
               <CardTitle className="text-base font-semibold truncate mb-2">
                 {project.name}
               </CardTitle>
@@ -287,7 +287,7 @@ const ProjectLibrary = () => {
               </div>
             </CardContent>
 
-            <CardFooter className="p-4 pt-0">
+            <CardFooter className="p-4 pt-0 mt-auto">
               <div className="flex gap-1 w-full">
                 <Button 
                   variant="outline" 
