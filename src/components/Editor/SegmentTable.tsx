@@ -458,7 +458,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
             if (bgm.cancelled) {
               setIsBgmConfigured(false);
               setSelectedBgm(null);
-            } else {
+            } else if (bgm.name && bgm.url) {
               setIsBgmConfigured(true);
               setSelectedBgm({ name: bgm.name, type: bgm.type });
             }

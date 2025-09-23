@@ -45,11 +45,18 @@ export const BgmModal = ({ isOpen, onClose, onSelect }: BgmModalProps) => {
     if (confirmedAudio === audio.id) {
       // Cancel selection
       setConfirmedAudio(null);
-      onSelect?.({ type: 'library', url: '', name: '', cancelled: true });
     } else {
       // Confirm selection
       setConfirmedAudio(audio.id);
-      onSelect?.({ type: 'library', url: audio.url, name: audio.name });
+    }
+  };
+
+  const handleConfirm = () => {
+    if (confirmedAudio) {
+      const selectedAudio = audioLibrary.find(audio => audio.id === confirmedAudio);
+      if (selectedAudio) {
+        onSelect?.({ type: 'library', url: selectedAudio.url, name: selectedAudio.name });
+      }
     }
     onClose();
   };
@@ -180,6 +187,13 @@ export const BgmModal = ({ isOpen, onClose, onSelect }: BgmModalProps) => {
         <div className="flex justify-end gap-3 pt-4 border-t">
           <Button variant="outline" onClick={onClose}>
             取消
+          </Button>
+          <Button 
+            variant="default"
+            onClick={handleConfirm}
+            disabled={!confirmedAudio}
+          >
+            确定
           </Button>
         </div>
       </DialogContent>
