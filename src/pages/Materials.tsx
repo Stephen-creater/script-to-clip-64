@@ -48,7 +48,27 @@ const Materials = () => {
         { id: 'station_staff', name: '车站工作人员', count: 15, parentId: 'videos' },
       ]
     },
-    { id: 'images', name: '图片素材', count: 45 },
+    { 
+      id: 'images', 
+      name: '图片素材', 
+      count: 45,
+      hasChildren: true,
+      children: [
+        { 
+          id: 'marketing', 
+          name: '营销类', 
+          count: 25, 
+          parentId: 'images',
+          hasChildren: true,
+          children: [
+            { id: 'brand_symbols', name: '品牌+符号', count: 8, parentId: 'marketing' },
+            { id: 'promotion_life', name: '促销生活', count: 10, parentId: 'marketing' },
+            { id: 'discount_codes', name: '优惠码', count: 7, parentId: 'marketing' },
+          ]
+        },
+        { id: 'decorative', name: '装饰类', count: 20, parentId: 'images' },
+      ]
+    },
     { 
       id: 'audio', 
       name: '音频素材', 
