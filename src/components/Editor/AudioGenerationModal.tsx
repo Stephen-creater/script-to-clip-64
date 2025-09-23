@@ -37,12 +37,12 @@ export const AudioGenerationModal = ({
           setTimeout(() => {
             onComplete();
             onClose();
-          }, 500);
+          }, 200);
         }
         
         return next;
       });
-    }, 800); // Simulate generation time per segment
+    }, 2000 / segmentCount); // Complete all segments in 2 seconds total
 
     return () => clearInterval(interval);
   }, [isOpen, segmentCount, onComplete, onClose]);
