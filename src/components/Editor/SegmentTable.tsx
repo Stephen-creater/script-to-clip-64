@@ -20,6 +20,7 @@ import { GlobalSubtitleModal } from "./GlobalSubtitleModal";
 import { StickerModal } from "./StickerModal";
 import { BgmModal } from "./BgmModal";
 import { AudioGenerationModal } from "./AudioGenerationModal";
+import { MaterialSelectionModal } from "./MaterialSelectionModal";
 
 interface Segment {
   id: string;
@@ -98,7 +99,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
-    type: 'animatedText' | 'sticker' | 'globalSubtitle' | 'bgm' | 'audioGeneration' | null;
+    type: 'animatedText' | 'sticker' | 'globalSubtitle' | 'bgm' | 'audioGeneration' | 'materialSelection' | null;
     segmentId: string | null;
   }>({ type: null, segmentId: null });
   
@@ -216,7 +217,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
     setSelectedSegments([]);
   };
 
-  const openModal = (type: 'animatedText' | 'sticker' | 'globalSubtitle' | 'bgm', segmentId?: string) => {
+  const openModal = (type: 'animatedText' | 'sticker' | 'globalSubtitle' | 'bgm' | 'materialSelection', segmentId?: string) => {
     setActiveModal({ type, segmentId: segmentId || null });
   };
 
@@ -252,6 +253,22 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       prevSegments.map(segment => 
         segment.id === segmentId 
           ? { ...segment, name }
+          : segment
+      )
+    );
+  };
+
+  const updateSegmentVideo = (segmentId: string, material: {
+    id: string;
+    name: string;
+    type: string;
+    url: string;
+    thumbnail?: string;
+  }) => {
+    setSegments(prevSegments => 
+      prevSegments.map(segment => 
+        segment.id === segmentId 
+          ? { ...segment, video: material.name }
           : segment
       )
     );
@@ -366,12 +383,17 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                        placeholder="分段名称"
                      />
                    </td>
-                  <td className="p-3">
-                    <Button variant="outline" size="sm" className="w-full justify-start">
-                      <Upload size={14} className="mr-2" />
-                      {segment.video}
-                    </Button>
-                  </td>
+                   <td className="p-3">
+                     <Button 
+                       variant="outline" 
+                       size="sm" 
+                       className="w-full justify-start"
+                       onClick={() => openModal('materialSelection', segment.id)}
+                     >
+                       <Upload size={14} className="mr-2" />
+                       {segment.video || "选择素材"}
+                     </Button>
+                   </td>
                   <td className="p-3">
                     <Textarea
                       value={segment.script}
@@ -493,6 +515,19 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
           onClose={closeModal}
           onComplete={handleAudioGenerationComplete}
           segmentCount={segments.filter(s => s.script).length}
+        />
+      )}
+      
+      {activeModal.type === 'materialSelection' && (
+        <MaterialSelectionModal
+          isOpen={true}
+          onClose={closeModal}
+          onSelect={(material) => {
+            if (activeModal.segmentId) {
+              updateSegmentVideo(activeModal.segmentId, material);
+            }
+            closeModal();
+          }}
         />
       )}
     </div>
