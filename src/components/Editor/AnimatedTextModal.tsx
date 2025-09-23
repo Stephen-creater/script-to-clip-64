@@ -125,32 +125,32 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
                 <SelectTrigger>
                   <SelectValue placeholder="请选择音效文件夹" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="folder1">
-                    <div className="flex items-center gap-2">
-                      <Folder size={16} />
-                      <span>搞笑音效</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="folder2">
-                    <div className="flex items-center gap-2">
-                      <Folder size={16} />
-                      <span>转场音效</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="folder3">
-                    <div className="flex items-center gap-2">
-                      <Folder size={16} />
-                      <span>环境音效</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="folder4">
-                    <div className="flex items-center gap-2">
-                      <Folder size={16} />
-                      <span>特效音效</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
+                 <SelectContent>
+                   <SelectItem value="funny">
+                     <div className="flex items-center gap-2">
+                       <Folder size={16} />
+                       <span>搞笑音效</span>
+                     </div>
+                   </SelectItem>
+                   <SelectItem value="transition">
+                     <div className="flex items-center gap-2">
+                       <Folder size={16} />
+                       <span>转场音效</span>
+                     </div>
+                   </SelectItem>
+                   <SelectItem value="environment">
+                     <div className="flex items-center gap-2">
+                       <Folder size={16} />
+                       <span>环境音效</span>
+                     </div>
+                   </SelectItem>
+                   <SelectItem value="special">
+                     <div className="flex items-center gap-2">
+                       <Folder size={16} />
+                       <span>特效音效</span>
+                     </div>
+                   </SelectItem>
+                 </SelectContent>
               </Select>
               <div className="space-y-2">
                 <Label htmlFor="volume">音量</Label>

@@ -50,7 +50,16 @@ const Materials = () => {
       ]
     },
     { id: 'images', name: '图片素材', count: 45 },
-    { id: 'audio', name: '音频素材', count: 22 },
+    { 
+      id: 'audio', 
+      name: '音频素材', 
+      count: 22,
+      hasChildren: true,
+      children: [
+        { id: 'bgm', name: 'BGM', count: 12, parentId: 'audio' },
+        { id: 'sound_effects', name: '音效素材', count: 10, parentId: 'audio' },
+      ]
+    },
   ]);
 
   const materials: MaterialItem[] = [
@@ -75,13 +84,43 @@ const Materials = () => {
     },
     {
       id: '3',
-      name: '背景音乐.mp3',
+      name: '轻松愉悦.mp3',
       type: 'audio',
       thumbnail: '/placeholder.svg',
       duration: '02:30',
       size: '3.8 MB',
       date: '2024-01-13',
-      folderId: 'audio'
+      folderId: 'bgm'
+    },
+    {
+      id: '9',
+      name: '激励节拍.mp3',
+      type: 'audio',
+      thumbnail: '/placeholder.svg',
+      duration: '03:15',
+      size: '4.2 MB',
+      date: '2024-01-12',
+      folderId: 'bgm'
+    },
+    {
+      id: '10',
+      name: '搞笑音效.mp3',
+      type: 'audio',
+      thumbnail: '/placeholder.svg',
+      duration: '00:02',
+      size: '0.5 MB',
+      date: '2024-01-11',
+      folderId: 'sound_effects'
+    },
+    {
+      id: '11',
+      name: '动作音效.mp3',
+      type: 'audio',
+      thumbnail: '/placeholder.svg',
+      duration: '00:01',
+      size: '0.3 MB',
+      date: '2024-01-10',
+      folderId: 'sound_effects'
     },
     {
       id: '4',
@@ -150,7 +189,7 @@ const Materials = () => {
     }
     
     if (selectedFolder === 'audio') {
-      return materials.filter(m => m.type === 'audio');
+      return materials.filter(m => ['bgm', 'sound_effects'].includes(m.folderId));
     }
     
     // For specific subfolders

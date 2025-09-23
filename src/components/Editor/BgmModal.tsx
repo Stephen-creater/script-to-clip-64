@@ -12,14 +12,14 @@ interface BgmModalProps {
   selectedBgm?: { name: string, type: string, id?: string } | null;
 }
 
-// Mock audio library data
+// BGM素材库数据 - 对应音频素材/BGM文件夹
 const audioLibrary = [
-  { id: "1", name: "轻松愉悦", duration: "2:30", url: "/audio/happy.mp3", category: "轻音乐" },
-  { id: "2", name: "激励节拍", duration: "3:15", url: "/audio/energetic.mp3", category: "动感" },
-  { id: "3", name: "温馨时光", duration: "2:45", url: "/audio/warm.mp3", category: "轻音乐" },
-  { id: "4", name: "商务专业", duration: "3:00", url: "/audio/corporate.mp3", category: "商务" },
-  { id: "5", name: "科技未来", duration: "2:20", url: "/audio/tech.mp3", category: "科技" },
-  { id: "6", name: "浪漫情调", duration: "3:30", url: "/audio/romantic.mp3", category: "浪漫" },
+  { id: "1", name: "轻松愉悦", duration: "2:30", url: "/audio/bgm/happy.mp3", category: "轻音乐" },
+  { id: "2", name: "激励节拍", duration: "3:15", url: "/audio/bgm/energetic.mp3", category: "动感" },
+  { id: "3", name: "温馨时光", duration: "2:45", url: "/audio/bgm/warm.mp3", category: "轻音乐" },
+  { id: "4", name: "商务专业", duration: "3:00", url: "/audio/bgm/corporate.mp3", category: "商务" },
+  { id: "5", name: "科技未来", duration: "2:20", url: "/audio/bgm/tech.mp3", category: "科技" },
+  { id: "6", name: "浪漫情调", duration: "3:30", url: "/audio/bgm/romantic.mp3", category: "浪漫" },
 ];
 
 const categories = ["全部", "轻音乐", "动感", "商务", "科技", "浪漫"];
