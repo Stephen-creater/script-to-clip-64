@@ -283,17 +283,6 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
           </Button>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button 
-            variant={isAudioGenerated && isGlobalSubtitleConfigured && isBgmConfigured ? "default" : "outline"} 
-            size="sm"
-            className={isAudioGenerated && isGlobalSubtitleConfigured && isBgmConfigured ? "bg-gradient-primary hover:bg-gradient-primary/90" : ""}
-            onClick={handleExportVideo}
-          >
-            导出视频
-          </Button>
-        </div>
-        
         {selectedSegments.length > 0 && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">
