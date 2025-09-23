@@ -32,18 +32,7 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
              formData.style === "gradient" ? "渐变" :
              formData.style === "glow" ? "发光" :
              formData.style === "3d" ? "3D效果" : formData.style,
-      font: formData.font === "xinyi-crown-black" ? "欣意冠黑体2.0" :
-            formData.font === "ushe-title-black" ? "优设标题黑" :
-            formData.font === "douyin" ? "抖音体" :
-            formData.font === "ali-health" ? "阿里健康体2.0" :
-            formData.font === "ushe-good-body" ? "优设好身体" :
-            formData.font === "hubin-male-god" ? "胡濒波男神体" :
-            formData.font === "jiangcheng-round-400w" ? "江城圆体 400W" :
-            formData.font === "jiangcheng-moon-400w" ? "江城月湖体 400W" :
-            formData.font === "jiangcheng-justice-400w" ? "江城正义体 400W" :
-            formData.font === "jiangcheng-zhiyin-400w" ? "江城知音体 400W" :
-            formData.font === "maoken-sugar-round" ? "猫啃网糖圆体(测试版)0.11" :
-            formData.font === "pangmen-title" ? "庞门正道标题体" : formData.font,
+      font: formData.font === "caveat-brush" ? "CaveatBrush" : formData.font,
       fontSize: formData.fontSize === "small" ? "小号 (24px)" :
                 formData.fontSize === "medium" ? "中号 (32px)" :
                 formData.fontSize === "large" ? "大号 (48px)" :
@@ -96,18 +85,7 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
                 <SelectValue placeholder="请选择" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="xinyi-crown-black">欣意冠黑体2.0</SelectItem>
-                <SelectItem value="ushe-title-black">优设标题黑</SelectItem>
-                <SelectItem value="douyin">抖音体</SelectItem>
-                <SelectItem value="ali-health">阿里健康体2.0</SelectItem>
-                <SelectItem value="ushe-good-body">优设好身体</SelectItem>
-                <SelectItem value="hubin-male-god">胡濒波男神体</SelectItem>
-                <SelectItem value="jiangcheng-round-400w">江城圆体 400W</SelectItem>
-                <SelectItem value="jiangcheng-moon-400w">江城月湖体 400W</SelectItem>
-                <SelectItem value="jiangcheng-justice-400w">江城正义体 400W</SelectItem>
-                <SelectItem value="jiangcheng-zhiyin-400w">江城知音体 400W</SelectItem>
-                <SelectItem value="maoken-sugar-round">猫啃网糖圆体(测试版)0.11</SelectItem>
-                <SelectItem value="pangmen-title">庞门正道标题体</SelectItem>
+                <SelectItem value="caveat-brush">CaveatBrush</SelectItem>
               </SelectContent>
             </Select>
           </div>

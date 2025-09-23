@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X } from "lucide-react";
 
 interface SubtitleModalProps {
@@ -63,12 +64,14 @@ export const SubtitleModal = ({ isOpen, onClose, segmentId }: SubtitleModalProps
 
           <div className="space-y-2">
             <Label htmlFor="subtitleFont">字体</Label>
-            <Input
-              id="subtitleFont"
-              placeholder="请选择"
-              value={formData.font}
-              onChange={(e) => setFormData(prev => ({ ...prev, font: e.target.value }))}
-            />
+            <Select value={formData.font} onValueChange={(value) => setFormData(prev => ({ ...prev, font: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="请选择" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="caveat-brush">CaveatBrush</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
