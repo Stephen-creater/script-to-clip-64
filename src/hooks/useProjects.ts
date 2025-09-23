@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { Database } from '@/lib/database.types'
+import { supabase } from '@/integrations/supabase/client'
+import { Database } from '@/integrations/supabase/types'
 import { useToast } from '@/hooks/use-toast'
 
 type Project = Database['public']['Tables']['projects']['Row']
@@ -38,15 +38,14 @@ export const useProjects = () => {
   // Create project
   const createProject = async (projectData: Omit<ProjectInsert, 'user_id'>) => {
     try {
-      // Get user ID (for now, use a default user)
       const { data: { user } } = await supabase.auth.getUser()
-      const userId = user?.id || 'anonymous'
+      if (!user) throw new Error('用户未登录')
 
       const { data, error } = await supabase
         .from('projects')
         .insert({
           ...projectData,
-          user_id: userId,
+          user_id: user.id,
         })
         .select()
         .single()
@@ -136,15 +135,15 @@ export const useProjects = () => {
   const copyProject = async (projectId: string) => {
     try {
       const originalProject = projects.find(p => p.id === projectId)
-      if (!originalProject) throw new Error('Project not found')
+      if (!originalProject) throw new Error('项目不存在')
 
       const { data: { user } } = await supabase.auth.getUser()
-      const userId = user?.id || 'anonymous'
+      if (!user) throw new Error('用户未登录')
 
       const { data, error } = await supabase
         .from('projects')
         .insert({
-          user_id: userId,
+          user_id: user.id,
           name: `${originalProject.name}副本`,
           thumbnail: originalProject.thumbnail,
           duration: originalProject.duration,
@@ -180,7 +179,7 @@ export const useProjects = () => {
   const toggleTemplate = async (projectId: string) => {
     try {
       const project = projects.find(p => p.id === projectId)
-      if (!project) throw new Error('Project not found')
+      if (!project) throw new Error('项目不存在')
 
       const { data, error } = await supabase
         .from('projects')
@@ -234,6 +233,7 @@ export const useProjects = () => {
     copyProject,
     toggleTemplate,
     getProjectsByStatus,
-    refreshProjects: loadProjects
+    refreshProjects: loadProjects,
+    isSupabaseConfigured: true // Always true since we're using the direct client
   }
 }

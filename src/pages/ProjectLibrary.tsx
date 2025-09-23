@@ -21,6 +21,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/hooks/useProjects";
 
+import { AuthGuard } from "@/components/Auth/AuthGuard";
+
 const ProjectLibrary = () => {
   const navigate = useNavigate();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -138,7 +140,8 @@ const ProjectLibrary = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <AuthGuard>
+      <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
           <div>
@@ -374,7 +377,8 @@ const ProjectLibrary = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </AuthGuard>
   );
 };
 

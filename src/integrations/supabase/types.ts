@@ -120,6 +120,48 @@ export type Database = {
           },
         ]
       }
+      projects: {
+        Row: {
+          created_at: string
+          data: Json | null
+          duration: number | null
+          id: string
+          is_template: boolean | null
+          name: string
+          segments_count: number | null
+          status: string
+          thumbnail: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          duration?: number | null
+          id?: string
+          is_template?: boolean | null
+          name: string
+          segments_count?: number | null
+          status?: string
+          thumbnail?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          duration?: number | null
+          id?: string
+          is_template?: boolean | null
+          name?: string
+          segments_count?: number | null
+          status?: string
+          thumbnail?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
