@@ -57,6 +57,9 @@ export const BgmModal = ({ isOpen, onClose, onSelect }: BgmModalProps) => {
       if (selectedAudio) {
         onSelect?.({ type: 'library', url: selectedAudio.url, name: selectedAudio.name });
       }
+    } else {
+      // No audio selected, send cancellation
+      onSelect?.({ type: 'library', url: '', name: '', cancelled: true });
     }
     onClose();
   };
@@ -191,7 +194,6 @@ export const BgmModal = ({ isOpen, onClose, onSelect }: BgmModalProps) => {
           <Button 
             variant="default"
             onClick={handleConfirm}
-            disabled={!confirmedAudio}
           >
             确定
           </Button>
