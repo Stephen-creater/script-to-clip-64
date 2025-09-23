@@ -1,45 +1,35 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from './database.types'
 
-// Debugging: Log available environment variables
-console.log('Available env variables:', {
-  VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL ? 'Present' : 'Missing',
-  VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Present' : 'Missing',
-  all_env: Object.keys(import.meta.env)
-})
-
+// Check if Supabase environment variables are available
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// More detailed error message
-if (!supabaseUrl || !supabaseAnonKey) {
-  const missingVars = []
-  if (!supabaseUrl) missingVars.push('VITE_SUPABASE_URL')
-  if (!supabaseAnonKey) missingVars.push('VITE_SUPABASE_ANON_KEY')
-  
-  console.error('Supabase configuration error:', {
-    missing: missingVars,
-    supabaseUrl: supabaseUrl ? 'Present' : 'Missing',
-    supabaseAnonKey: supabaseAnonKey ? 'Present' : 'Missing'
-  })
-  
-  throw new Error(`Missing Supabase environment variables: ${missingVars.join(', ')}. Please ensure Supabase is properly connected in Lovable.`)
-}
+export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey)
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-  },
-  db: {
-    schema: 'public'
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'lovable-video-editor'
-    }
-  }
+console.log('Supabase configuration status:', {
+  configured: isSupabaseConfigured,
+  hasUrl: !!supabaseUrl,
+  hasKey: !!supabaseAnonKey
 })
+
+// Create Supabase client only if configured
+export const supabase = isSupabaseConfigured 
+  ? createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+      },
+      db: {
+        schema: 'public'
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'lovable-video-editor'
+        }
+      }
+    })
+  : null
 
 // Storage buckets
 export const STORAGE_BUCKETS = {
@@ -51,6 +41,7 @@ export const STORAGE_BUCKETS = {
 
 // Helper function to get public URL for files
 export const getFileUrl = (bucket: string, path: string) => {
+  if (!supabase) return '/placeholder.svg'
   const { data } = supabase.storage.from(bucket).getPublicUrl(path)
   return data.publicUrl
 }
@@ -62,6 +53,10 @@ export const uploadFile = async (
   file: File,
   options?: { upsert?: boolean }
 ) => {
+  if (!supabase) {
+    throw new Error('Supabase not configured. Please connect Supabase in Lovable.')
+  }
+  
   const { data, error } = await supabase.storage
     .from(bucket)
     .upload(path, file, {
@@ -75,6 +70,10 @@ export const uploadFile = async (
 
 // Helper function to delete file
 export const deleteFile = async (bucket: string, path: string) => {
+  if (!supabase) {
+    throw new Error('Supabase not configured. Please connect Supabase in Lovable.')
+  }
+  
   const { error } = await supabase.storage
     .from(bucket)
     .remove([path])

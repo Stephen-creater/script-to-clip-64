@@ -19,7 +19,7 @@ import {
   Star
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useProjects } from "@/hooks/useProjects";
+import { useProjects } from "@/hooks/useProjectsSafe";
 
 const ProjectLibrary = () => {
   const navigate = useNavigate();
@@ -34,7 +34,8 @@ const ProjectLibrary = () => {
     createProject, 
     deleteProject, 
     copyProject, 
-    toggleTemplate 
+    toggleTemplate,
+    isSupabaseConfigured 
   } = useProjects();
 
   const templates = projects.filter(p => p.is_template);
@@ -140,12 +141,19 @@ const ProjectLibrary = () => {
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            项目库
-          </h1>
-          <p className="text-muted-foreground mt-2">管理您的视频项目和模板</p>
-        </div>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              项目库
+            </h1>
+            <div className="flex items-center gap-2 mt-2">
+              <p className="text-muted-foreground">管理您的视频项目和模板</p>
+              {!isSupabaseConfigured && (
+                <div className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                  演示模式
+                </div>
+              )}
+            </div>
+          </div>
 
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
