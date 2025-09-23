@@ -107,6 +107,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
   const [isAudioGenerated, setIsAudioGenerated] = useState(false);
   const [isGlobalSubtitleConfigured, setIsGlobalSubtitleConfigured] = useState(false);
   const [isBgmConfigured, setIsBgmConfigured] = useState(false);
+  const [selectedBgm, setSelectedBgm] = useState<{name: string, type: string} | null>(null);
 
   const handleSelectSegment = (segmentId: string, checked: boolean) => {
     if (checked) {
@@ -454,7 +455,13 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
           onClose={closeModal}
           onSelect={(bgm) => {
             console.log("BGM选择:", bgm);
-            setIsBgmConfigured(true);
+            if (bgm.cancelled) {
+              setIsBgmConfigured(false);
+              setSelectedBgm(null);
+            } else {
+              setIsBgmConfigured(true);
+              setSelectedBgm({ name: bgm.name, type: bgm.type });
+            }
             // Handle BGM selection here
           }}
         />

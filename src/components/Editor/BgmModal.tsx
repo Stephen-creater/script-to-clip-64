@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 interface BgmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect?: (bgm: { type: 'upload' | 'library', file?: File, url?: string, name: string }) => void;
+  onSelect?: (bgm: { type: 'upload' | 'library', file?: File, url?: string, name: string, cancelled?: boolean }) => void;
 }
 
 // Mock audio library data
@@ -27,6 +27,7 @@ export const BgmModal = ({ isOpen, onClose, onSelect }: BgmModalProps) => {
   const [selectedCategory, setSelectedCategory] = useState("全部");
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [selectedAudio, setSelectedAudio] = useState<string | null>(null);
+  const [confirmedAudio, setConfirmedAudio] = useState<string | null>(null);
 
   const filteredAudio = selectedCategory === "全部" 
     ? audioLibrary 
@@ -41,7 +42,15 @@ export const BgmModal = ({ isOpen, onClose, onSelect }: BgmModalProps) => {
   };
 
   const handleLibrarySelect = (audio: typeof audioLibrary[0]) => {
-    onSelect?.({ type: 'library', url: audio.url, name: audio.name });
+    if (confirmedAudio === audio.id) {
+      // Cancel selection
+      setConfirmedAudio(null);
+      onSelect?.({ type: 'library', url: '', name: '', cancelled: true });
+    } else {
+      // Confirm selection
+      setConfirmedAudio(audio.id);
+      onSelect?.({ type: 'library', url: audio.url, name: audio.name });
+    }
     onClose();
   };
 
@@ -121,12 +130,14 @@ export const BgmModal = ({ isOpen, onClose, onSelect }: BgmModalProps) => {
                     </div>
                     <Button
                       size="sm"
+                      variant={confirmedAudio === audio.id ? "default" : "outline"}
+                      className={confirmedAudio === audio.id ? "bg-red-500 text-white border-red-500 hover:bg-red-600" : ""}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleLibrarySelect(audio);
                       }}
                     >
-                      选择
+                      {confirmedAudio === audio.id ? "取消" : "选择"}
                     </Button>
                   </div>
                 ))}
