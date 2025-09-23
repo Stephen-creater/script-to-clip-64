@@ -237,6 +237,16 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
     );
   };
 
+  const updateSegmentScript = (segmentId: string, script: string) => {
+    setSegments(prevSegments => 
+      prevSegments.map(segment => 
+        segment.id === segmentId 
+          ? { ...segment, script }
+          : segment
+      )
+    );
+  };
+
   return (
     <div className="flex-1 bg-background p-6">
       {/* Action Buttons */}
@@ -354,8 +364,9 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                   <td className="p-3">
                     <Textarea
                       value={segment.script}
-                      className="min-h-[60px] text-sm resize-none border-0 bg-transparent p-0"
-                      readOnly
+                      onChange={(e) => updateSegmentScript(segment.id, e.target.value)}
+                      className="min-h-[60px] text-sm resize-none border-0 bg-transparent p-0 focus:border-border focus:bg-background/50"
+                      placeholder="请输入文案内容"
                     />
                   </td>
                   <td className="p-3">

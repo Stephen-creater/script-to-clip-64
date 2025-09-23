@@ -121,7 +121,7 @@ const Editor = () => {
         {/* Animated Text */}
         {currentSegment.animatedText && currentSegment.animatedText !== "未设置" && (
           <div 
-            className="absolute left-1/2 top-1/4 transform -translate-x-1/2 -translate-y-1/2 text-yellow-400 font-bold text-xl animate-pulse"
+            className="absolute left-1/2 top-1/4 transform -translate-x-1/2 -translate-y-1/2 text-yellow-400 font-bold text-xl font-caveat"
           >
             {currentSegment.animatedText}
           </div>
