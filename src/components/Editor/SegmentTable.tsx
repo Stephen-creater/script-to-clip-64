@@ -232,9 +232,14 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
             <FileText size={16} className="mr-2" />
             导入文案
           </Button>
-          <Button variant="outline" size="sm" className="hover:bg-gradient-primary hover:text-white hover:border-transparent" onClick={handleGenerateAudio}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className={isAudioGenerated ? "bg-red-500 text-white border-red-500 hover:bg-red-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"} 
+            onClick={handleGenerateAudio}
+          >
             <Volume2 size={16} className="mr-2" />
-            一键生成音频
+            {isAudioGenerated ? "重新生成音频" : "一键生成音频"}
           </Button>
           <Button variant="outline" size="sm" onClick={() => openModal('globalSubtitle')}>
             <Settings2 size={16} className="mr-2" />
@@ -279,8 +284,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
                 <th className="min-w-[120px] p-3 text-left text-sm font-medium text-foreground">
                   {isAudioGenerated ? (
                     <span>
-                      音频（已生成，请预览）
-                      <span className="text-red-500 ml-1">已生成，请预览</span>
+                      音频（<span className="text-red-500">已生成，请预览</span>）
                     </span>
                   ) : (
                     "音频"
