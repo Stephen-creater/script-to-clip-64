@@ -19,6 +19,7 @@ import { AnimatedTextModal } from "./AnimatedTextModal";
 import { GlobalSubtitleModal } from "./GlobalSubtitleModal";
 import { StickerModal } from "./StickerModal";
 import { BgmModal } from "./BgmModal";
+import { AudioGenerationModal } from "./AudioGenerationModal";
 
 interface Segment {
   id: string;
@@ -29,6 +30,7 @@ interface Segment {
   animatedText: string;
   sticker: string;
   audio: string;
+  audioTimestamp?: string;
 }
 
 interface SegmentTableProps {
@@ -98,9 +100,11 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
-    type: 'animatedText' | 'sticker' | 'globalSubtitle' | 'bgm' | null;
+    type: 'animatedText' | 'sticker' | 'globalSubtitle' | 'bgm' | 'audioGeneration' | null;
     segmentId: string | null;
   }>({ type: null, segmentId: null });
+  
+  const [isAudioGenerated, setIsAudioGenerated] = useState(false);
 
   const handleSelectSegment = (segmentId: string, checked: boolean) => {
     if (checked) {
@@ -119,17 +123,30 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
   };
 
   const handleGenerateAudio = () => {
-    // Generate audio for all segments with scripts
+    // Open audio generation modal
+    setActiveModal({ type: 'audioGeneration', segmentId: null });
+  };
+
+  const handleAudioGenerationComplete = () => {
+    // Generate timestamps for all segments with scripts
+    let currentTime = 0;
     const updatedSegments = segments.map(segment => {
-      if (segment.script && !segment.audio) {
+      if (segment.script) {
+        const duration = Math.random() * 3 + 1; // Random duration between 1-4 seconds
+        const startTime = currentTime;
+        const endTime = currentTime + duration;
+        currentTime = endTime;
+        
         return {
           ...segment,
-          audio: `audio_${segment.id}.mp3`
+          audio: `audio_${segment.id}.mp3`,
+          audioTimestamp: `${startTime.toFixed(1)}~${endTime.toFixed(1)}s`
         };
       }
       return segment;
     });
     setSegments(updatedSegments);
+    setIsAudioGenerated(true);
   };
 
   const renumberSegments = (segmentList: Segment[]) => {
@@ -259,7 +276,16 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
                 <th className="min-w-[320px] p-3 text-left text-sm font-medium text-foreground">文案</th>
                 <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">花字</th>
                 <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">视频贴纸</th>
-                <th className="min-w-[120px] p-3 text-left text-sm font-medium text-foreground">音频</th>
+                <th className="min-w-[120px] p-3 text-left text-sm font-medium text-foreground">
+                  {isAudioGenerated ? (
+                    <span>
+                      音频（已生成，请预览）
+                      <span className="text-red-500 ml-1">已生成，请预览</span>
+                    </span>
+                  ) : (
+                    "音频"
+                  )}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -322,18 +348,17 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
                       {segment.sticker}
                     </Button>
                   </td>
-                  <td className="p-3">
-                    {segment.audio ? (
-                      <Button variant="outline" size="sm" className="w-full justify-start">
-                        <Music size={14} className="mr-2" />
-                        {segment.audio}
-                      </Button>
-                    ) : (
-                      <div className="text-xs text-muted-foreground text-center py-2">
-                        未生成
-                      </div>
-                    )}
-                  </td>
+                   <td className="p-3">
+                     {segment.audioTimestamp ? (
+                       <div className="text-sm font-medium text-center py-2">
+                         {segment.audioTimestamp}
+                       </div>
+                     ) : (
+                       <div className="text-xs text-muted-foreground text-center py-2">
+                         未生成
+                       </div>
+                     )}
+                   </td>
                 </tr>
               ))}
             </tbody>
@@ -382,6 +407,15 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
             console.log("BGM选择:", bgm);
             // Handle BGM selection here
           }}
+        />
+      )}
+      
+      {activeModal.type === 'audioGeneration' && (
+        <AudioGenerationModal
+          isOpen={true}
+          onClose={closeModal}
+          onComplete={handleAudioGenerationComplete}
+          segmentCount={segments.filter(s => s.script).length}
         />
       )}
     </div>
