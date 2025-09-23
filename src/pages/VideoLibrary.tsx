@@ -20,6 +20,7 @@ interface VideoItem {
   size: string;
   createdAt: string;
   thumbnail: string;
+  folderId: string;
 }
 
 const VideoLibrary = () => {
@@ -32,8 +33,7 @@ const VideoLibrary = () => {
     { id: 'recent', name: '最近导出', count: 2, hasChildren: true, children: [
       { id: 'project1', name: '西班牙项目', count: 2, parentId: 'recent' },
       { id: 'project2', name: '法国项目', count: 0, parentId: 'recent' }
-    ]},
-    { id: 'archived', name: '已归档', count: 0 },
+    ]}
   ]);
   
   const [videos] = useState<VideoItem[]>([
@@ -43,7 +43,8 @@ const VideoLibrary = () => {
       duration: "45.6秒",
       size: "12.5MB",
       createdAt: "2024-01-15 14:30",
-      thumbnail: ""
+      thumbnail: "",
+      folderId: "project1"
     },
     {
       id: "2", 
@@ -51,13 +52,32 @@ const VideoLibrary = () => {
       duration: "43.2秒",
       size: "11.8MB",
       createdAt: "2024-01-14 16:45",
-      thumbnail: ""
+      thumbnail: "",
+      folderId: "project1"
     }
   ]);
 
-  const filteredVideos = videos.filter(video =>
-    video.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter videos based on selected folder
+  const getFilteredVideos = () => {
+    let folderFilteredVideos = videos;
+    
+    if (selectedFolder !== 'all') {
+      if (selectedFolder === 'recent') {
+        // Show all videos from recent export subfolders
+        folderFilteredVideos = videos.filter(v => ['project1', 'project2'].includes(v.folderId));
+      } else {
+        // Show videos from specific folder
+        folderFilteredVideos = videos.filter(v => v.folderId === selectedFolder);
+      }
+    }
+    
+    // Apply search filter
+    return folderFilteredVideos.filter(video =>
+      video.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  const filteredVideos = getFilteredVideos();
 
   const handleVideoSelect = (videoId: string) => {
     setSelectedVideos(prev => 
