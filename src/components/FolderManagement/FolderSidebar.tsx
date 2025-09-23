@@ -131,10 +131,9 @@ const FolderSidebar = ({
             "group flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors",
             isSelected
               ? "bg-primary text-primary-foreground"
-              : "hover:bg-secondary",
-            level > 0 && "ml-4"
+              : "hover:bg-secondary"
           )}
-          style={{ marginLeft: level * 16 }}
+          style={{ marginLeft: level * 20 }}
         >
           <div 
             className="flex items-center gap-2 flex-1"
@@ -145,11 +144,13 @@ const FolderSidebar = ({
               onFolderSelect(folder.id);
             }}
           >
-            {hasChildren && (
-              isExpanded ? 
-                <ChevronDown size={14} /> : 
-                <ChevronRight size={14} />
-            )}
+            <div className="w-[14px] flex justify-center">
+              {hasChildren && (
+                isExpanded ? 
+                  <ChevronDown size={14} /> : 
+                  <ChevronRight size={14} />
+              )}
+            </div>
             {isExpanded ? <FolderOpen size={16} /> : <Folder size={16} />}
             <span className="text-sm">{folder.name}</span>
           </div>

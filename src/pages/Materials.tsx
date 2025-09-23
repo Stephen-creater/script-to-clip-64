@@ -33,10 +33,9 @@ interface MaterialItem {
 const Materials = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState('all');
+  const [selectedFolder, setSelectedFolder] = useState('videos');
   const [expandedFolders, setExpandedFolders] = useState<string[]>(['videos']);
   const [folders, setFolders] = useState<FolderItem[]>([
-    { id: 'all', name: '全部素材', count: 156 },
     { 
       id: 'videos', 
       name: '视频素材', 
@@ -175,10 +174,6 @@ const Materials = () => {
 
   // Filter materials based on selected folder
   const getFilteredMaterials = () => {
-    if (selectedFolder === 'all') {
-      return materials;
-    }
-    
     // Check if it's a parent folder
     if (selectedFolder === 'videos') {
       return materials.filter(m => ['train_0807', 'ai_generated', 'window_view', 'station_staff'].includes(m.folderId));
@@ -288,7 +283,7 @@ const Materials = () => {
     };
     setFolders(removeFolder);
     if (selectedFolder === folderId) {
-      setSelectedFolder('all');
+      setSelectedFolder('videos');
     }
   };
 
