@@ -23,7 +23,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import FolderSidebar, { FolderItem } from "@/components/FolderManagement/FolderSidebar";
-import { useMaterials } from "@/hooks/useMaterialsSafe";
+import { useMaterials } from "@/hooks/useMaterials";
+
+import { AuthGuard } from "@/components/Auth/AuthGuard";
 
 const Materials = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -56,7 +58,7 @@ const Materials = () => {
     { 
       id: 'images', 
       name: '图片素材', 
-      count: materials.filter(m => m.type === 'image').length,
+      count: materials.filter(m => m.file_type === 'image').length,
       hasChildren: true,
       children: [
         { 
@@ -77,7 +79,7 @@ const Materials = () => {
     { 
       id: 'audio', 
       name: '音频素材', 
-      count: materials.filter(m => m.type === 'audio').length,
+      count: materials.filter(m => m.file_type === 'audio').length,
       hasChildren: true,
       children: [
         { id: 'bgm', name: 'BGM', count: getMaterialsByCategory('音频素材', 'BGM').length, parentId: 'audio' },
@@ -115,9 +117,9 @@ const Materials = () => {
     
     if (selectedFolder !== 'all') {
       if (selectedFolder === 'images') {
-        filtered = materials.filter(m => m.type === 'image');
+        filtered = materials.filter(m => m.file_type === 'image');
       } else if (selectedFolder === 'audio') {
-        filtered = materials.filter(m => m.type === 'audio');
+        filtered = materials.filter(m => m.file_type === 'audio');
       } else if (selectedFolder === 'marketing') {
         filtered = getMaterialsByCategory('图片素材', '营销类');
       } else if (selectedFolder === 'decorative') {
@@ -146,8 +148,8 @@ const Materials = () => {
 
   const filteredMaterials = getFilteredMaterials();
 
-  const getFileIcon = (type: string) => {
-    switch (type) {
+  const getFileIcon = (fileType: string) => {
+    switch (fileType) {
       case 'video': return <FileVideo size={16} className="text-blue-500" />;
       case 'image': return <FileImage size={16} className="text-green-500" />;
       case 'audio': return <FileAudio size={16} className="text-purple-500" />;
@@ -200,17 +202,20 @@ const Materials = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>加载素材库...</p>
+      <AuthGuard>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>加载素材库...</p>
+          </div>
         </div>
-      </div>
+      </AuthGuard>
     );
   }
 
   return (
-    <div className="flex h-full">
+    <AuthGuard>
+      <div className="flex h-full">
       <FolderSidebar
         folders={folders}
         selectedFolder={selectedFolder}
@@ -332,7 +337,7 @@ const Materials = () => {
                       onCheckedChange={(checked) => handleSelectItem(material.id, !!checked)}
                     />
                     <div className="aspect-video bg-muted rounded flex items-center justify-center overflow-hidden">
-                      {material.type === 'image' ? (
+                      {material.file_type === 'image' ? (
                         <img 
                           src={getMaterialUrl(material)}
                           alt={material.name}
@@ -343,8 +348,8 @@ const Materials = () => {
                           }}
                         />
                       ) : null}
-                      <div className={material.type === 'image' ? 'hidden' : ''}>
-                        {getFileIcon(material.type)}
+                      <div className={material.file_type === 'image' ? 'hidden' : ''}>
+                        {getFileIcon(material.file_type)}
                       </div>
                     </div>
                     {material.duration && (
@@ -381,7 +386,7 @@ const Materials = () => {
                   checked={selectedItems.includes(material.id)}
                   onCheckedChange={(checked) => handleSelectItem(material.id, !!checked)}
                 />
-                {getFileIcon(material.type)}
+                {getFileIcon(material.file_type)}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{material.name}</p>
                   <p className="text-xs text-muted-foreground">
@@ -495,8 +500,9 @@ const Materials = () => {
             className="hidden"
           />
         </DialogContent>
-      </Dialog>
-    </div>
+        </Dialog>
+      </div>
+    </AuthGuard>
   );
 };
 

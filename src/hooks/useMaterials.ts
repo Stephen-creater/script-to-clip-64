@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { supabase, uploadFile, deleteFile, getFileUrl, STORAGE_BUCKETS } from '@/lib/supabase'
-import { Database } from '@/lib/database.types'
+import { supabase } from '@/integrations/supabase/client'
+import { Database } from '@/integrations/supabase/types'
 import { useToast } from '@/hooks/use-toast'
 
 type Material = Database['public']['Tables']['materials']['Row']
 type MaterialInsert = Database['public']['Tables']['materials']['Insert']
+type MaterialUpdate = Database['public']['Tables']['materials']['Update']
 
 export const useMaterials = () => {
   const [materials, setMaterials] = useState<Material[]>([])
@@ -43,64 +44,99 @@ export const useMaterials = () => {
   ) => {
     setUploading(true)
     try {
-      // Get user ID (for now, use a default user)
       const { data: { user } } = await supabase.auth.getUser()
-      const userId = user?.id || 'anonymous'
+      if (!user) throw new Error('用户未登录')
 
       // Determine file type
       const fileType = file.type.startsWith('image/') ? 'image' : 
-                      file.type.startsWith('audio/') ? 'audio' : 'video'
-      
-      // Generate file path
+                     file.type.startsWith('audio/') ? 'audio' : 
+                     file.type.startsWith('video/') ? 'video' : 'other'
+
+      // Generate unique file path
       const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-      const filePath = `${userId}/${category}/${subcategory || 'default'}/${fileName}`
+      const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
 
-      // Upload to storage
-      const uploadData = await uploadFile(STORAGE_BUCKETS.MATERIALS, filePath, file)
-      
-      // Get file URL
-      const fileUrl = getFileUrl(STORAGE_BUCKETS.MATERIALS, filePath)
+      // Upload file to storage
+      const { data: storageData, error: storageError } = await supabase.storage
+        .from('materials')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
 
-      // Save to database
-      const materialData: MaterialInsert = {
-        user_id: userId,
-        name: file.name,
-        type: fileType,
-        category,
-        subcategory,
-        file_path: filePath,
-        file_size: file.size,
-        file_type: file.type,
-        duration: fileType === 'audio' || fileType === 'video' ? null : null, // TODO: Extract duration
-        metadata: {
-          original_name: file.name,
-          upload_date: new Date().toISOString()
-        }
+      if (storageError) throw storageError
+
+      // Get file information
+      let duration: number | undefined
+      let width: number | undefined
+      let height: number | undefined
+
+      // For images, get dimensions
+      if (fileType === 'image') {
+        const img = new Image()
+        img.src = URL.createObjectURL(file)
+        await new Promise((resolve) => {
+          img.onload = () => {
+            width = img.naturalWidth
+            height = img.naturalHeight
+            resolve(void 0)
+          }
+        })
+        URL.revokeObjectURL(img.src)
       }
 
-      const { data, error } = await supabase
+      // For audio/video, get duration
+      if (fileType === 'audio' || fileType === 'video') {
+        const media = document.createElement(fileType === 'audio' ? 'audio' : 'video')
+        media.src = URL.createObjectURL(file)
+        await new Promise((resolve) => {
+          media.addEventListener('loadedmetadata', () => {
+            duration = media.duration
+            resolve(void 0)
+          })
+        })
+        URL.revokeObjectURL(media.src)
+      }
+
+      // Save material info to database
+      const { data: materialData, error: dbError } = await supabase
         .from('materials')
-        .insert(materialData)
+        .insert({
+          user_id: user.id,
+          name: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
+          original_name: file.name,
+          file_path: storageData.path,
+          file_size: file.size,
+          file_type: fileType,
+          mime_type: file.type,
+          duration,
+          width,
+          height,
+          category,
+          subcategory,
+          metadata: {
+            originalFileName: file.name,
+            uploadedAt: new Date().toISOString()
+          }
+        })
         .select()
         .single()
 
-      if (error) throw error
+      if (dbError) throw dbError
 
-      // Add to local state
-      setMaterials(prev => [data, ...prev])
+      setMaterials(prev => [materialData, ...prev])
       
       toast({
         title: "上传成功",
-        description: `素材 ${file.name} 已上传`,
+        description: `${file.name} 已上传到素材库`,
       })
 
-      return data
+      return materialData
     } catch (error) {
       console.error('Error uploading material:', error)
       toast({
         title: "上传失败",
-        description: "无法上传素材文件",
+        description: `无法上传 ${file.name}`,
         variant: "destructive"
       })
       throw error
@@ -113,20 +149,23 @@ export const useMaterials = () => {
   const deleteMaterial = async (materialId: string) => {
     try {
       const material = materials.find(m => m.id === materialId)
-      if (!material) throw new Error('Material not found')
+      if (!material) throw new Error('素材不存在')
 
       // Delete from storage
-      await deleteFile(STORAGE_BUCKETS.MATERIALS, material.file_path)
+      const { error: storageError } = await supabase.storage
+        .from('materials')
+        .remove([material.file_path])
+
+      if (storageError) throw storageError
 
       // Delete from database
-      const { error } = await supabase
+      const { error: dbError } = await supabase
         .from('materials')
         .delete()
         .eq('id', materialId)
 
-      if (error) throw error
+      if (dbError) throw dbError
 
-      // Remove from local state
       setMaterials(prev => prev.filter(m => m.id !== materialId))
       
       toast({
@@ -153,9 +192,78 @@ export const useMaterials = () => {
     })
   }
 
+  // Update material
+  const updateMaterial = async (materialId: string, updates: MaterialUpdate) => {
+    try {
+      const { data, error } = await supabase
+        .from('materials')
+        .update(updates)
+        .eq('id', materialId)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setMaterials(prev => prev.map(m => m.id === materialId ? data : m))
+      
+      toast({
+        title: "更新成功",
+        description: "素材信息已更新",
+      })
+
+      return data
+    } catch (error) {
+      console.error('Error updating material:', error)
+      toast({
+        title: "更新失败",
+        description: "无法更新素材信息",
+        variant: "destructive"
+      })
+      throw error
+    }
+  }
+
+  // Search materials
+  const searchMaterials = async (query: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('materials')
+        .select('*')
+        .or(`name.ilike.%${query}%,original_name.ilike.%${query}%,tags.cs.{${query}}`)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error searching materials:', error)
+      return []
+    }
+  }
+
   // Get material URL
   const getMaterialUrl = (material: Material) => {
-    return getFileUrl(STORAGE_BUCKETS.MATERIALS, material.file_path)
+    const { data } = supabase.storage.from('materials').getPublicUrl(material.file_path)
+    return data.publicUrl
+  }
+
+  // Add tags
+  const addTags = async (materialId: string, tags: string[]) => {
+    const material = materials.find(m => m.id === materialId)
+    if (!material) return
+
+    const newTags = [...(material.tags || []), ...tags].filter((tag, index, arr) => arr.indexOf(tag) === index)
+    
+    return updateMaterial(materialId, { tags: newTags })
+  }
+
+  // Remove tags
+  const removeTags = async (materialId: string, tagsToRemove: string[]) => {
+    const material = materials.find(m => m.id === materialId)
+    if (!material) return
+
+    const newTags = (material.tags || []).filter(tag => !tagsToRemove.includes(tag))
+    
+    return updateMaterial(materialId, { tags: newTags })
   }
 
   useEffect(() => {
@@ -168,8 +276,13 @@ export const useMaterials = () => {
     uploading,
     uploadMaterial,
     deleteMaterial,
+    updateMaterial,
     getMaterialsByCategory,
     getMaterialUrl,
-    refreshMaterials: loadMaterials
+    searchMaterials,
+    addTags,
+    removeTags,
+    refreshMaterials: loadMaterials,
+    isSupabaseConfigured: true // Always true since we're using the direct client
   }
 }

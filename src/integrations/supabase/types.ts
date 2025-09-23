@@ -14,7 +14,112 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      folders: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          parent_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materials: {
+        Row: {
+          category: string
+          created_at: string
+          duration: number | null
+          file_path: string
+          file_size: number
+          file_type: string
+          folder_id: string | null
+          height: number | null
+          id: string
+          metadata: Json | null
+          mime_type: string
+          name: string
+          original_name: string
+          subcategory: string | null
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          duration?: number | null
+          file_path: string
+          file_size: number
+          file_type: string
+          folder_id?: string | null
+          height?: number | null
+          id?: string
+          metadata?: Json | null
+          mime_type: string
+          name: string
+          original_name: string
+          subcategory?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          duration?: number | null
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          folder_id?: string | null
+          height?: number | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string
+          name?: string
+          original_name?: string
+          subcategory?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materials_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
