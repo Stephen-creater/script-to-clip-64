@@ -21,8 +21,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/hooks/useProjects";
 
-import { AuthGuard } from "@/components/Auth/AuthGuard";
-
 const ProjectLibrary = () => {
   const navigate = useNavigate();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -140,8 +138,7 @@ const ProjectLibrary = () => {
   };
 
   return (
-    <AuthGuard>
-      <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
           <div>
@@ -150,7 +147,9 @@ const ProjectLibrary = () => {
             </h1>
             <div className="flex items-center gap-2 mt-2">
               <p className="text-muted-foreground">管理您的视频项目和模板</p>
-              {/* 移除演示模式提示 */}
+              <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
+                演示模式 - 数据不会保存
+              </Badge>
             </div>
           </div>
 
@@ -378,8 +377,7 @@ const ProjectLibrary = () => {
         </DialogContent>
       </Dialog>
       </div>
-    </AuthGuard>
-  );
-};
+    );
+  };
 
-export default ProjectLibrary;
+  export default ProjectLibrary;

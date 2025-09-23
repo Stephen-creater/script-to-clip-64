@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -24,8 +25,6 @@ import {
 import { cn } from "@/lib/utils";
 import FolderSidebar, { FolderItem } from "@/components/FolderManagement/FolderSidebar";
 import { useMaterials } from "@/hooks/useMaterials";
-
-import { AuthGuard } from "@/components/Auth/AuthGuard";
 
 const Materials = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -202,20 +201,17 @@ const Materials = () => {
 
   if (loading) {
     return (
-      <AuthGuard>
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>加载素材库...</p>
-          </div>
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>加载素材库...</p>
         </div>
-      </AuthGuard>
+      </div>
     );
   }
 
   return (
-    <AuthGuard>
-      <div className="flex h-full">
+    <div className="flex h-full">
       <FolderSidebar
         folders={folders}
         selectedFolder={selectedFolder}
@@ -234,7 +230,9 @@ const Materials = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold">素材库</h1>
-            {/* 移除演示模式提示，因为现在已经连接了 Supabase */}
+            <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
+              演示模式 - 数据不会保存
+            </Badge>
             <Button 
               className="bg-gradient-primary"
               onClick={openUploadDialog}
@@ -498,8 +496,7 @@ const Materials = () => {
         </DialogContent>
         </Dialog>
       </div>
-    </AuthGuard>
-  );
-};
+    );
+  };
 
-export default Materials;
+  export default Materials;

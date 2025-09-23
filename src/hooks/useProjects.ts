@@ -1,28 +1,78 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/integrations/supabase/client'
-import { Database } from '@/integrations/supabase/types'
 import { useToast } from '@/hooks/use-toast'
 
-type Project = Database['public']['Tables']['projects']['Row']
-type ProjectInsert = Database['public']['Tables']['projects']['Insert']
-type ProjectUpdate = Database['public']['Tables']['projects']['Update']
+export interface Project {
+  id: string
+  user_id: string
+  name: string
+  thumbnail?: string
+  duration?: number
+  segments_count?: number
+  status: 'draft' | 'published' | 'archived' | 'completed' | 'processing'
+  is_template?: boolean
+  data?: Record<string, any>
+  created_at: string
+  updated_at: string
+}
+
+type ProjectInsert = Omit<Project, 'id' | 'created_at' | 'updated_at' | 'user_id'>
+type ProjectUpdate = Partial<Omit<Project, 'id' | 'created_at' | 'user_id'>>
+
+// Mock data for demo
+const mockProjects: Project[] = [
+  {
+    id: '1',
+    user_id: 'demo-user',
+    name: '示例项目 1',
+    thumbnail: '/placeholder.svg',
+    duration: 120,
+    segments_count: 5,
+    status: 'draft',
+    is_template: false,
+    data: {},
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: '2',
+    user_id: 'demo-user',
+    name: '示例模板',
+    thumbnail: '/placeholder.svg',
+    duration: 60,
+    segments_count: 3,
+    status: 'published',
+    is_template: true,
+    data: {},
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: '3',
+    user_id: 'demo-user',
+    name: '营销视频项目',
+    thumbnail: '/placeholder.svg',
+    duration: 90,
+    segments_count: 4,
+    status: 'draft',
+    is_template: false,
+    data: {},
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+]
 
 export const useProjects = () => {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
-  // Load projects
+  // Load projects (demo mode)
   const loadProjects = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('updated_at', { ascending: false })
-
-      if (error) throw error
-      setProjects(data || [])
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500))
+      setProjects(mockProjects)
     } catch (error) {
       console.error('Error loading projects:', error)
       toast({
@@ -35,31 +85,25 @@ export const useProjects = () => {
     }
   }
 
-  // Create project
+  // Create project (demo mode)
   const createProject = async (projectData: Omit<ProjectInsert, 'user_id'>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('用户未登录')
+      const newProject: Project = {
+        ...projectData,
+        id: Date.now().toString(),
+        user_id: 'demo-user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
 
-      const { data, error } = await supabase
-        .from('projects')
-        .insert({
-          ...projectData,
-          user_id: user.id,
-        })
-        .select()
-        .single()
-
-      if (error) throw error
-
-      setProjects(prev => [data, ...prev])
+      setProjects(prev => [newProject, ...prev])
       
       toast({
         title: "创建成功",
-        description: `项目 ${data.name} 已创建`,
+        description: `项目 ${newProject.name} 已创建`,
       })
 
-      return data
+      return newProject
     } catch (error) {
       console.error('Error creating project:', error)
       toast({
@@ -71,29 +115,22 @@ export const useProjects = () => {
     }
   }
 
-  // Update project
+  // Update project (demo mode)
   const updateProject = async (projectId: string, updates: ProjectUpdate) => {
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', projectId)
-        .select()
-        .single()
-
-      if (error) throw error
-
-      setProjects(prev => prev.map(p => p.id === projectId ? data : p))
+      setProjects(prev => prev.map(p => 
+        p.id === projectId 
+          ? { ...p, ...updates, updated_at: new Date().toISOString() }
+          : p
+      ))
       
       toast({
         title: "更新成功",
         description: "项目已保存",
       })
 
-      return data
+      const updatedProject = projects.find(p => p.id === projectId)
+      return updatedProject
     } catch (error) {
       console.error('Error updating project:', error)
       toast({
@@ -105,16 +142,9 @@ export const useProjects = () => {
     }
   }
 
-  // Delete project
+  // Delete project (demo mode)
   const deleteProject = async (projectId: string) => {
     try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', projectId)
-
-      if (error) throw error
-
       setProjects(prev => prev.filter(p => p.id !== projectId))
       
       toast({
@@ -131,40 +161,30 @@ export const useProjects = () => {
     }
   }
 
-  // Copy project
+  // Copy project (demo mode)
   const copyProject = async (projectId: string) => {
     try {
       const originalProject = projects.find(p => p.id === projectId)
       if (!originalProject) throw new Error('项目不存在')
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('用户未登录')
+      const newProject: Project = {
+        ...originalProject,
+        id: Date.now().toString(),
+        name: `${originalProject.name}副本`,
+        status: 'draft' as const,
+        is_template: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
 
-      const { data, error } = await supabase
-        .from('projects')
-        .insert({
-          user_id: user.id,
-          name: `${originalProject.name}副本`,
-          thumbnail: originalProject.thumbnail,
-          duration: originalProject.duration,
-          segments_count: originalProject.segments_count,
-          status: 'draft' as const,
-          is_template: false,
-          data: originalProject.data,
-        })
-        .select()
-        .single()
-
-      if (error) throw error
-
-      setProjects(prev => [data, ...prev])
+      setProjects(prev => [newProject, ...prev])
       
       toast({
         title: "复制成功",
         description: `项目副本已创建`,
       })
 
-      return data
+      return newProject
     } catch (error) {
       console.error('Error copying project:', error)
       toast({
@@ -175,32 +195,26 @@ export const useProjects = () => {
     }
   }
 
-  // Toggle template status
+  // Toggle template status (demo mode)
   const toggleTemplate = async (projectId: string) => {
     try {
       const project = projects.find(p => p.id === projectId)
       if (!project) throw new Error('项目不存在')
 
-      const { data, error } = await supabase
-        .from('projects')
-        .update({
-          is_template: !project.is_template,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', projectId)
-        .select()
-        .single()
+      const updatedProject = {
+        ...project,
+        is_template: !project.is_template,
+        updated_at: new Date().toISOString(),
+      }
 
-      if (error) throw error
-
-      setProjects(prev => prev.map(p => p.id === projectId ? data : p))
+      setProjects(prev => prev.map(p => p.id === projectId ? updatedProject : p))
       
       toast({
-        title: data.is_template ? "已设为模板" : "已取消模板",
-        description: data.is_template ? "项目已保存为模板" : "项目已取消模板状态",
+        title: updatedProject.is_template ? "已设为模板" : "已取消模板",
+        description: updatedProject.is_template ? "项目已保存为模板" : "项目已取消模板状态",
       })
 
-      return data
+      return updatedProject
     } catch (error) {
       console.error('Error toggling template:', error)
       toast({
@@ -234,6 +248,6 @@ export const useProjects = () => {
     toggleTemplate,
     getProjectsByStatus,
     refreshProjects: loadProjects,
-    isSupabaseConfigured: true // Always true since we're using the direct client
+    isSupabaseConfigured: false // Demo mode
   }
 }
