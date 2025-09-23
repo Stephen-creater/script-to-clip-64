@@ -59,6 +59,71 @@ const mockProjects: Project[] = [
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
+  {
+    id: '4',
+    user_id: 'demo-user',
+    name: '产品宣传片',
+    thumbnail: '/placeholder.svg',
+    duration: 180,
+    segments_count: 8,
+    status: 'completed',
+    is_template: false,
+    data: {},
+    created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+    updated_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: '5',
+    user_id: 'demo-user',
+    name: '企业介绍视频',
+    thumbnail: '/placeholder.svg',
+    duration: 240,
+    segments_count: 10,
+    status: 'completed',
+    is_template: false,
+    data: {},
+    created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+    updated_at: new Date(Date.now() - 172800000).toISOString(),
+  },
+  {
+    id: '6',
+    user_id: 'demo-user',
+    name: '培训课程视频',
+    thumbnail: '/placeholder.svg',
+    duration: 150,
+    segments_count: 6,
+    status: 'processing',
+    is_template: false,
+    data: {},
+    created_at: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+    updated_at: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: '7',
+    user_id: 'demo-user',
+    name: '活动回顾视频',
+    thumbnail: '/placeholder.svg',
+    duration: 200,
+    segments_count: 7,
+    status: 'processing',
+    is_template: false,
+    data: {},
+    created_at: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
+    updated_at: new Date(Date.now() - 7200000).toISOString(),
+  },
+  {
+    id: '8',
+    user_id: 'demo-user',
+    name: '快速剪辑模板',
+    thumbnail: '/placeholder.svg',
+    duration: 45,
+    segments_count: 3,
+    status: 'completed',
+    is_template: true,
+    data: {},
+    created_at: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+    updated_at: new Date(Date.now() - 259200000).toISOString(),
+  },
 ]
 
 export const useProjects = () => {
