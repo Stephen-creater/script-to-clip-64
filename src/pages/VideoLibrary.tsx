@@ -29,7 +29,7 @@ const VideoLibrary = () => {
   const [expandedFolders, setExpandedFolders] = useState<string[]>(['recent']);
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [folders, setFolders] = useState<FolderItem[]>([
-    { id: 'all', name: '全部视频', count: 2 },
+    { id: 'all', name: '西班牙火车旅行_成片', count: 2 },
     { id: 'recent', name: '最近导出', count: 2, hasChildren: true, children: [
       { id: 'project1', name: '西班牙项目', count: 2, parentId: 'recent' },
       { id: 'project2', name: '法国项目', count: 0, parentId: 'recent' }
