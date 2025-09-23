@@ -8,9 +8,10 @@ import { X } from "lucide-react";
 interface GlobalSubtitleModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onComplete?: () => void;
 }
 
-export const GlobalSubtitleModal = ({ isOpen, onClose }: GlobalSubtitleModalProps) => {
+export const GlobalSubtitleModal = ({ isOpen, onClose, onComplete }: GlobalSubtitleModalProps) => {
   const [formData, setFormData] = useState({
     style: "",
     animation: "",
@@ -21,6 +22,7 @@ export const GlobalSubtitleModal = ({ isOpen, onClose }: GlobalSubtitleModalProp
   const handleSubmit = () => {
     // Handle global subtitle configuration
     console.log("Global subtitle config:", formData);
+    onComplete?.();
     onClose();
   };
 

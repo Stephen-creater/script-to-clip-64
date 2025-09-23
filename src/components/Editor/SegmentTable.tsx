@@ -105,6 +105,8 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
   }>({ type: null, segmentId: null });
   
   const [isAudioGenerated, setIsAudioGenerated] = useState(false);
+  const [isGlobalSubtitleConfigured, setIsGlobalSubtitleConfigured] = useState(false);
+  const [isBgmConfigured, setIsBgmConfigured] = useState(false);
 
   const handleSelectSegment = (segmentId: string, checked: boolean) => {
     if (checked) {
@@ -147,6 +149,25 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
     });
     setSegments(updatedSegments);
     setIsAudioGenerated(true);
+  };
+
+  const handleExportVideo = () => {
+    if (!isAudioGenerated) {
+      alert("请先生成音频");
+      return;
+    }
+    if (!isGlobalSubtitleConfigured) {
+      alert("请先配置字幕全局设置");
+      return;
+    }
+    if (!isBgmConfigured) {
+      alert("请先配置BGM配乐");
+      return;
+    }
+    
+    // All configurations are complete, proceed with export
+    console.log("开始导出视频...");
+    // TODO: Implement actual video export logic
   };
 
   const renumberSegments = (segmentList: Segment[]) => {
@@ -235,19 +256,40 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
           <Button 
             variant="outline" 
             size="sm" 
-            className={isAudioGenerated ? "bg-red-500 text-white border-red-500 hover:bg-red-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"} 
+            className={isAudioGenerated ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"} 
             onClick={handleGenerateAudio}
           >
             <Volume2 size={16} className="mr-2" />
             {isAudioGenerated ? "重新生成音频" : "一键生成音频"}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => openModal('globalSubtitle')}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className={isGlobalSubtitleConfigured ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"}
+            onClick={() => openModal('globalSubtitle')}
+          >
             <Settings2 size={16} className="mr-2" />
             字幕全局设置
           </Button>
-          <Button variant="outline" size="sm" className="hover:bg-blue-600 hover:text-white hover:border-blue-600" onClick={() => openModal('bgm')}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className={isBgmConfigured ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"}
+            onClick={() => openModal('bgm')}
+          >
             <Music size={16} className="mr-2" />
             BGM配乐
+          </Button>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button 
+            variant={isAudioGenerated && isGlobalSubtitleConfigured && isBgmConfigured ? "default" : "outline"} 
+            size="sm"
+            className={isAudioGenerated && isGlobalSubtitleConfigured && isBgmConfigured ? "bg-gradient-primary hover:bg-gradient-primary/90" : ""}
+            onClick={handleExportVideo}
+          >
+            导出视频
           </Button>
         </div>
         
@@ -284,7 +326,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
                 <th className="min-w-[120px] p-3 text-left text-sm font-medium text-foreground">
                   {isAudioGenerated ? (
                     <span>
-                      音频（<span className="text-red-500">已生成，请预览</span>）
+                      音频（<span className="text-blue-500">已生成，请预览</span>）
                     </span>
                   ) : (
                     "音频"
@@ -392,6 +434,9 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
         <GlobalSubtitleModal
           isOpen={true}
           onClose={closeModal}
+          onComplete={() => {
+            setIsGlobalSubtitleConfigured(true);
+          }}
         />
       )}
       
@@ -409,6 +454,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
           onClose={closeModal}
           onSelect={(bgm) => {
             console.log("BGM选择:", bgm);
+            setIsBgmConfigured(true);
             // Handle BGM selection here
           }}
         />
