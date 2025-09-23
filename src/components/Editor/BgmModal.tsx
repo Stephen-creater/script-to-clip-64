@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +9,7 @@ interface BgmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect?: (bgm: { type: 'upload' | 'library', file?: File, url?: string, name: string, cancelled?: boolean }) => void;
+  selectedBgm?: { name: string, type: string, id?: string } | null;
 }
 
 // Mock audio library data
@@ -23,11 +24,23 @@ const audioLibrary = [
 
 const categories = ["全部", "轻音乐", "动感", "商务", "科技", "浪漫"];
 
-export const BgmModal = ({ isOpen, onClose, onSelect }: BgmModalProps) => {
+export const BgmModal = ({ isOpen, onClose, onSelect, selectedBgm }: BgmModalProps) => {
   const [selectedCategory, setSelectedCategory] = useState("全部");
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [selectedAudio, setSelectedAudio] = useState<string | null>(null);
   const [confirmedAudio, setConfirmedAudio] = useState<string | null>(null);
+
+  // Initialize confirmed audio based on selectedBgm prop
+  useEffect(() => {
+    if (selectedBgm && selectedBgm.type === 'library') {
+      const matchedAudio = audioLibrary.find(audio => audio.name === selectedBgm.name);
+      if (matchedAudio) {
+        setConfirmedAudio(matchedAudio.id);
+      }
+    } else {
+      setConfirmedAudio(null);
+    }
+  }, [selectedBgm, isOpen]);
 
   const filteredAudio = selectedCategory === "全部" 
     ? audioLibrary 

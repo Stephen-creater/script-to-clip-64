@@ -107,7 +107,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
   const [isAudioGenerated, setIsAudioGenerated] = useState(false);
   const [isGlobalSubtitleConfigured, setIsGlobalSubtitleConfigured] = useState(false);
   const [isBgmConfigured, setIsBgmConfigured] = useState(false);
-  const [selectedBgm, setSelectedBgm] = useState<{name: string, type: string} | null>(null);
+  const [selectedBgm, setSelectedBgm] = useState<{name: string, type: string, id?: string} | null>(null);
 
   const handleSelectSegment = (segmentId: string, checked: boolean) => {
     if (checked) {
@@ -442,6 +442,7 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
         <BgmModal
           isOpen={true}
           onClose={closeModal}
+          selectedBgm={selectedBgm}
           onSelect={(bgm) => {
             console.log("BGM选择:", bgm);
             if (bgm.cancelled) {
@@ -449,7 +450,19 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
               setSelectedBgm(null);
             } else if (bgm.name && bgm.url) {
               setIsBgmConfigured(true);
-              setSelectedBgm({ name: bgm.name, type: bgm.type });
+              const matchedAudio = [
+                { id: "1", name: "轻松愉悦" },
+                { id: "2", name: "激励节拍" },
+                { id: "3", name: "温馨时光" },
+                { id: "4", name: "商务专业" },
+                { id: "5", name: "科技未来" },
+                { id: "6", name: "浪漫情调" }
+              ].find(audio => audio.name === bgm.name);
+              setSelectedBgm({ 
+                name: bgm.name, 
+                type: bgm.type, 
+                id: matchedAudio?.id 
+              });
             }
             // Handle BGM selection here
           }}
