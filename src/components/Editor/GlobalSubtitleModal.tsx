@@ -3,7 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { X, Plus } from "lucide-react";
+import { SubtitleTemplateCreationModal } from "./SubtitleTemplateCreationModal";
 
 interface GlobalSubtitleModalProps {
   isOpen: boolean;
@@ -13,17 +15,23 @@ interface GlobalSubtitleModalProps {
 
 export const GlobalSubtitleModal = ({ isOpen, onClose, onComplete }: GlobalSubtitleModalProps) => {
   const [formData, setFormData] = useState({
-    style: "",
-    animation: "",
-    font: "",
+    template: "",
     distanceFromTop: "87"
   });
+  
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
   const handleSubmit = () => {
     // Handle global subtitle configuration
     console.log("Global subtitle config:", formData);
     onComplete?.();
     onClose();
+  };
+
+  const handleCreateTemplate = (templateData: any) => {
+    console.log("New subtitle template created:", templateData);
+    // Here you would typically save the template and update available templates
+    setFormData(prev => ({ ...prev, template: templateData.name }));
   };
 
   return (
@@ -43,33 +51,27 @@ export const GlobalSubtitleModal = ({ isOpen, onClose, onComplete }: GlobalSubti
         
         <div className="space-y-6 py-4">
           <div className="space-y-2">
-            <Label htmlFor="globalSubtitleStyle">字幕样式</Label>
-            <Input
-              id="globalSubtitleStyle"
-              placeholder="请选择"
-              value={formData.style}
-              onChange={(e) => setFormData(prev => ({ ...prev, style: e.target.value }))}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="globalSubtitleAnimation">字幕动画</Label>
-            <Input
-              id="globalSubtitleAnimation"
-              placeholder="请选择"
-              value={formData.animation}
-              onChange={(e) => setFormData(prev => ({ ...prev, animation: e.target.value }))}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="globalSubtitleFont">字体</Label>
-            <Input
-              id="globalSubtitleFont"
-              placeholder="请选择"
-              value={formData.font}
-              onChange={(e) => setFormData(prev => ({ ...prev, font: e.target.value }))}
-            />
+            <Label htmlFor="globalSubtitleTemplate">字幕模板</Label>
+            <div className="flex items-center gap-2">
+              <Select value={formData.template} onValueChange={(value) => setFormData(prev => ({ ...prev, template: value }))}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="请选择" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="字幕模板1">字幕模板1</SelectItem>
+                  <SelectItem value="字幕模板2">字幕模板2</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsTemplateModalOpen(true)}
+                className="px-3"
+              >
+                <Plus size={16} className="mr-1" />
+                新增字幕模板
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -95,6 +97,12 @@ export const GlobalSubtitleModal = ({ isOpen, onClose, onComplete }: GlobalSubti
           </Button>
         </div>
       </DialogContent>
+      
+      <SubtitleTemplateCreationModal
+        isOpen={isTemplateModalOpen}
+        onClose={() => setIsTemplateModalOpen(false)}
+        onCreateTemplate={handleCreateTemplate}
+      />
     </Dialog>
   );
 };
