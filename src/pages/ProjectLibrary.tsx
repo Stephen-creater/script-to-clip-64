@@ -72,13 +72,12 @@ const ProjectLibrary = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
+      case 'published':
         return <Badge variant="default" className="bg-green-500">已完成</Badge>;
       case 'draft':
         return <Badge variant="secondary">草稿</Badge>;
       case 'processing':
         return <Badge variant="outline" className="border-yellow-500 text-yellow-600">处理中</Badge>;
-      case 'published':
-        return <Badge variant="default" className="bg-blue-500">已发布</Badge>;
       case 'archived':
         return <Badge variant="outline" className="border-gray-500 text-gray-600">已归档</Badge>;
       default:
