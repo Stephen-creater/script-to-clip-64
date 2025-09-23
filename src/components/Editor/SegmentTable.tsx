@@ -109,21 +109,19 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
 
   // Notify parent component when segments change
   useEffect(() => {
-    if (onSegmentsChange) {
-      onSegmentsChange(segments);
-    }
-  }, [segments, onSegmentsChange]);
+    onSegmentsChange?.(segments);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [segments]);
 
   // Notify parent component when configuration changes
   useEffect(() => {
-    if (onConfigurationChange) {
-      onConfigurationChange({
-        isAudioGenerated,
-        isGlobalSubtitleConfigured,
-        isBgmConfigured,
-      });
-    }
-  }, [isAudioGenerated, isGlobalSubtitleConfigured, isBgmConfigured, onConfigurationChange]);
+    onConfigurationChange?.({
+      isAudioGenerated,
+      isGlobalSubtitleConfigured,
+      isBgmConfigured,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAudioGenerated, isGlobalSubtitleConfigured, isBgmConfigured]);
 
   const handleSelectSegment = (segmentId: string, checked: boolean) => {
     if (checked) {
