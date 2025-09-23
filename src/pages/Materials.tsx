@@ -234,15 +234,11 @@ const Materials = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold">素材库</h1>
-            {!isSupabaseConfigured && (
-              <div className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
-                演示模式
-              </div>
-            )}
+            {/* 移除演示模式提示，因为现在已经连接了 Supabase */}
             <Button 
               className="bg-gradient-primary"
               onClick={openUploadDialog}
-              disabled={uploading || !isSupabaseConfigured}
+              disabled={uploading}
             >
               <Upload size={16} className="mr-2" />
               {uploading ? '上传中...' : '上传素材'}

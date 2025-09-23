@@ -19,7 +19,7 @@ import {
   Star
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useProjects } from "@/hooks/useProjectsSafe";
+import { useProjects } from "@/hooks/useProjects";
 
 const ProjectLibrary = () => {
   const navigate = useNavigate();
@@ -147,11 +147,7 @@ const ProjectLibrary = () => {
             </h1>
             <div className="flex items-center gap-2 mt-2">
               <p className="text-muted-foreground">管理您的视频项目和模板</p>
-              {!isSupabaseConfigured && (
-                <div className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
-                  演示模式
-                </div>
-              )}
+              {/* 移除演示模式提示 */}
             </div>
           </div>
 
