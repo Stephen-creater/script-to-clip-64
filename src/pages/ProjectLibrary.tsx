@@ -19,80 +19,53 @@ import {
   Star
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-interface Project {
-  id: string;
-  name: string;
-  thumbnail: string;
-  duration: string;
-  segments: number;
-  status: 'draft' | 'completed' | 'processing';
-  lastModified: string;
-  template?: boolean;
-}
+import { useProjects } from "@/hooks/useProjects";
 
 const ProjectLibrary = () => {
   const navigate = useNavigate();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: '1',
-      name: '西班牙火车旅行',
-      thumbnail: '/placeholder.svg',
-      duration: '45.6s',
-      segments: 5,
-      status: 'completed',
-      lastModified: '2024-01-15 14:30'
-    },
-    {
-      id: '2',
-      name: '产品介绍视频',
-      thumbnail: '/placeholder.svg',
-      duration: '32.4s',
-      segments: 4,
-      status: 'draft',
-      lastModified: '2024-01-14 16:45'
-    },
-    {
-      id: '3',
-      name: '品牌宣传片',
-      thumbnail: '/placeholder.svg',
-      duration: '58.2s',
-      segments: 6,
-      status: 'processing',
-      lastModified: '2024-01-13 09:20'
-    },
-    {
-      id: '4',
-      name: '教程视频模板',
-      thumbnail: '/placeholder.svg',
-      duration: '40.0s',
-      segments: 4,
-      status: 'completed',
-      lastModified: '2024-01-12 11:15',
-      template: true
-    }
-  ]);
+  const { 
+    projects, 
+    loading, 
+    createProject, 
+    deleteProject, 
+    copyProject, 
+    toggleTemplate 
+  } = useProjects();
 
-  const templates = projects.filter(p => p.template);
+  const templates = projects.filter(p => p.is_template);
 
   // Filter projects based on selected filter
   const filteredProjects = projects.filter(project => {
+    // Apply status filter
+    let matchesFilter = true;
     switch (filterStatus) {
       case 'completed':
-        return project.status === 'completed';
+        matchesFilter = project.status === 'completed';
+        break;
       case 'draft':
-        return project.status === 'draft';
+        matchesFilter = project.status === 'draft';
+        break;
       case 'processing':
-        return project.status === 'processing';
+        matchesFilter = project.status === 'processing';
+        break;
       case 'template':
-        return project.template === true;
+        matchesFilter = project.is_template === true;
+        break;
       default:
-        return true; // Show all projects
+        matchesFilter = true; // Show all projects
     }
+
+    // Apply search filter
+    if (searchTerm && matchesFilter) {
+      matchesFilter = project.name.toLowerCase().includes(searchTerm.toLowerCase());
+    }
+
+    return matchesFilter;
   });
 
   const getStatusBadge = (status: string) => {
@@ -108,11 +81,23 @@ const ProjectLibrary = () => {
     }
   };
 
-  const handleCreateProject = (type: 'blank' | 'template') => {
+  const handleCreateProject = async (type: 'blank' | 'template') => {
     if (type === 'template') {
       setTemplateDialogOpen(true);
     } else {
-      navigate('/editor/new');
+      try {
+        const newProject = await createProject({
+          name: '新项目',
+          status: 'draft',
+          duration: 0,
+          segments_count: 0,
+          is_template: false,
+          data: { segments: [] }
+        });
+        navigate(`/editor/${newProject.id}`);
+      } catch (error) {
+        console.error('Failed to create project:', error);
+      }
     }
     setCreateDialogOpen(false);
   };
@@ -122,38 +107,33 @@ const ProjectLibrary = () => {
     setTemplateDialogOpen(false);
   };
 
-  const handleCopyProject = (projectId: string) => {
-    const originalProject = projects.find(p => p.id === projectId);
-    if (originalProject) {
-      const now = new Date();
-      const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      
-      const newProject: Project = {
-        ...originalProject,
-        id: Date.now().toString(), // Generate unique ID
-        name: `${originalProject.name}副本`,
-        lastModified: timestamp, // Today's date with time
-        status: 'draft', // New copy starts as draft
-        template: false // Copy is not a template by default
-      };
-      
-      // Add the new project at the beginning of the list
-      setProjects(prev => [newProject, ...prev]);
-    }
+  const handleCopyProject = async (projectId: string) => {
+    await copyProject(projectId);
   };
 
-  const handleDeleteProject = (projectId: string) => {
+  const handleDeleteProject = async (projectId: string) => {
     if (confirm('确定要删除这个项目吗？此操作无法撤销。')) {
-      setProjects(prev => prev.filter(p => p.id !== projectId));
+      await deleteProject(projectId);
     }
   };
 
-  const handleSaveAsTemplate = (projectId: string) => {
-    setProjects(prev => prev.map(p => 
-      p.id === projectId 
-        ? { ...p, template: !p.template }
-        : p
-    ));
+  const handleSaveAsTemplate = async (projectId: string) => {
+    await toggleTemplate(projectId);
+  };
+
+  const formatDuration = (seconds: number) => {
+    if (seconds === 0) return '0s';
+    return `${seconds.toFixed(1)}s`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -220,9 +200,11 @@ const ProjectLibrary = () => {
       <div className="flex items-center gap-4 mb-6">
         <div className="relative flex-1 max-w-md">
           <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-          <Input 
+            <Input 
             placeholder="搜索项目..." 
             className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         
@@ -241,9 +223,19 @@ const ProjectLibrary = () => {
         </Select>
       </div>
 
-      {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredProjects.map((project) => (
+      {/* Loading State */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>加载项目库...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Projects Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredProjects.map((project) => (
           <Card key={project.id} className="hover:shadow-card transition-all group">
             <CardHeader className="p-0">
               <div className="relative">
@@ -260,7 +252,7 @@ const ProjectLibrary = () => {
                     编辑
                   </Button>
                 </div>
-                {project.template && (
+                {project.is_template && (
                   <Badge className="absolute top-2 right-2 bg-primary">模板</Badge>
                 )}
               </div>
@@ -275,14 +267,14 @@ const ProjectLibrary = () => {
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock size={14} />
-                    <span>{project.duration}</span>
+                    <span>{formatDuration(project.duration)}</span>
                   </div>
-                  <span>{project.segments} 分段</span>
+                  <span>{project.segments_count} 分段</span>
                 </div>
                 
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Calendar size={14} />
-                  <span>{project.lastModified}</span>
+                  <span>{formatDate(project.updated_at)}</span>
                 </div>
                 
                 {getStatusBadge(project.status)}
@@ -320,9 +312,24 @@ const ProjectLibrary = () => {
                 </Button>
               </div>
             </CardFooter>
-          </Card>
-        ))}
-      </div>
+            </Card>
+            ))}
+          </div>
+
+          {/* Empty State */}
+          {filteredProjects.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <div className="text-muted-foreground mb-4">
+                <Video size={48} className="mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium">暂无项目</p>
+                <p className="text-sm">
+                  {searchTerm ? '没有找到匹配的项目' : '创建您的第一个视频项目吧'}
+                </p>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Template Selection Dialog */}
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
@@ -345,11 +352,11 @@ const ProjectLibrary = () => {
                     <div>
                       <h3 className="font-semibold">{template.name}</h3>
                       <p className="text-sm text-muted-foreground mt-1">
-                        时长: {template.duration} • 最后修改: {template.lastModified}
+                        时长: {formatDuration(template.duration)} • 最后修改: {formatDate(template.updated_at)}
                       </p>
                     </div>
                     <Badge variant="outline">
-                      {template.segments} 分段
+                      {template.segments_count} 分段
                     </Badge>
                   </div>
                 </CardContent>
