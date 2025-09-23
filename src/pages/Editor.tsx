@@ -17,7 +17,14 @@ interface Segment {
 }
 
 const Editor = () => {
-  const { previewOpen } = useOutletContext<{ previewOpen: boolean }>();
+  const { previewOpen, onConfigurationChange } = useOutletContext<{ 
+    previewOpen: boolean;
+    onConfigurationChange?: (config: {
+      isAudioGenerated: boolean;
+      isGlobalSubtitleConfigured: boolean;
+      isBgmConfigured: boolean;
+    }) => void;
+  }>();
   const [isPlaying, setIsPlaying] = useState(false);
   const [segments, setSegments] = useState<Segment[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
@@ -26,6 +33,16 @@ const Editor = () => {
 
   const handleSegmentsChange = (newSegments: Segment[]) => {
     setSegments(newSegments);
+  };
+
+  const handleConfigurationChange = (config: {
+    isAudioGenerated: boolean;
+    isGlobalSubtitleConfigured: boolean;
+    isBgmConfigured: boolean;
+  }) => {
+    if (onConfigurationChange) {
+      onConfigurationChange(config);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -126,7 +143,10 @@ const Editor = () => {
     <div className="flex h-full">
       {/* Segment Table */}
       <div className={previewOpen ? "flex-1" : "w-full"}>
-        <SegmentTable onSegmentsChange={handleSegmentsChange} />
+        <SegmentTable 
+          onSegmentsChange={handleSegmentsChange}
+          onConfigurationChange={handleConfigurationChange}
+        />
       </div>
 
       {/* Video Preview - Only show when previewOpen is true */}

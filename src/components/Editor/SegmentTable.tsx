@@ -35,9 +35,14 @@ interface Segment {
 
 interface SegmentTableProps {
   onSegmentsChange?: (segments: Segment[]) => void;
+  onConfigurationChange?: (config: {
+    isAudioGenerated: boolean;
+    isGlobalSubtitleConfigured: boolean;
+    isBgmConfigured: boolean;
+  }) => void;
 }
 
-const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
+const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableProps) => {
   const [segments, setSegments] = useState<Segment[]>([
     {
       id: "1",
@@ -91,13 +96,6 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
     }
   ]);
 
-  // Notify parent component when segments change
-  useEffect(() => {
-    if (onSegmentsChange) {
-      onSegmentsChange(segments);
-    }
-  }, [segments, onSegmentsChange]);
-
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
     type: 'animatedText' | 'sticker' | 'globalSubtitle' | 'bgm' | 'audioGeneration' | null;
@@ -108,6 +106,24 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
   const [isGlobalSubtitleConfigured, setIsGlobalSubtitleConfigured] = useState(false);
   const [isBgmConfigured, setIsBgmConfigured] = useState(false);
   const [selectedBgm, setSelectedBgm] = useState<{name: string, type: string, id?: string} | null>(null);
+
+  // Notify parent component when segments change
+  useEffect(() => {
+    if (onSegmentsChange) {
+      onSegmentsChange(segments);
+    }
+  }, [segments, onSegmentsChange]);
+
+  // Notify parent component when configuration changes
+  useEffect(() => {
+    if (onConfigurationChange) {
+      onConfigurationChange({
+        isAudioGenerated,
+        isGlobalSubtitleConfigured,
+        isBgmConfigured,
+      });
+    }
+  }, [isAudioGenerated, isGlobalSubtitleConfigured, isBgmConfigured, onConfigurationChange]);
 
   const handleSelectSegment = (segmentId: string, checked: boolean) => {
     if (checked) {
@@ -152,24 +168,6 @@ const SegmentTable = ({ onSegmentsChange }: SegmentTableProps) => {
     setIsAudioGenerated(true);
   };
 
-  const handleExportVideo = () => {
-    if (!isAudioGenerated) {
-      alert("请先生成音频");
-      return;
-    }
-    if (!isGlobalSubtitleConfigured) {
-      alert("请先配置字幕全局设置");
-      return;
-    }
-    if (!isBgmConfigured) {
-      alert("请先配置BGM配乐");
-      return;
-    }
-    
-    // All configurations are complete, proceed with export
-    console.log("开始导出视频...");
-    // TODO: Implement actual video export logic
-  };
 
   const renumberSegments = (segmentList: Segment[]) => {
     return segmentList.map((segment, index) => ({

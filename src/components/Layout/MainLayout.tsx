@@ -20,6 +20,11 @@ const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [configuration, setConfiguration] = useState({
+    isAudioGenerated: false,
+    isGlobalSubtitleConfigured: false,
+    isBgmConfigured: false,
+  });
   const location = useLocation();
 
   const navigation = [
@@ -30,6 +35,32 @@ const MainLayout = () => {
   ];
 
   const isEditor = location.pathname.startsWith('/editor');
+
+  const handleConfigurationChange = (config: {
+    isAudioGenerated: boolean;
+    isGlobalSubtitleConfigured: boolean;
+    isBgmConfigured: boolean;
+  }) => {
+    setConfiguration(config);
+  };
+
+  const handleExportClick = () => {
+    if (!configuration.isAudioGenerated) {
+      alert("请先生成音频");
+      return;
+    }
+    if (!configuration.isGlobalSubtitleConfigured) {
+      alert("请先配置字幕全局设置");
+      return;
+    }
+    if (!configuration.isBgmConfigured) {
+      alert("请先配置BGM配乐");
+      return;
+    }
+    
+    // All configurations are complete, proceed with export
+    setExportModalOpen(true);
+  };
 
   return (
     <div className="flex h-screen bg-background">
@@ -101,7 +132,7 @@ const MainLayout = () => {
                 <Play size={16} className="mr-2" />
                 预览
               </Button>
-              <Button size="sm" className="bg-gradient-primary" onClick={() => setExportModalOpen(true)}>
+              <Button size="sm" className="bg-gradient-primary" onClick={handleExportClick}>
                 <Download size={16} className="mr-2" />
                 导出视频
               </Button>
@@ -111,7 +142,7 @@ const MainLayout = () => {
 
         {/* Content Area */}
         <div className="flex-1 overflow-hidden">
-          <Outlet context={{ previewOpen }} />
+          <Outlet context={{ previewOpen, onConfigurationChange: handleConfigurationChange }} />
         </div>
       </div>
 
