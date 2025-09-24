@@ -2,21 +2,14 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import { FileText, Image, Video, Music, FolderOpen, Square, CheckSquare } from "lucide-react";
-import { useMaterials } from "@/hooks/useMaterials";
+import { Badge } from "@/components/ui/badge";
+import { FolderOpen, ChevronRight, ChevronDown, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MaterialSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (materials: {
-    id: string;
-    name: string;
-    type: string;
-    url: string;
-    thumbnail?: string;
-  }[]) => void;
-  multiSelect?: boolean;
+  onSelect: (folderId: string, folderName: string) => void;
 }
 
 interface FolderItem {
@@ -25,290 +18,210 @@ interface FolderItem {
   count: number;
   parentId?: string;
   children?: FolderItem[];
+  addedDate?: string;
 }
 
-// Mock folder structure for demo
+// Mock folder structure matching Materials page structure
 const mockFolders: FolderItem[] = [
   {
     id: "all",
     name: "全部素材",
-    count: 128
+    count: 0,
+    addedDate: "2024-01-15"
   },
   {
-    id: "video",
-    name: "视频素材",
-    count: 45,
-    children: [
-      { id: "video-nature", name: "自然风光", count: 12 },
-      { id: "video-city", name: "城市生活", count: 18 },
-      { id: "video-people", name: "人物视频", count: 15 }
-    ]
-  },
-  {
-    id: "image", 
+    id: "images",
     name: "图片素材",
-    count: 67,
+    count: 0,
+    addedDate: "2024-01-14",
     children: [
-      { id: "image-bg", name: "背景图片", count: 25 },
-      { id: "image-icon", name: "图标素材", count: 30 },
-      { id: "image-photo", name: "照片素材", count: 12 }
+      {
+        id: "marketing",
+        name: "营销类",
+        count: 0,
+        parentId: "images",
+        addedDate: "2024-01-13",
+        children: [
+          { id: "brand", name: "品牌+符号", count: 0, parentId: "marketing", addedDate: "2024-01-12" },
+          { id: "promo", name: "促销生活", count: 0, parentId: "marketing", addedDate: "2024-01-11" },
+          { id: "coupon", name: "优惠码", count: 0, parentId: "marketing", addedDate: "2024-01-10" },
+        ]
+      },
+      { id: "decorative", name: "装饰类", count: 0, parentId: "images", addedDate: "2024-01-09" },
     ]
   },
   {
     id: "audio",
-    name: "音频素材", 
-    count: 16,
+    name: "音频素材",
+    count: 0,
+    addedDate: "2024-01-08",
     children: [
-      { id: "audio-bgm", name: "背景音乐", count: 8 },
-      { id: "audio-effect", name: "音效", count: 8 }
+      { id: "bgm", name: "BGM", count: 0, parentId: "audio", addedDate: "2024-01-07" },
+      { id: "sound-effects", name: "音效素材", count: 0, parentId: "audio", addedDate: "2024-01-06" },
     ]
   }
 ];
 
-// Mock materials data
-const mockMaterials = [
-  {
-    id: "1",
-    name: "自然风光视频1",
-    type: "video",
-    category: "video-nature",
-    thumbnail: "/placeholder.svg",
-    duration: "00:15",
-    size: "12.5MB",
-    date: "2024-01-15"
-  },
-  {
-    id: "2", 
-    name: "城市夜景",
-    type: "video",
-    category: "video-city",
-    thumbnail: "/placeholder.svg",
-    duration: "00:20",
-    size: "18.3MB",
-    date: "2024-01-14"
-  },
-  {
-    id: "3",
-    name: "商务人士",
-    type: "video", 
-    category: "video-people",
-    thumbnail: "/placeholder.svg",
-    duration: "00:12",
-    size: "9.8MB",
-    date: "2024-01-13"
-  },
-  {
-    id: "4",
-    name: "科技背景",
-    type: "image",
-    category: "image-bg", 
-    thumbnail: "/placeholder.svg",
-    size: "2.1MB",
-    date: "2024-01-12"
-  },
-  {
-    id: "5",
-    name: "设置图标",
-    type: "image",
-    category: "image-icon",
-    thumbnail: "/placeholder.svg", 
-    size: "256KB",
-    date: "2024-01-11"
-  }
-];
+// Get recently added folders (last 5)
+const getRecentlyAddedFolders = (folders: FolderItem[]): FolderItem[] => {
+  const allFolders: FolderItem[] = [];
+  
+  const flattenFolders = (folders: FolderItem[]) => {
+    folders.forEach(folder => {
+      if (folder.id !== "all") { // Exclude "全部素材"
+        allFolders.push(folder);
+      }
+      if (folder.children) {
+        flattenFolders(folder.children);
+      }
+    });
+  };
+  
+  flattenFolders(folders);
+  
+  return allFolders
+    .sort((a, b) => new Date(b.addedDate || '').getTime() - new Date(a.addedDate || '').getTime())
+    .slice(0, 5);
+};
 
-export const MaterialSelectionModal = ({ isOpen, onClose, onSelect, multiSelect = false }: MaterialSelectionModalProps) => {
-  const [selectedFolder, setSelectedFolder] = useState<string>("all");
-  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
+
+export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSelectionModalProps) => {
+  const [selectedFolder, setSelectedFolder] = useState<string>("");
+  const [expandedFolders, setExpandedFolders] = useState<string[]>(["images", "audio"]);
 
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      setSelectedFolder("all");
-      setSelectedMaterials([]);
+      setSelectedFolder("");
     }
   }, [isOpen]);
 
-  const getFilteredMaterials = () => {
-    let filtered = mockMaterials;
-    
-    // Filter by folder
-    if (selectedFolder !== "all") {
-      filtered = filtered.filter(material => {
-        if (selectedFolder.startsWith("video")) {
-          return material.type === "video" && (selectedFolder === "video" || material.category === selectedFolder);
-        }
-        if (selectedFolder.startsWith("image")) {
-          return material.type === "image" && (selectedFolder === "image" || material.category === selectedFolder);
-        }
-        if (selectedFolder.startsWith("audio")) {
-          return material.type === "audio" && (selectedFolder === "audio" || material.category === selectedFolder);
-        }
-        return material.category === selectedFolder;
-      });
-    }
-    
-    return filtered;
-  };
+  const recentlyAddedFolders = getRecentlyAddedFolders(mockFolders);
 
-  const handleMaterialSelect = (materialId: string) => {
-    if (multiSelect) {
-      setSelectedMaterials(prev => 
-        prev.includes(materialId) 
-          ? prev.filter(id => id !== materialId)
-          : [...prev, materialId]
-      );
-    } else {
-      setSelectedMaterials([materialId]);
-    }
-  };
-
-  const handleSelectAll = () => {
-    const filteredMaterials = getFilteredMaterials();
-    const allIds = filteredMaterials.map(m => m.id);
-    const allSelected = allIds.every(id => selectedMaterials.includes(id));
-    
-    if (allSelected) {
-      setSelectedMaterials(prev => prev.filter(id => !allIds.includes(id)));
-    } else {
-      setSelectedMaterials(prev => [...new Set([...prev, ...allIds])]);
-    }
+  const handleFolderSelect = (folderId: string, folderName: string) => {
+    setSelectedFolder(folderId);
   };
 
   const handleConfirm = () => {
-    const materials = mockMaterials.filter(m => selectedMaterials.includes(m.id)).map(material => ({
-      id: material.id,
-      name: material.name,
-      type: material.type,
-      url: material.thumbnail,
-      thumbnail: material.thumbnail
-    }));
-    
-    if (materials.length > 0) {
-      onSelect(materials);
+    if (selectedFolder) {
+      const folder = findFolderById(mockFolders, selectedFolder);
+      if (folder) {
+        onSelect(selectedFolder, folder.name);
+      }
     }
     onClose();
   };
 
-  const getFileIcon = (type: string) => {
-    switch (type) {
-      case 'video':
-        return <Video size={16} className="text-blue-500" />;
-      case 'image':
-        return <Image size={16} className="text-green-500" />;
-      case 'audio':
-        return <Music size={16} className="text-purple-500" />;
-      default:
-        return <FileText size={16} className="text-gray-500" />;
+  const findFolderById = (folders: FolderItem[], id: string): FolderItem | null => {
+    for (const folder of folders) {
+      if (folder.id === id) return folder;
+      if (folder.children) {
+        const found = findFolderById(folder.children, id);
+        if (found) return found;
+      }
     }
+    return null;
+  };
+
+  const toggleFolder = (folderId: string) => {
+    setExpandedFolders(prev => 
+      prev.includes(folderId) 
+        ? prev.filter(id => id !== folderId)
+        : [...prev, folderId]
+    );
   };
 
   const renderFolderTree = (folders: FolderItem[], level = 0) => {
-    return folders.map(folder => (
-      <div key={folder.id}>
-        <div
-          className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors hover:bg-muted/50 ${
-            selectedFolder === folder.id ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''
-          }`}
-          style={{ paddingLeft: `${level * 12 + 8}px` }}
-          onClick={() => setSelectedFolder(folder.id)}
-        >
-          <FolderOpen size={16} />
-          <span className="text-sm">{folder.name}</span>
-          <span className="text-xs text-muted-foreground ml-auto">({folder.count})</span>
+    return folders.map(folder => {
+      const isExpanded = expandedFolders.includes(folder.id);
+      const isSelected = selectedFolder === folder.id;
+      const hasChildren = folder.children && folder.children.length > 0;
+
+      return (
+        <div key={folder.id}>
+          <div
+            className={cn(
+              "flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors hover:bg-muted/50",
+              isSelected && "bg-primary/10 text-primary"
+            )}
+            style={{ paddingLeft: `${level * 16 + 12}px` }}
+            onClick={() => handleFolderSelect(folder.id, folder.name)}
+          >
+            <div className="w-4 flex justify-center">
+              {hasChildren && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFolder(folder.id);
+                  }}
+                  className="p-0 hover:bg-muted rounded-sm"
+                >
+                  {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                </button>
+              )}
+            </div>
+            <FolderOpen size={16} />
+            <span className="text-sm flex-1">{folder.name}</span>
+          </div>
+          {hasChildren && isExpanded && (
+            <div className="mt-1">
+              {renderFolderTree(folder.children!, level + 1)}
+            </div>
+          )}
         </div>
-        {folder.children && renderFolderTree(folder.children, level + 1)}
-      </div>
-    ));
+      );
+    });
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>选择素材</DialogTitle>
+      <DialogContent className="max-w-lg max-h-[70vh] flex flex-col">
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <DialogTitle>请选择分组</DialogTitle>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X size={16} />
+          </Button>
         </DialogHeader>
         
-        <div className="flex flex-1 gap-4 min-h-0">
-          {/* Left Sidebar - Folders */}
-          <div className="w-1/4 border-r border-border pr-4">
-            <div className="mb-4">
-              <h3 className="text-sm font-medium mb-2">素材分类</h3>
-              <ScrollArea className="h-[400px]">
-                {renderFolderTree(mockFolders)}
-              </ScrollArea>
+        <div className="flex-1 space-y-4">
+          {/* Recently Added Section */}
+          <div>
+            <h3 className="text-sm font-medium mb-3 text-muted-foreground">最近添加</h3>
+            <div className="flex flex-wrap gap-2">
+              {recentlyAddedFolders.map((folder) => (
+                <Badge
+                  key={folder.id}
+                  variant={selectedFolder === folder.id ? "default" : "secondary"}
+                  className={cn(
+                    "cursor-pointer px-3 py-1 text-sm",
+                    selectedFolder === folder.id && "bg-primary text-primary-foreground"
+                  )}
+                  onClick={() => handleFolderSelect(folder.id, folder.name)}
+                >
+                  {folder.name}
+                </Badge>
+              ))}
             </div>
           </div>
-          
-          {/* Right Content - Materials */}
-          <div className="flex-1 flex flex-col min-h-0">
-            {/* Selection Controls */}
-            {multiSelect && (
-              <div className="mb-4 flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSelectAll}
-                  className="flex items-center gap-2"
-                >
-                  {getFilteredMaterials().every(m => selectedMaterials.includes(m.id)) ? (
-                    <CheckSquare size={16} />
-                  ) : (
-                    <Square size={16} />
-                  )}
-                  全选
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  已选择 {selectedMaterials.length} 项
-                </span>
-              </div>
-            )}
-            
-            {/* Materials Grid */}  
-            <ScrollArea className="flex-1">
-              <div className="grid grid-cols-3 gap-4">
-                {getFilteredMaterials().map((material) => (
-                  <div
-                    key={material.id}
-                    className={`relative border border-border rounded-lg p-3 cursor-pointer transition-all hover:bg-muted/30 hover:border-primary/50 ${
-                      selectedMaterials.includes(material.id) ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : ''
-                    }`}
-                    onClick={() => handleMaterialSelect(material.id)}
-                  >
-                    {multiSelect && (
-                      <div className="absolute top-2 right-2 z-10">
-                        <Checkbox 
-                          checked={selectedMaterials.includes(material.id)}
-                          onChange={() => {}} // Handled by parent click
-                        />
-                      </div>
-                    )}
-                    <div className="aspect-video bg-muted rounded mb-2 flex items-center justify-center">
-                      {getFileIcon(material.type)}
-                    </div>
-                    <div className="text-sm font-medium truncate mb-1">{material.name}</div>
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      {material.duration && <div>时长: {material.duration}</div>}
-                      <div>大小: {material.size}</div>
-                      <div>日期: {material.date}</div>
-                    </div>
-                  </div>
-                ))}
+
+          {/* All Folders Section */}
+          <div className="flex-1">
+            <ScrollArea className="h-[300px]">
+              <div className="space-y-1">
+                {renderFolderTree(mockFolders)}
               </div>
             </ScrollArea>
           </div>
         </div>
         
         {/* Footer */}
-        <div className="flex justify-end gap-2 pt-4 border-t border-border">
-          <Button variant="outline" onClick={onClose}>
-            取消
-          </Button>
+        <div className="flex justify-end pt-4 border-t border-border">
           <Button 
             onClick={handleConfirm}
-            disabled={selectedMaterials.length === 0}
+            disabled={!selectedFolder}
+            className="bg-teal-500 hover:bg-teal-600 text-white"
           >
-            确认选择 {selectedMaterials.length > 0 && `(${selectedMaterials.length})`}
+            确定
           </Button>
         </div>
       </DialogContent>

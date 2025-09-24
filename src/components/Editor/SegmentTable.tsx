@@ -522,10 +522,17 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
         <MaterialSelectionModal
           isOpen={true}
           onClose={closeModal}
-          onSelect={(materials) => {
-            if (activeModal.segmentId && materials.length > 0) {
-              // Use the first selected material
-              updateSegmentVideo(activeModal.segmentId, materials[0]);
+          onSelect={(folderId, folderName) => {
+            if (activeModal.segmentId) {
+              // Create a mock material object based on folder selection
+              const mockMaterial = {
+                id: folderId,
+                name: folderName,
+                type: 'folder',
+                url: '/placeholder.svg',
+                thumbnail: '/placeholder.svg'
+              };
+              updateSegmentVideo(activeModal.segmentId, mockMaterial);
             }
             closeModal();
           }}
