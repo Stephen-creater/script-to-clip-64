@@ -30,7 +30,7 @@ const Materials = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [selectedFolder, setSelectedFolder] = useState('all');
-  const [expandedFolders, setExpandedFolders] = useState<string[]>(['images', 'audio']);
+  const [expandedFolders, setExpandedFolders] = useState<string[]>(['all', 'images', 'audio']);
   const [searchTerm, setSearchTerm] = useState("");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -51,8 +51,13 @@ const Materials = () => {
   const [folders] = useState<FolderItem[]>([
     { 
       id: 'all', 
-      name: '全部素材', 
-      count: materials.length
+      name: '视频素材', 
+      count: materials.length,
+      hasChildren: true,
+      children: [
+        { id: 'window-scenery', name: '车窗外风景', count: getMaterialsByCategory('视频素材', '车窗外风景').length, parentId: 'all' },
+        { id: 'station-interior', name: '车站内', count: getMaterialsByCategory('视频素材', '车站内').length, parentId: 'all' },
+      ]
     },
     { 
       id: 'images', 
@@ -115,7 +120,11 @@ const Materials = () => {
     let filtered = materials;
     
     if (selectedFolder !== 'all') {
-      if (selectedFolder === 'images') {
+      if (selectedFolder === 'window-scenery') {
+        filtered = getMaterialsByCategory('视频素材', '车窗外风景');
+      } else if (selectedFolder === 'station-interior') {
+        filtered = getMaterialsByCategory('视频素材', '车站内');
+      } else if (selectedFolder === 'images') {
         filtered = materials.filter(m => m.file_type === 'image');
       } else if (selectedFolder === 'audio') {
         filtered = materials.filter(m => m.file_type === 'audio');
@@ -441,6 +450,7 @@ const Materials = () => {
                   <SelectValue placeholder="选择素材类型" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="视频素材">视频素材</SelectItem>
                   <SelectItem value="图片素材">图片素材</SelectItem>
                   <SelectItem value="音频素材">音频素材</SelectItem>
                 </SelectContent>
@@ -455,6 +465,12 @@ const Materials = () => {
                     <SelectValue placeholder="选择分类" />
                   </SelectTrigger>
                   <SelectContent>
+                    {selectedCategory === '视频素材' && (
+                      <>
+                        <SelectItem value="车窗外风景">车窗外风景</SelectItem>
+                        <SelectItem value="车站内">车站内</SelectItem>
+                      </>
+                    )}
                     {selectedCategory === '图片素材' && (
                       <>
                         <SelectItem value="营销类">营销类</SelectItem>
@@ -489,7 +505,10 @@ const Materials = () => {
             ref={fileInputRef}
             type="file"
             multiple
-            accept={selectedCategory === '图片素材' ? 'image/*' : 'audio/*'}
+            accept={
+              selectedCategory === '视频素材' ? 'video/*' :
+              selectedCategory === '图片素材' ? 'image/*' : 'audio/*'
+            }
             onChange={handleFileSelect}
             className="hidden"
           />

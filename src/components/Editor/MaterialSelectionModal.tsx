@@ -25,9 +25,13 @@ interface FolderItem {
 const mockFolders: FolderItem[] = [
   {
     id: "all",
-    name: "全部素材",
+    name: "视频素材",
     count: 0,
-    addedDate: "2024-01-15"
+    addedDate: "2024-01-15",
+    children: [
+      { id: "window-scenery", name: "车窗外风景", count: 0, parentId: "all", addedDate: "2024-01-14" },
+      { id: "station-interior", name: "车站内", count: 0, parentId: "all", addedDate: "2024-01-13" },
+    ]
   },
   {
     id: "images",
@@ -87,7 +91,7 @@ const getRecentlyAddedFolders = (folders: FolderItem[]): FolderItem[] => {
 
 export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSelectionModalProps) => {
   const [selectedFolder, setSelectedFolder] = useState<string>("");
-  const [expandedFolders, setExpandedFolders] = useState<string[]>(["images", "audio"]);
+  const [expandedFolders, setExpandedFolders] = useState<string[]>(["all", "images", "audio"]);
 
   // Reset state when modal opens
   useEffect(() => {
