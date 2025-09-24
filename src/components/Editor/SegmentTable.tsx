@@ -522,9 +522,10 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
         <MaterialSelectionModal
           isOpen={true}
           onClose={closeModal}
-          onSelect={(material) => {
-            if (activeModal.segmentId) {
-              updateSegmentVideo(activeModal.segmentId, material);
+          onSelect={(materials) => {
+            if (activeModal.segmentId && materials.length > 0) {
+              // Use the first selected material
+              updateSegmentVideo(activeModal.segmentId, materials[0]);
             }
             closeModal();
           }}

@@ -1,22 +1,22 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, FileText, Image, Video, Music, FolderOpen } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FileText, Image, Video, Music, FolderOpen, Square, CheckSquare } from "lucide-react";
 import { useMaterials } from "@/hooks/useMaterials";
 
 interface MaterialSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (material: {
+  onSelect: (materials: {
     id: string;
     name: string;
     type: string;
     url: string;
     thumbnail?: string;
-  }) => void;
+  }[]) => void;
+  multiSelect?: boolean;
 }
 
 interface FolderItem {
@@ -117,17 +117,15 @@ const mockMaterials = [
   }
 ];
 
-export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSelectionModalProps) => {
+export const MaterialSelectionModal = ({ isOpen, onClose, onSelect, multiSelect = false }: MaterialSelectionModalProps) => {
   const [selectedFolder, setSelectedFolder] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
+  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
 
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedFolder("all");
-      setSearchQuery("");
-      setSelectedMaterial(null);
+      setSelectedMaterials([]);
     }
   }, [isOpen]);
 
@@ -150,30 +148,44 @@ export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSe
       });
     }
     
-    // Filter by search query
-    if (searchQuery) {
-      filtered = filtered.filter(material => 
-        material.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    
     return filtered;
   };
 
-  const handleMaterialSelect = (material: typeof mockMaterials[0]) => {
-    setSelectedMaterial(material.id);
+  const handleMaterialSelect = (materialId: string) => {
+    if (multiSelect) {
+      setSelectedMaterials(prev => 
+        prev.includes(materialId) 
+          ? prev.filter(id => id !== materialId)
+          : [...prev, materialId]
+      );
+    } else {
+      setSelectedMaterials([materialId]);
+    }
+  };
+
+  const handleSelectAll = () => {
+    const filteredMaterials = getFilteredMaterials();
+    const allIds = filteredMaterials.map(m => m.id);
+    const allSelected = allIds.every(id => selectedMaterials.includes(id));
+    
+    if (allSelected) {
+      setSelectedMaterials(prev => prev.filter(id => !allIds.includes(id)));
+    } else {
+      setSelectedMaterials(prev => [...new Set([...prev, ...allIds])]);
+    }
   };
 
   const handleConfirm = () => {
-    const material = mockMaterials.find(m => m.id === selectedMaterial);
-    if (material) {
-      onSelect({
-        id: material.id,
-        name: material.name,
-        type: material.type,
-        url: material.thumbnail,
-        thumbnail: material.thumbnail
-      });
+    const materials = mockMaterials.filter(m => selectedMaterials.includes(m.id)).map(material => ({
+      id: material.id,
+      name: material.name,
+      type: material.type,
+      url: material.thumbnail,
+      thumbnail: material.thumbnail
+    }));
+    
+    if (materials.length > 0) {
+      onSelect(materials);
     }
     onClose();
   };
@@ -195,15 +207,15 @@ export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSe
     return folders.map(folder => (
       <div key={folder.id}>
         <div
-          className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 ${
-            selectedFolder === folder.id ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
+          className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors hover:bg-muted/50 ${
+            selectedFolder === folder.id ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''
           }`}
           style={{ paddingLeft: `${level * 12 + 8}px` }}
           onClick={() => setSelectedFolder(folder.id)}
         >
           <FolderOpen size={16} />
           <span className="text-sm">{folder.name}</span>
-          <span className="text-xs text-gray-500 ml-auto">({folder.count})</span>
+          <span className="text-xs text-muted-foreground ml-auto">({folder.count})</span>
         </div>
         {folder.children && renderFolderTree(folder.children, level + 1)}
       </div>
@@ -230,18 +242,27 @@ export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSe
           
           {/* Right Content - Materials */}
           <div className="flex-1 flex flex-col min-h-0">
-            {/* Search */}
-            <div className="mb-4">
-              <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <Input
-                  placeholder="搜索素材..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+            {/* Selection Controls */}
+            {multiSelect && (
+              <div className="mb-4 flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSelectAll}
+                  className="flex items-center gap-2"
+                >
+                  {getFilteredMaterials().every(m => selectedMaterials.includes(m.id)) ? (
+                    <CheckSquare size={16} />
+                  ) : (
+                    <Square size={16} />
+                  )}
+                  全选
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  已选择 {selectedMaterials.length} 项
+                </span>
               </div>
-            </div>
+            )}
             
             {/* Materials Grid */}  
             <ScrollArea className="flex-1">
@@ -249,16 +270,24 @@ export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSe
                 {getFilteredMaterials().map((material) => (
                   <div
                     key={material.id}
-                    className={`border border-border rounded-lg p-3 cursor-pointer hover:shadow-md transition-all ${
-                      selectedMaterial === material.id ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''
+                    className={`relative border border-border rounded-lg p-3 cursor-pointer transition-all hover:bg-muted/30 hover:border-primary/50 ${
+                      selectedMaterials.includes(material.id) ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : ''
                     }`}
-                    onClick={() => handleMaterialSelect(material)}
+                    onClick={() => handleMaterialSelect(material.id)}
                   >
-                    <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded mb-2 flex items-center justify-center">
+                    {multiSelect && (
+                      <div className="absolute top-2 right-2 z-10">
+                        <Checkbox 
+                          checked={selectedMaterials.includes(material.id)}
+                          onChange={() => {}} // Handled by parent click
+                        />
+                      </div>
+                    )}
+                    <div className="aspect-video bg-muted rounded mb-2 flex items-center justify-center">
                       {getFileIcon(material.type)}
                     </div>
                     <div className="text-sm font-medium truncate mb-1">{material.name}</div>
-                    <div className="text-xs text-gray-500 space-y-1">
+                    <div className="text-xs text-muted-foreground space-y-1">
                       {material.duration && <div>时长: {material.duration}</div>}
                       <div>大小: {material.size}</div>
                       <div>日期: {material.date}</div>
@@ -277,9 +306,9 @@ export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSe
           </Button>
           <Button 
             onClick={handleConfirm}
-            disabled={!selectedMaterial}
+            disabled={selectedMaterials.length === 0}
           >
-            确认选择
+            确认选择 {selectedMaterials.length > 0 && `(${selectedMaterials.length})`}
           </Button>
         </div>
       </DialogContent>
