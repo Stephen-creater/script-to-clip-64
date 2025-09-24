@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Video, 
   FolderOpen, 
@@ -34,6 +35,7 @@ const MainLayout = () => {
   const location = useLocation();
   const inputRef = useRef<HTMLInputElement>(null);
   const { projects } = useProjects();
+  const { toast } = useToast();
 
   // Set default project name based on creation type
   useEffect(() => {
@@ -80,16 +82,24 @@ const MainLayout = () => {
   };
 
   const handleExportClick = () => {
+    const missingConfigs = [];
+    
     if (!configuration.isAudioGenerated) {
-      alert("请先生成音频");
-      return;
+      missingConfigs.push("一键生成音频");
     }
     if (!configuration.isGlobalSubtitleConfigured) {
-      alert("请先配置字幕全局设置");
-      return;
+      missingConfigs.push("字幕全局设置");
     }
     if (!configuration.isBgmConfigured) {
-      alert("请先配置BGM配乐");
+      missingConfigs.push("BGM配乐");
+    }
+    
+    if (missingConfigs.length > 0) {
+      toast({
+        title: "配置未完成",
+        description: `请先完成以下配置：${missingConfigs.join("、")}`,
+        variant: "destructive"
+      });
       return;
     }
     
