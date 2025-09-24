@@ -140,9 +140,9 @@ const Editor = () => {
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex min-h-full">
       {/* Segment Table */}
-      <div className={previewOpen ? "flex-1" : "w-full"}>
+      <div className={previewOpen ? "flex-1 min-h-0" : "w-full"}>
         <SegmentTable 
           onSegmentsChange={handleSegmentsChange}
           onConfigurationChange={handleConfigurationChange}
@@ -151,7 +151,7 @@ const Editor = () => {
 
       {/* Video Preview - Only show when previewOpen is true */}
       {previewOpen && (
-        <div className="w-1/3 bg-preview-bg border-l border-border p-6 flex-shrink-0">
+        <div className="w-1/3 bg-preview-bg border-l border-border p-6 flex-shrink-0 overflow-auto">
           <div className="relative bg-black rounded-lg flex items-center justify-center overflow-hidden mx-auto" style={{ aspectRatio: '9/16', maxHeight: '70vh', width: 'auto' }}>
             <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center">
               <div className="text-white/40 text-center">

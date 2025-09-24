@@ -106,10 +106,10 @@ const MainLayout = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Header */}
         {isEditor && (
-          <div className="bg-card border-b border-border px-6 py-3 flex items-center justify-between">
+          <div className="bg-card border-b border-border px-6 py-3 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-4">
               <h2 className="text-lg font-semibold text-foreground">西班牙-脚本1</h2>
               <Button variant="outline" size="sm">
@@ -141,7 +141,7 @@ const MainLayout = () => {
         )}
 
         {/* Content Area */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-auto min-h-0">
           <Outlet context={{ previewOpen, onConfigurationChange: handleConfigurationChange }} />
         </div>
       </div>
