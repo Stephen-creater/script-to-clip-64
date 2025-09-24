@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { 
   Video, 
   FolderOpen, 
@@ -11,7 +12,8 @@ import {
   Menu,
   X,
   Film,
-  ArrowLeft
+  ArrowLeft,
+  Edit2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ExportVideoModal } from "@/components/Editor/ExportVideoModal";
@@ -20,12 +22,16 @@ const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [projectName, setProjectName] = useState("西班牙-脚本1"); // Default project name
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [tempProjectName, setTempProjectName] = useState(projectName);
   const [configuration, setConfiguration] = useState({
     isAudioGenerated: false,
     isGlobalSubtitleConfigured: false,
     isBgmConfigured: false,
   });
   const location = useLocation();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const navigation = [
     { name: "项目库", href: "/", icon: FolderOpen },
@@ -61,6 +67,39 @@ const MainLayout = () => {
     // All configurations are complete, proceed with export
     setExportModalOpen(true);
   };
+
+  const handleTitleClick = () => {
+    setIsEditingTitle(true);
+    setTempProjectName(projectName);
+  };
+
+  const handleTitleSave = () => {
+    if (tempProjectName.trim()) {
+      setProjectName(tempProjectName.trim());
+    }
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleCancel = () => {
+    setTempProjectName(projectName);
+    setIsEditingTitle(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleTitleSave();
+    } else if (e.key === 'Escape') {
+      handleTitleCancel();
+    }
+  };
+
+  // Focus input when editing starts
+  useEffect(() => {
+    if (isEditingTitle && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditingTitle]);
 
   return (
     <div className="flex h-screen bg-background">
@@ -111,7 +150,27 @@ const MainLayout = () => {
         {isEditor && (
           <div className="bg-card border-b border-border px-6 py-3 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-4">
-              <h2 className="text-lg font-semibold text-foreground">西班牙-脚本1</h2>
+              {isEditingTitle ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    ref={inputRef}
+                    value={tempProjectName}
+                    onChange={(e) => setTempProjectName(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onBlur={handleTitleSave}
+                    className="text-lg font-semibold bg-background"
+                    style={{ width: Math.max(tempProjectName.length * 12, 120) + 'px' }}
+                  />
+                </div>
+              ) : (
+                <div 
+                  className="flex items-center gap-2 cursor-pointer hover:bg-accent/50 px-2 py-1 rounded group"
+                  onClick={handleTitleClick}
+                >
+                  <h2 className="text-lg font-semibold text-foreground">{projectName}</h2>
+                  <Edit2 size={14} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              )}
               <Button variant="outline" size="sm">
                 <Save size={16} className="mr-2" />
                 保存
