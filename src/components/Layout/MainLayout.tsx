@@ -17,14 +17,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ExportVideoModal } from "@/components/Editor/ExportVideoModal";
+import { useProjects } from "@/hooks/useProjects";
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [projectName, setProjectName] = useState("西班牙-脚本1"); // Default project name
+  const [projectName, setProjectName] = useState(""); // Will be set based on creation type
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [tempProjectName, setTempProjectName] = useState(projectName);
+  const [tempProjectName, setTempProjectName] = useState("");
   const [configuration, setConfiguration] = useState({
     isAudioGenerated: false,
     isGlobalSubtitleConfigured: false,
@@ -32,6 +33,34 @@ const MainLayout = () => {
   });
   const location = useLocation();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { projects } = useProjects();
+
+  // Set default project name based on creation type
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const templateId = urlParams.get('template');
+    
+    if (templateId && projects.length > 0) {
+      // From template creation - find template name and add "副本"
+      const template = projects.find(p => p.id === templateId);
+      if (template) {
+        setProjectName(`${template.name}副本`);
+      } else {
+        setProjectName("模板副本");
+      }
+    } else if (location.pathname.includes('editor')) {
+      // From blank creation or existing project
+      const pathSegments = location.pathname.split('/');
+      if (pathSegments[2] === 'new' || !projectName) {
+        setProjectName("请命名");
+      }
+    }
+  }, [location, projects]);
+
+  // Update tempProjectName when projectName changes
+  useEffect(() => {
+    setTempProjectName(projectName);
+  }, [projectName]);
 
   const navigation = [
     { name: "项目库", href: "/", icon: FolderOpen },

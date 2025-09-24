@@ -91,7 +91,7 @@ const ProjectLibrary = () => {
     } else {
       try {
         const newProject = await createProject({
-          name: '新项目',
+          name: '请命名',
           status: 'draft',
           duration: 0,
           segments_count: 0,
