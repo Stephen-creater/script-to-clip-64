@@ -27,11 +27,14 @@ const ProjectLibrary = () => {
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingProject, setEditingProject] = useState<string | null>(null);
+  const [tempProjectName, setTempProjectName] = useState('');
 
   const { 
     projects, 
     loading, 
     createProject, 
+    updateProject,
     deleteProject, 
     copyProject, 
     toggleTemplate,
@@ -123,6 +126,32 @@ const ProjectLibrary = () => {
 
   const handleSaveAsTemplate = async (projectId: string) => {
     await toggleTemplate(projectId);
+  };
+
+  const handleStartRename = (projectId: string, currentName: string) => {
+    setEditingProject(projectId);
+    setTempProjectName(currentName);
+  };
+
+  const handleSaveRename = async (projectId: string) => {
+    if (tempProjectName.trim() && tempProjectName !== projects.find(p => p.id === projectId)?.name) {
+      await updateProject(projectId, { name: tempProjectName.trim() });
+    }
+    setEditingProject(null);
+    setTempProjectName('');
+  };
+
+  const handleCancelRename = () => {
+    setEditingProject(null);
+    setTempProjectName('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, projectId: string) => {
+    if (e.key === 'Enter') {
+      handleSaveRename(projectId);
+    } else if (e.key === 'Escape') {
+      handleCancelRename();
+    }
   };
 
   const formatDuration = (seconds: number) => {
@@ -268,9 +297,27 @@ const ProjectLibrary = () => {
             </CardHeader>
             
             <CardContent className="p-4 flex-1">
-              <CardTitle className="text-base font-semibold truncate mb-2">
-                {project.name}
-              </CardTitle>
+              <div className="mb-2">
+                {editingProject === project.id ? (
+                  <Input
+                    value={tempProjectName}
+                    onChange={(e) => setTempProjectName(e.target.value)}
+                    onBlur={() => handleSaveRename(project.id)}
+                    onKeyDown={(e) => handleKeyDown(e, project.id)}
+                    className="text-base font-semibold h-auto p-1 border-primary"
+                    autoFocus
+                    maxLength={100}
+                  />
+                ) : (
+                  <CardTitle 
+                    className="text-base font-semibold truncate cursor-pointer hover:text-primary transition-colors"
+                    onClick={() => handleStartRename(project.id, project.name)}
+                    title="点击编辑项目名称"
+                  >
+                    {project.name}
+                  </CardTitle>
+                )}
+              </div>
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm text-muted-foreground">

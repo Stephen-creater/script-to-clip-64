@@ -28,6 +28,8 @@ const VideoLibrary = () => {
   const [selectedFolder, setSelectedFolder] = useState('all');
   const [expandedFolders, setExpandedFolders] = useState<string[]>(['recent']);
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
+  const [editingVideo, setEditingVideo] = useState<string | null>(null);
+  const [tempVideoName, setTempVideoName] = useState('');
   const [folders, setFolders] = useState<FolderItem[]>([
     { id: 'all', name: '西班牙火车旅行_成片', count: 2 },
     { id: 'recent', name: '最近导出', count: 2, hasChildren: true, children: [
@@ -36,7 +38,7 @@ const VideoLibrary = () => {
     ]}
   ]);
   
-  const [videos] = useState<VideoItem[]>([
+  const [videos, setVideos] = useState<VideoItem[]>([
     {
       id: "1",
       name: "西班牙-脚本1_导出版本1",
@@ -180,6 +182,34 @@ const VideoLibrary = () => {
     }
   };
 
+  const handleStartVideoRename = (videoId: string, currentName: string) => {
+    setEditingVideo(videoId);
+    setTempVideoName(currentName);
+  };
+
+  const handleSaveVideoRename = (videoId: string) => {
+    if (tempVideoName.trim() && tempVideoName !== videos.find(v => v.id === videoId)?.name) {
+      setVideos(prev => prev.map(video => 
+        video.id === videoId ? { ...video, name: tempVideoName.trim() } : video
+      ));
+    }
+    setEditingVideo(null);
+    setTempVideoName('');
+  };
+
+  const handleCancelVideoRename = () => {
+    setEditingVideo(null);
+    setTempVideoName('');
+  };
+
+  const handleVideoKeyDown = (e: React.KeyboardEvent, videoId: string) => {
+    if (e.key === 'Enter') {
+      handleSaveVideoRename(videoId);
+    } else if (e.key === 'Escape') {
+      handleCancelVideoRename();
+    }
+  };
+
   return (
     <div className="flex h-full">
       <FolderSidebar
@@ -294,9 +324,27 @@ const VideoLibrary = () => {
 
               {/* Video Info */}
               <div className="space-y-2">
-                <h3 className="font-medium text-sm truncate" title={video.name}>
-                  {video.name}
-                </h3>
+                <div>
+                  {editingVideo === video.id ? (
+                    <Input
+                      value={tempVideoName}
+                      onChange={(e) => setTempVideoName(e.target.value)}
+                      onBlur={() => handleSaveVideoRename(video.id)}
+                      onKeyDown={(e) => handleVideoKeyDown(e, video.id)}
+                      className="font-medium text-sm h-auto p-1 border-primary"
+                      autoFocus
+                      maxLength={100}
+                    />
+                  ) : (
+                    <h3 
+                      className="font-medium text-sm truncate cursor-pointer hover:text-primary transition-colors" 
+                      title={`${video.name} (点击编辑)`}
+                      onClick={() => handleStartVideoRename(video.id, video.name)}
+                    >
+                      {video.name}
+                    </h3>
+                  )}
+                </div>
                 
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
