@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Plus, Folder, Music, Image } from "lucide-react";
+import { useMaterials } from "@/hooks/useMaterials";
 
 interface StickerModalProps {
   isOpen: boolean;
@@ -14,43 +15,53 @@ interface StickerModalProps {
   segmentId: string;
 }
 
-// Mock materials data from materials library
-const mockMaterials = [
-  // Marketing materials (营销类)
-  { id: '1', name: '9月17日.png', type: 'image' as const, folderId: '2-1-1', thumbnail: '/placeholder.svg' },
-  { id: '2', name: '9月17日(1).png', type: 'image' as const, folderId: '2-1-1', thumbnail: '/placeholder.svg' },
-  { id: '3', name: 'TREN95(6).png', type: 'image' as const, folderId: '2-1-2', thumbnail: '/placeholder.svg' },
-  { id: '4', name: 'TREN95(4).png', type: 'image' as const, folderId: '2-1-2', thumbnail: '/placeholder.svg' },
-  { id: '5', name: 'TREN95(7).png', type: 'image' as const, folderId: '2-1-3', thumbnail: '/placeholder.svg' },
-  
-  // Decorative materials (装饰类)
-  { id: '6', name: 'TREN95(6).png', type: 'image' as const, folderId: '2-2', thumbnail: '/placeholder.svg' },
-  { id: '7', name: 'ave10版.jpeg', type: 'image' as const, folderId: '2-2', thumbnail: '/placeholder.svg' },
-  { id: '8', name: '9月10日 (1).png', type: 'image' as const, folderId: '2-2', thumbnail: '/placeholder.svg' },
-  { id: '9', name: '载屏2025 0.png', type: 'image' as const, folderId: '2-2', thumbnail: '/placeholder.svg' },
-  { id: '10', name: '9月10日(7).png', type: 'image' as const, folderId: '2-2', thumbnail: '/placeholder.svg' },
-];
-
-// Mock folder structure for navigation
-const imageFolders = [
-  { 
-    id: '2-1', 
-    name: '营销类', 
-    subfolders: [
-      { id: '2-1-1', name: '品牌+符号' },
-      { id: '2-1-2', name: '促销生活' },
-      { id: '2-1-3', name: '优惠码' },
-    ]
-  },
-  { id: '2-2', name: '装饰类', subfolders: [] }
-];
+// Interface for folder structure
+interface Folder {
+  id: string;
+  name: string;
+  subfolders: { id: string; name: string }[];
+}
 
 export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStickers, setSelectedStickers] = useState<string[]>([]);
   const [stickerSoundEffects, setStickerSoundEffects] = useState<{[key: string]: {folder: string, volume: string}}>({});
-  const [selectedCategory, setSelectedCategory] = useState("2-1"); // Default to 营销类
+  const [selectedFolder, setSelectedFolder] = useState(""); // Selected folder ID
   const [selectedSubfolder, setSelectedSubfolder] = useState(""); // For filtering by subfolder
+  
+  const { materials, getMaterialUrl } = useMaterials();
+
+  // Get image materials only (for stickers)
+  const imageMaterials = useMemo(() => {
+    return materials.filter(material => material.file_type === 'image');
+  }, [materials]);
+
+  // Extract folder structure from materials
+  const folders = useMemo(() => {
+    const folderMap = new Map<string, Folder>();
+    
+    imageMaterials.forEach(material => {
+      if (material.folder_id) {
+        if (!folderMap.has(material.folder_id)) {
+          // For simplicity, we'll use the category as folder name if no folder structure exists
+          folderMap.set(material.folder_id, {
+            id: material.folder_id,
+            name: material.category || `文件夹 ${material.folder_id}`,
+            subfolders: []
+          });
+        }
+      }
+    });
+
+    return Array.from(folderMap.values());
+  }, [imageMaterials]);
+
+  // Set default selected folder when folders are available
+  useEffect(() => {
+    if (folders.length > 0 && !selectedFolder) {
+      setSelectedFolder(folders[0].id);
+    }
+  }, [folders, selectedFolder]);
 
   const handleStickerSelect = (stickerId: string) => {
     setSelectedStickers(prev => {
@@ -88,37 +99,30 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
     onClose();
   };
 
-  // Get filtered materials based on selected category and subfolder
+  // Get filtered materials based on selected folder and search query
   const getFilteredMaterials = () => {
-    let filtered = mockMaterials.filter(material => {
-      // Filter by category (营销类 or 装饰类)
-      if (selectedCategory === "2-1") {
-        return material.folderId?.startsWith("2-1");
-      } else if (selectedCategory === "2-2") {
-        return material.folderId === "2-2";
-      }
-      return false;
-    });
+    let filtered = imageMaterials;
 
-    // Further filter by subfolder if selected
-    if (selectedSubfolder) {
-      filtered = filtered.filter(material => material.folderId === selectedSubfolder);
+    // Filter by selected folder
+    if (selectedFolder) {
+      filtered = filtered.filter(material => material.folder_id === selectedFolder);
     }
 
     // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(material => 
-        material.name.toLowerCase().includes(searchQuery.toLowerCase())
+        material.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (material.original_name && material.original_name.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
     return filtered;
   };
 
-  const currentFolder = imageFolders.find(folder => folder.id === selectedCategory);
-  const marketingMaterials = getFilteredMaterials();
+  const currentFolder = folders.find(folder => folder.id === selectedFolder);
+  const filteredMaterials = getFilteredMaterials();
 
-  const StickerGrid = ({ stickers }: { stickers: typeof mockMaterials }) => (
+  const StickerGrid = ({ stickers }: { stickers: typeof imageMaterials }) => (
     <div className="grid grid-cols-5 gap-4">
       {stickers.map(sticker => (
         <div
@@ -132,7 +136,7 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
         >
           <div className="aspect-square bg-muted rounded flex items-center justify-center mb-2">
             <img 
-              src={sticker.thumbnail} 
+              src={getMaterialUrl(sticker)} 
               alt={sticker.name}
               className="w-full h-full object-cover rounded"
             />
@@ -142,6 +146,27 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
       ))}
     </div>
   );
+
+  // If no folders available, show empty state
+  if (folders.length === 0) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>选择贴纸</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <Folder size={48} className="mb-4" />
+            <p>暂无贴纸文件夹</p>
+            <p className="text-sm">请在素材库中创建文件夹并上传图片素材</p>
+          </div>
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={onClose}>关闭</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -159,15 +184,17 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
         <div className="flex-1 min-h-0">
           <ScrollArea className="h-full pr-4">
             <div className="space-y-4">
-              <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
+              <Tabs value={selectedFolder} onValueChange={setSelectedFolder} className="w-full">
                 <div className="flex items-center justify-between mb-4">
                   <TabsList>
-                    <TabsTrigger value="2-1">
-                      营销类({mockMaterials.filter(m => m.folderId?.startsWith("2-1")).length})
-                    </TabsTrigger>
-                    <TabsTrigger value="2-2">
-                      装饰类({mockMaterials.filter(m => m.folderId === "2-2").length})
-                    </TabsTrigger>
+                    {folders.map(folder => {
+                      const folderMaterialCount = imageMaterials.filter(m => m.folder_id === folder.id).length;
+                      return (
+                        <TabsTrigger key={folder.id} value={folder.id}>
+                          {folder.name}({folderMaterialCount})
+                        </TabsTrigger>
+                      );
+                    })}
                   </TabsList>
                   
                   <div className="relative">
@@ -181,122 +208,59 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
                   </div>
                 </div>
 
-                <div className="flex gap-4 mb-4">
-                  <Button 
-                    variant={selectedSubfolder === '' ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => setSelectedSubfolder('')}
-                  >
-                    全部
-                  </Button>
-                  {currentFolder?.subfolders.map(subfolder => (
-                    <Button 
-                      key={subfolder.id}
-                      variant={selectedSubfolder === subfolder.id ? "default" : "outline"} 
-                      size="sm"
-                      onClick={() => setSelectedSubfolder(subfolder.id)}
-                    >
-                      {subfolder.name}
-                    </Button>
-                  ))}
-                </div>
-
-                <TabsContent value="2-1" className="space-y-4">
-                  <div className="flex gap-4">
-                    <div className="flex-1">
-                      {marketingMaterials.length > 0 ? (
-                        <StickerGrid stickers={marketingMaterials} />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                          <Image size={48} className="mb-4" />
-                          <p>暂无贴纸素材</p>
-                          <p className="text-sm">请上传图片素材到素材库</p>
+                {folders.map(folder => (
+                  <TabsContent key={folder.id} value={folder.id} className="space-y-4">
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        {filteredMaterials.length > 0 ? (
+                          <StickerGrid stickers={filteredMaterials} />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                            <Image size={48} className="mb-4" />
+                            <p>暂无贴纸素材</p>
+                            <p className="text-sm">请上传图片素材到此文件夹</p>
+                          </div>
+                        )}
+                      </div>
+                      {selectedStickers.length > 0 && (
+                        <div className="w-48 border-l border-border pl-4">
+                          <h4 className="text-sm font-medium mb-3">预览</h4>
+                          <div className="relative bg-black rounded-lg" style={{ aspectRatio: '9/16', height: '200px' }}>
+                            <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg">
+                              {selectedStickers.map((stickerId, index) => {
+                                const sticker = imageMaterials.find(s => s.id === stickerId);
+                                if (!sticker) return null;
+                                return (
+                                  <div 
+                                    key={stickerId}
+                                    className="absolute bg-white/20 border border-white/30 rounded px-2 py-1 text-xs text-white"
+                                    style={{
+                                      top: `${20 + index * 15}%`,
+                                      right: `${10 + index * 5}%`,
+                                      transform: `rotate(${index * 5 - 10}deg)`
+                                    }}
+                                  >
+                                    贴纸{index + 1}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            已选择 {selectedStickers.length} 个贴纸
+                          </div>
                         </div>
                       )}
                     </div>
-                    {selectedStickers.length > 0 && (
-                      <div className="w-48 border-l border-border pl-4">
-                        <h4 className="text-sm font-medium mb-3">预览</h4>
-                        <div className="relative bg-black rounded-lg" style={{ aspectRatio: '9/16', height: '200px' }}>
-                          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg">
-                            {selectedStickers.map((stickerId, index) => {
-                              const sticker = mockMaterials.find(s => s.id === stickerId);
-                              if (!sticker) return null;
-                              return (
-                                <div 
-                                  key={stickerId}
-                                  className="absolute bg-white/20 border border-white/30 rounded px-2 py-1 text-xs text-white"
-                                  style={{
-                                    top: `${20 + index * 15}%`,
-                                    right: `${10 + index * 5}%`,
-                                    transform: `rotate(${index * 5 - 10}deg)`
-                                  }}
-                                >
-                                  贴纸{index + 1}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          已选择 {selectedStickers.length} 个贴纸
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="2-2" className="space-y-4">
-                  <div className="flex gap-4">
-                    <div className="flex-1">
-                      {marketingMaterials.length > 0 ? (
-                        <StickerGrid stickers={marketingMaterials} />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                          <Image size={48} className="mb-4" />
-                          <p>暂无贴纸素材</p>
-                          <p className="text-sm">请上传图片素材到素材库</p>
-                        </div>
-                      )}
-                    </div>
-                    {selectedStickers.length > 0 && (
-                      <div className="w-48 border-l border-border pl-4">
-                        <h4 className="text-sm font-medium mb-3">预览</h4>
-                        <div className="relative bg-black rounded-lg" style={{ aspectRatio: '9/16', height: '200px' }}>
-                          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg">
-                            {selectedStickers.map((stickerId, index) => {
-                              const sticker = mockMaterials.find(s => s.id === stickerId);
-                              if (!sticker) return null;
-                              return (
-                                <div 
-                                  key={stickerId}
-                                  className="absolute bg-white/20 border border-white/30 rounded px-2 py-1 text-xs text-white"
-                                  style={{
-                                    top: `${20 + index * 15}%`,
-                                    right: `${10 + index * 5}%`,
-                                    transform: `rotate(${index * 5 - 10}deg)`
-                                  }}
-                                >
-                                  贴纸{index + 1}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          已选择 {selectedStickers.length} 个贴纸
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
+                  </TabsContent>
+                ))}
               </Tabs>
 
               {selectedStickers.length > 0 && (
                 <div className="space-y-4 border-t border-border pt-4">
                   <h4 className="text-sm font-medium">贴纸音效设置</h4>
                   {selectedStickers.map((stickerId, index) => {
-                    const stickerName = mockMaterials.find(s => s.id === stickerId)?.name || `贴纸${index + 1}`;
+                    const stickerName = imageMaterials.find(s => s.id === stickerId)?.name || `贴纸${index + 1}`;
                     const currentEffect = stickerSoundEffects[stickerId];
                     
                     return (
