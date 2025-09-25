@@ -103,6 +103,15 @@ const VideoLibrary = () => {
     setSelectedVideos([]);
   };
 
+  const handleBatchDownload = () => {
+    // TODO: Implement batch download logic
+    console.log('Download videos:', selectedVideos);
+    const selectedVideoNames = videos
+      .filter(video => selectedVideos.includes(video.id))
+      .map(video => video.name);
+    alert(`开始下载 ${selectedVideoNames.length} 个文件:\n${selectedVideoNames.join('\n')}`);
+  };
+
   const handleFolderCreate = (name: string, parentId?: string) => {
     const newFolder: FolderItem = {
       id: Date.now().toString(),
@@ -257,13 +266,24 @@ const VideoLibrary = () => {
             </span>
           </div>
           {selectedVideos.length > 0 && (
-            <Button 
-              variant="destructive" 
-              size="sm"
-              onClick={handleBatchDelete}
-            >
-              批量删除
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleBatchDownload}
+              >
+                <Download size={14} className="mr-1" />
+                批量下载
+              </Button>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={handleBatchDelete}
+              >
+                <Trash2 size={14} className="mr-1" />
+                批量删除
+              </Button>
+            </div>
           )}
         </div>
       )}
