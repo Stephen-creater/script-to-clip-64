@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useToast } from '@/hooks/use-toast'
+import { supabase } from '@/integrations/supabase/client'
 
 export interface Material {
   id: string
@@ -89,13 +90,18 @@ export const useMaterials = () => {
   const [uploadProgress, setUploadProgress] = useState(0)
   const { toast } = useToast()
 
-  // Load materials (demo mode)
+  // Load materials from Supabase
   const loadMaterials = async () => {
     setLoading(true)
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500))
-      setMaterials(mockMaterials)
+      const { data, error } = await supabase
+        .from('materials')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      
+      setMaterials(data || [])
     } catch (error) {
       console.error('Error loading materials:', error)
       toast({
