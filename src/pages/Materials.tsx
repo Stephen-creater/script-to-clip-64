@@ -18,7 +18,8 @@ import {
   Move,
   Eye,
   Download,
-  Plus
+  Plus,
+  Folder
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import FolderSidebar, { FolderItem } from "@/components/FolderManagement/FolderSidebar";
@@ -44,11 +45,12 @@ const Materials = () => {
     isSupabaseConfigured 
   } = useMaterials();
   
-  const [folders] = useState<FolderItem[]>([
+  // Dynamic folder structure with correct counts
+  const getDynamicFolders = (): FolderItem[] => [
     { 
       id: 'all', 
       name: '视频素材', 
-      count: materials.length,
+      count: materials.filter(m => m.file_type === 'video').length,
       hasChildren: true,
       children: [
         { id: 'window-scenery', name: '车窗外风景', count: getMaterialsByCategory('视频素材', '车窗外风景').length, parentId: 'all' },
@@ -61,19 +63,9 @@ const Materials = () => {
       count: materials.filter(m => m.file_type === 'image').length,
       hasChildren: true,
       children: [
-        { 
-          id: 'marketing', 
-          name: '营销类', 
-          count: getMaterialsByCategory('图片素材', '营销类').length, 
-          parentId: 'images',
-          hasChildren: true,
-          children: [
-            { id: 'brand', name: '品牌+符号', count: getMaterialsByCategory('图片素材', '品牌+符号').length, parentId: 'marketing' },
-            { id: 'promo', name: '促销生活', count: getMaterialsByCategory('图片素材', '促销生活').length, parentId: 'marketing' },
-            { id: 'coupon', name: '优惠码', count: getMaterialsByCategory('图片素材', '优惠码').length, parentId: 'marketing' },
-          ]
-        },
+        { id: 'emotion', name: '表情类', count: getMaterialsByCategory('图片素材', '表情类').length, parentId: 'images' },
         { id: 'decorative', name: '装饰类', count: getMaterialsByCategory('图片素材', '装饰类').length, parentId: 'images' },
+        { id: 'marketing', name: '营销类', count: getMaterialsByCategory('图片素材', '营销类').length, parentId: 'images' },
       ]
     },
     { 
@@ -86,20 +78,20 @@ const Materials = () => {
         { id: 'sound-effects', name: '音效素材', count: getMaterialsByCategory('音频素材', '音效素材').length, parentId: 'audio' },
       ]
     },
-  ]);
+  ];
+
+  const folders = getDynamicFolders();
 
   // Get category and subcategory from selected folder
   const getFolderInfo = (folderId: string) => {
     if (folderId === 'all' || folderId === 'window-scenery' || folderId === 'station-interior') {
       return { category: '视频素材', subcategory: folderId === 'window-scenery' ? '车窗外风景' : folderId === 'station-interior' ? '车站内' : undefined };
-    } else if (folderId === 'images' || folderId === 'marketing' || folderId === 'decorative' || folderId === 'brand' || folderId === 'promo' || folderId === 'coupon') {
+    } else if (folderId === 'images' || folderId === 'emotion' || folderId === 'decorative' || folderId === 'marketing') {
       return { 
         category: '图片素材', 
-        subcategory: folderId === 'marketing' ? '营销类' : 
+        subcategory: folderId === 'emotion' ? '表情类' : 
                     folderId === 'decorative' ? '装饰类' :
-                    folderId === 'brand' ? '品牌+符号' :
-                    folderId === 'promo' ? '促销生活' :
-                    folderId === 'coupon' ? '优惠码' : undefined
+                    folderId === 'marketing' ? '营销类' : undefined
       };
     } else if (folderId === 'audio' || folderId === 'bgm' || folderId === 'sound-effects') {
       return { 
@@ -108,6 +100,40 @@ const Materials = () => {
       };
     }
     return { category: '视频素材', subcategory: undefined };
+  };
+
+  // Check if folder has children (should show subfolders instead of files)
+  const hasSubfolders = (folderId: string) => {
+    const findFolder = (folders: FolderItem[], id: string): FolderItem | null => {
+      for (const folder of folders) {
+        if (folder.id === id) return folder;
+        if (folder.children) {
+          const found = findFolder(folder.children, id);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    
+    const folder = findFolder(folders, folderId);
+    return folder?.hasChildren || (folder?.children && folder.children.length > 0);
+  };
+
+  // Get subfolders for parent folders
+  const getSubfolders = (folderId: string) => {
+    const findFolder = (folders: FolderItem[], id: string): FolderItem | null => {
+      for (const folder of folders) {
+        if (folder.id === id) return folder;
+        if (folder.children) {
+          const found = findFolder(folder.children, id);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    
+    const folder = findFolder(folders, folderId);
+    return folder?.children || [];
   };
 
   // File upload handlers
@@ -129,8 +155,13 @@ const Materials = () => {
     fileInputRef.current?.click();
   };
 
-  // Get filtered materials
+  // Get filtered materials - only for leaf folders
   const getFilteredMaterials = () => {
+    // If folder has subfolders, don't show materials
+    if (hasSubfolders(selectedFolder)) {
+      return [];
+    }
+
     let filtered = materials;
     
     if (selectedFolder !== 'all') {
@@ -138,24 +169,20 @@ const Materials = () => {
         filtered = getMaterialsByCategory('视频素材', '车窗外风景');
       } else if (selectedFolder === 'station-interior') {
         filtered = getMaterialsByCategory('视频素材', '车站内');
-      } else if (selectedFolder === 'images') {
-        filtered = materials.filter(m => m.file_type === 'image');
-      } else if (selectedFolder === 'audio') {
-        filtered = materials.filter(m => m.file_type === 'audio');
-      } else if (selectedFolder === 'marketing') {
-        filtered = getMaterialsByCategory('图片素材', '营销类');
+      } else if (selectedFolder === 'emotion') {
+        filtered = getMaterialsByCategory('图片素材', '表情类');
       } else if (selectedFolder === 'decorative') {
         filtered = getMaterialsByCategory('图片素材', '装饰类');
-      } else if (selectedFolder === 'brand') {
-        filtered = getMaterialsByCategory('图片素材', '品牌+符号');
-      } else if (selectedFolder === 'promo') {
-        filtered = getMaterialsByCategory('图片素材', '促销生活');
-      } else if (selectedFolder === 'coupon') {
-        filtered = getMaterialsByCategory('图片素材', '优惠码');
+      } else if (selectedFolder === 'marketing') {
+        filtered = getMaterialsByCategory('图片素材', '营销类');
       } else if (selectedFolder === 'bgm') {
         filtered = getMaterialsByCategory('音频素材', 'BGM');
       } else if (selectedFolder === 'sound-effects') {
         filtered = getMaterialsByCategory('音频素材', '音效素材');
+      } else if (selectedFolder === 'all') {
+        filtered = materials.filter(m => m.file_type === 'video');
+      } else if (selectedFolder === 'audio') {
+        filtered = materials.filter(m => m.file_type === 'audio');
       }
     }
 
@@ -169,6 +196,8 @@ const Materials = () => {
   };
 
   const filteredMaterials = getFilteredMaterials();
+  const subfolders = hasSubfolders(selectedFolder) ? getSubfolders(selectedFolder) : [];
+  const shouldShowSubfolders = hasSubfolders(selectedFolder) && subfolders.length > 0;
 
   const getFileIcon = (fileType: string) => {
     switch (fileType) {
@@ -329,8 +358,31 @@ const Materials = () => {
           </div>
         )}
 
-        {/* Materials Grid/List */}
-        {viewMode === 'grid' ? (
+        {/* Show subfolders or materials based on folder type */}
+        {shouldShowSubfolders ? (
+          // Show subfolders as cards
+          <div>
+            <div className="mb-4">
+              <span className="text-sm text-muted-foreground">子文件夹</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {subfolders.map((subfolder) => (
+                <div
+                  key={subfolder.id}
+                  className="bg-card border border-border rounded-lg p-4 hover:shadow-card transition-all cursor-pointer"
+                  onClick={() => setSelectedFolder(subfolder.id)}
+                >
+                  <div className="flex flex-col items-center text-center">
+                    <Folder size={32} className="text-primary mb-2" />
+                    <h3 className="text-sm font-medium truncate w-full">{subfolder.name}</h3>
+                    <p className="text-xs text-muted-foreground">{subfolder.count} 个文件</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : viewMode === 'grid' ? (
+          // Show materials in grid view
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Checkbox
@@ -432,7 +484,7 @@ const Materials = () => {
         )}
 
         {/* Empty State */}
-        {filteredMaterials.length === 0 && !loading && (
+        {!shouldShowSubfolders && filteredMaterials.length === 0 && !loading && (
           <div className="text-center py-12">
             <div className="text-muted-foreground mb-4">
               <Upload size={48} className="mx-auto mb-4 opacity-50" />
