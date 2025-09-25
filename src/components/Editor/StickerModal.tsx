@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Plus, Folder, Music, Image } from "lucide-react";
 import { useMaterials } from "@/hooks/useMaterials";
+import { useFolders } from "@/hooks/useFolders";
 
 interface StickerModalProps {
   isOpen: boolean;
@@ -30,38 +31,24 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
   const [selectedSubfolder, setSelectedSubfolder] = useState(""); // For filtering by subfolder
   
   const { materials, getMaterialUrl } = useMaterials();
+  const { getFolderHierarchy } = useFolders();
 
   // Get image materials only (for stickers)
   const imageMaterials = useMemo(() => {
     return materials.filter(material => material.file_type === 'image');
   }, [materials]);
 
-  // Extract folder structure from materials
-  const folders = useMemo(() => {
-    const folderMap = new Map<string, Folder>();
-    
-    imageMaterials.forEach(material => {
-      if (material.folder_id) {
-        if (!folderMap.has(material.folder_id)) {
-          // For simplicity, we'll use the category as folder name if no folder structure exists
-          folderMap.set(material.folder_id, {
-            id: material.folder_id,
-            name: material.category || `文件夹 ${material.folder_id}`,
-            subfolders: []
-          });
-        }
-      }
-    });
-
-    return Array.from(folderMap.values());
-  }, [imageMaterials]);
+  // Extract folder structure from folders hook
+  const folderHierarchy = useMemo(() => {
+    return getFolderHierarchy();
+  }, [getFolderHierarchy]);
 
   // Set default selected folder when folders are available
   useEffect(() => {
-    if (folders.length > 0 && !selectedFolder) {
-      setSelectedFolder(folders[0].id);
+    if (folderHierarchy.length > 0 && !selectedFolder) {
+      setSelectedFolder(folderHierarchy[0].id);
     }
-  }, [folders, selectedFolder]);
+  }, [folderHierarchy, selectedFolder]);
 
   const handleStickerSelect = (stickerId: string) => {
     setSelectedStickers(prev => {
@@ -119,7 +106,7 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
     return filtered;
   };
 
-  const currentFolder = folders.find(folder => folder.id === selectedFolder);
+  const currentFolder = folderHierarchy.find(folder => folder.id === selectedFolder);
   const filteredMaterials = getFilteredMaterials();
 
   const StickerGrid = ({ stickers }: { stickers: typeof imageMaterials }) => (
@@ -148,7 +135,7 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
   );
 
   // If no folders available, show empty state
-  if (folders.length === 0) {
+  if (folderHierarchy.length === 0) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[500px]">
@@ -187,7 +174,7 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
               <Tabs value={selectedFolder} onValueChange={setSelectedFolder} className="w-full">
                 <div className="flex items-center justify-between mb-4">
                   <TabsList>
-                    {folders.map(folder => {
+                    {folderHierarchy.map(folder => {
                       const folderMaterialCount = imageMaterials.filter(m => m.folder_id === folder.id).length;
                       return (
                         <TabsTrigger key={folder.id} value={folder.id}>
@@ -208,7 +195,7 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
                   </div>
                 </div>
 
-                {folders.map(folder => (
+                {folderHierarchy.map(folder => (
                   <TabsContent key={folder.id} value={folder.id} className="space-y-4">
                     <div className="flex gap-4">
                       <div className="flex-1">

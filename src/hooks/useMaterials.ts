@@ -101,7 +101,29 @@ export const useMaterials = () => {
 
       if (error) throw error
       
-      setMaterials(data || [])
+      // Map database fields to Material interface with proper typing
+      const mappedMaterials: Material[] = (data || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        original_name: item.original_name || item.name + '.png',
+        file_path: item.file_path,
+        file_type: item.file_type,
+        mime_type: item.mime_type || 'image/png',
+        file_size: item.file_size,
+        category: item.category,
+        subcategory: item.subcategory || undefined,
+        width: item.width || undefined,
+        height: item.height || undefined,
+        duration: item.duration || undefined,
+        tags: item.tags || [],
+        metadata: (item.metadata as Record<string, any>) || {},
+        created_at: item.created_at,
+        updated_at: item.updated_at || item.created_at,
+        user_id: item.user_id,
+        folder_id: item.folder_id || undefined
+      }))
+      
+      setMaterials(mappedMaterials)
     } catch (error) {
       console.error('Error loading materials:', error)
       toast({
@@ -313,6 +335,6 @@ export const useMaterials = () => {
     addTags,
     removeTags,
     refreshMaterials: loadMaterials,
-    isSupabaseConfigured: false // Demo mode
+    isSupabaseConfigured: true // Using Supabase
   }
 }
