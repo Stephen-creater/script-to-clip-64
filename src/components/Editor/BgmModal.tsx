@@ -2,14 +2,15 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, Music, Play, Pause, Folder, ChevronRight } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Upload, Music, Play, Pause, Folder, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BgmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect?: (bgm: { type: 'upload' | 'library', file?: File, url?: string, name: string, cancelled?: boolean }) => void;
-  selectedBgm?: { name: string, type: string, id?: string } | null;
+  onSelect?: (bgm: { type: 'upload' | 'library', file?: File, url?: string, name: string, volume?: number, cancelled?: boolean }) => void;
+  selectedBgm?: { name: string, type: string, id?: string, volume?: number } | null;
 }
 
 interface MaterialItem {
@@ -104,6 +105,7 @@ export const BgmModal = ({ isOpen, onClose, onSelect, selectedBgm }: BgmModalPro
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [confirmedAudio, setConfirmedAudio] = useState<string | null>(null);
+  const [volume, setVolume] = useState<number>(50);
 
   // Initialize confirmed audio based on selectedBgm prop
   useEffect(() => {
@@ -111,9 +113,11 @@ export const BgmModal = ({ isOpen, onClose, onSelect, selectedBgm }: BgmModalPro
       const matchedAudio = audioMaterials.find(audio => audio.name === selectedBgm.name);
       if (matchedAudio) {
         setConfirmedAudio(matchedAudio.id);
+        setVolume(selectedBgm.volume || 50);
       }
     } else {
       setConfirmedAudio(null);
+      setVolume(50);
     }
   }, [selectedBgm, isOpen]);
 
@@ -130,7 +134,7 @@ export const BgmModal = ({ isOpen, onClose, onSelect, selectedBgm }: BgmModalPro
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      onSelect?.({ type: 'upload', file, name: file.name });
+      onSelect?.({ type: 'upload', file, name: file.name, volume });
       onClose();
     }
   };
@@ -149,7 +153,7 @@ export const BgmModal = ({ isOpen, onClose, onSelect, selectedBgm }: BgmModalPro
     if (confirmedAudio) {
       const selectedAudio = audioMaterials.find(audio => audio.id === confirmedAudio);
       if (selectedAudio) {
-        onSelect?.({ type: 'library', url: `/materials/${selectedAudio.name}`, name: selectedAudio.name });
+        onSelect?.({ type: 'library', url: `/materials/${selectedAudio.name}`, name: selectedAudio.name, volume });
       }
     } else {
       // No audio selected, send cancellation
@@ -306,6 +310,28 @@ export const BgmModal = ({ isOpen, onClose, onSelect, selectedBgm }: BgmModalPro
             </div>
           </TabsContent>
         </Tabs>
+        
+        {/* Volume Control - Show when audio is selected */}
+        {confirmedAudio && (
+          <div className="pt-4 border-t">
+            <div className="flex items-center gap-4 mb-4">
+              <Volume2 size={16} className="text-muted-foreground" />
+              <span className="text-sm font-medium">音量调节</span>
+              <div className="flex-1 flex items-center gap-3">
+                <Slider
+                  value={[volume]}
+                  onValueChange={(value) => setVolume(value[0])}
+                  max={100}
+                  step={1}
+                  className="flex-1"
+                />
+                <span className="text-sm text-muted-foreground w-12">
+                  {volume}%
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
         
         <div className="flex justify-end gap-3 pt-4 border-t">
           <Button variant="outline" onClick={onClose}>
