@@ -5,8 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Upload, 
   Search, 
@@ -32,15 +30,13 @@ const Materials = () => {
   const [selectedFolder, setSelectedFolder] = useState('all');
   const [expandedFolders, setExpandedFolders] = useState<string[]>(['all', 'images', 'audio']);
   const [searchTerm, setSearchTerm] = useState("");
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { 
     materials, 
     loading, 
     uploading, 
+    uploadProgress,
     uploadMaterial, 
     deleteMaterial, 
     getMaterialsByCategory, 
@@ -92,27 +88,45 @@ const Materials = () => {
     },
   ]);
 
+  // Get category and subcategory from selected folder
+  const getFolderInfo = (folderId: string) => {
+    if (folderId === 'all' || folderId === 'window-scenery' || folderId === 'station-interior') {
+      return { category: '视频素材', subcategory: folderId === 'window-scenery' ? '车窗外风景' : folderId === 'station-interior' ? '车站内' : undefined };
+    } else if (folderId === 'images' || folderId === 'marketing' || folderId === 'decorative' || folderId === 'brand' || folderId === 'promo' || folderId === 'coupon') {
+      return { 
+        category: '图片素材', 
+        subcategory: folderId === 'marketing' ? '营销类' : 
+                    folderId === 'decorative' ? '装饰类' :
+                    folderId === 'brand' ? '品牌+符号' :
+                    folderId === 'promo' ? '促销生活' :
+                    folderId === 'coupon' ? '优惠码' : undefined
+      };
+    } else if (folderId === 'audio' || folderId === 'bgm' || folderId === 'sound-effects') {
+      return { 
+        category: '音频素材', 
+        subcategory: folderId === 'bgm' ? 'BGM' : folderId === 'sound-effects' ? '音效素材' : undefined
+      };
+    }
+    return { category: '视频素材', subcategory: undefined };
+  };
+
   // File upload handlers
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    if (files.length > 0 && selectedCategory) {
+    if (files.length > 0) {
+      const { category, subcategory } = getFolderInfo(selectedFolder);
       files.forEach(file => {
-        uploadMaterial(file, selectedCategory, selectedSubcategory);
+        uploadMaterial(file, category, subcategory);
       });
-      setUploadDialogOpen(false);
-      setSelectedCategory('');
-      setSelectedSubcategory('');
+    }
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
-  const openUploadDialog = () => {
-    setUploadDialogOpen(true);
-  };
-
-  const handleUploadConfirm = () => {
-    if (selectedCategory) {
-      fileInputRef.current?.click();
-    }
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
   };
 
   // Get filtered materials
@@ -244,7 +258,7 @@ const Materials = () => {
             </Badge>
             <Button 
               className="bg-gradient-primary"
-              onClick={openUploadDialog}
+              onClick={handleUploadClick}
               disabled={uploading}
             >
               <Upload size={16} className="mr-2" />
@@ -289,8 +303,9 @@ const Materials = () => {
               <div className="flex items-center gap-3">
                 <Upload size={16} className="text-primary" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">正在上传文件...</p>
-                  <Progress value={60} className="h-2 mt-2" />
+                  <p className="text-sm font-medium">正在上传到 {getFolderInfo(selectedFolder).category}...</p>
+                  <Progress value={uploadProgress} className="h-2 mt-2" />
+                  <p className="text-xs text-muted-foreground mt-1">{uploadProgress}% 完成</p>
                 </div>
               </div>
             </CardContent>
@@ -424,7 +439,7 @@ const Materials = () => {
               <p className="text-lg font-medium">暂无素材文件</p>
               <p className="text-sm">上传您的第一个素材文件吧</p>
             </div>
-            <Button onClick={openUploadDialog} className="mt-4">
+            <Button onClick={handleUploadClick} className="mt-4">
               <Plus size={16} className="mr-2" />
               上传素材
             </Button>
@@ -432,90 +447,17 @@ const Materials = () => {
         )}
       </div>
 
-      {/* Upload Dialog */}
-      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>上传素材</DialogTitle>
-            <DialogDescription>
-              选择要上传的素材类型和分类
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">素材类型</label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="选择素材类型" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="视频素材">视频素材</SelectItem>
-                  <SelectItem value="图片素材">图片素材</SelectItem>
-                  <SelectItem value="音频素材">音频素材</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedCategory && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">分类</label>
-                <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择分类" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectedCategory === '视频素材' && (
-                      <>
-                        <SelectItem value="车窗外风景">车窗外风景</SelectItem>
-                        <SelectItem value="车站内">车站内</SelectItem>
-                      </>
-                    )}
-                    {selectedCategory === '图片素材' && (
-                      <>
-                        <SelectItem value="营销类">营销类</SelectItem>
-                        <SelectItem value="装饰类">装饰类</SelectItem>
-                        <SelectItem value="品牌+符号">品牌+符号</SelectItem>
-                        <SelectItem value="促销生活">促销生活</SelectItem>
-                        <SelectItem value="优惠码">优惠码</SelectItem>
-                      </>
-                    )}
-                    {selectedCategory === '音频素材' && (
-                      <>
-                        <SelectItem value="BGM">BGM</SelectItem>
-                        <SelectItem value="音效素材">音效素材</SelectItem>
-                      </>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
-              取消
-            </Button>
-            <Button onClick={handleUploadConfirm} disabled={!selectedCategory}>
-              选择文件
-            </Button>
-          </DialogFooter>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept={
-              selectedCategory === '视频素材' ? 'video/*' :
-              selectedCategory === '图片素材' ? 'image/*' : 'audio/*'
-            }
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-        </DialogContent>
-        </Dialog>
-      </div>
-    );
-  };
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        accept="image/*,video/*,audio/*"
+        onChange={handleFileSelect}
+      />
+    </div>
+  );
+};
 
   export default Materials;

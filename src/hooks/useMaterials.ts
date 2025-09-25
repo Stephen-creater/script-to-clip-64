@@ -86,6 +86,7 @@ export const useMaterials = () => {
   const [materials, setMaterials] = useState<Material[]>([])
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const { toast } = useToast()
 
   // Load materials (demo mode)
@@ -110,9 +111,18 @@ export const useMaterials = () => {
   // Upload material (demo mode)
   const uploadMaterial = async (file: File, category: string, subcategory?: string) => {
     setUploading(true)
+    setUploadProgress(0)
+    
     try {
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Simulate real-time upload progress
+      const updateProgress = async () => {
+        for (let i = 0; i <= 100; i += 10) {
+          setUploadProgress(i)
+          await new Promise(resolve => setTimeout(resolve, 100))
+        }
+      }
+      
+      await updateProgress()
       
       const newMaterial: Material = {
         id: Date.now().toString(),
@@ -137,7 +147,7 @@ export const useMaterials = () => {
       
       toast({
         title: "上传成功",
-        description: `${file.name} 已上传到素材库`,
+        description: `${file.name} 已上传到${category}${subcategory ? ` - ${subcategory}` : ''}`,
       })
 
       return newMaterial
@@ -151,6 +161,7 @@ export const useMaterials = () => {
       throw error
     } finally {
       setUploading(false)
+      setUploadProgress(0)
     }
   }
 
@@ -286,6 +297,7 @@ export const useMaterials = () => {
     materials,
     loading,
     uploading,
+    uploadProgress,
     uploadMaterial,
     deleteMaterial,
     updateMaterial,
