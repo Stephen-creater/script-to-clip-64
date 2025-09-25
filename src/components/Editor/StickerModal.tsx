@@ -23,27 +23,34 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
   const [selectedCategory, setSelectedCategory] = useState(""); // 选择的素材库文件夹（使用子文件夹名）
   
   const { materials, getMaterialUrl, getMaterialsByCategory } = useMaterials();
-  const { getFolderHierarchy } = useFolders();
+  const { folders } = useFolders();
 
   // 仅图片素材（贴纸）
   const imageMaterials = useMemo(() => {
     return materials.filter(material => material.file_type === 'image');
   }, [materials]);
 
-  // 从素材库获取“图片素材”的子文件夹作为可选项
+  // 从素材库获取所有根文件夹及其子文件夹作为可选项（任意文件夹可选）
   const folderOptions = useMemo(() => {
-    const subs = getFolderHierarchy();
-    return subs.map((f: any) => ({
-      id: f.id,
-      name: f.name,
-      count: getMaterialsByCategory('图片素材', f.name).length,
-    }));
-  }, [getFolderHierarchy, getMaterialsByCategory, imageMaterials]);
+    const options: any[] = [];
+    const roots = folders.filter((f) => !f.parent_id);
+    roots.forEach((root) => {
+      const children = folders.filter((f) => f.parent_id === root.id);
+      const rootCount = root.name === '图片素材' ? imageMaterials.length : 0;
+      options.push({ id: root.id, name: root.name, parentName: null, isRoot: true, count: rootCount });
+      children.forEach((ch) => {
+        const count = root.name === '图片素材' ? getMaterialsByCategory('图片素材', ch.name).length : 0;
+        options.push({ id: ch.id, name: ch.name, parentName: root.name, isRoot: false, count });
+      });
+    });
+    return options;
+  }, [folders, imageMaterials, getMaterialsByCategory]);
 
-  // 初始化选择第一个文件夹
   useEffect(() => {
-    if (folderOptions.length > 0 && !selectedCategory) {
-      setSelectedCategory(folderOptions[0].name);
+    if (!selectedCategory && folderOptions.length > 0) {
+      const imageRoot = folderOptions.find((o: any) => o.isRoot && o.name === '图片素材');
+      const firstImageChild = folderOptions.find((o: any) => !o.isRoot && o.parentName === '图片素材');
+      setSelectedCategory((firstImageChild?.id || imageRoot?.id || folderOptions[0].id) as string);
     }
   }, [folderOptions, selectedCategory]);
 
@@ -87,12 +94,18 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
   const getFilteredMaterials = () => {
     let filtered = imageMaterials;
 
-    // Filter by selected category (subcategory)
-    if (selectedCategory) {
-      filtered = getMaterialsByCategory('图片素材', selectedCategory);
+    const selectedOpt: any = folderOptions.find((o: any) => o.id === selectedCategory);
+
+    if (selectedOpt) {
+      if (selectedOpt.isRoot && selectedOpt.name === '图片素材') {
+        filtered = imageMaterials;
+      } else if (selectedOpt.parentName === '图片素材') {
+        filtered = getMaterialsByCategory('图片素材', selectedOpt.name);
+      } else {
+        filtered = [];
+      }
     }
 
-    // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(material => 
         material.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -170,15 +183,17 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-[220px]">
+                    <SelectTrigger className="w-[260px]">
                       <SelectValue placeholder="选择素材库文件夹" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {folderOptions.map((opt) => (
-                        <SelectItem key={opt.id} value={opt.name}>
+                    <SelectContent className="z-50 bg-popover">
+                      {folderOptions.map((opt: any) => (
+                        <SelectItem key={opt.id} value={opt.id}>
                           <div className="flex items-center gap-2">
                             <Folder size={16} />
-                            <span>{opt.name} ({opt.count})</span>
+                            <span className={opt.isRoot ? "font-medium" : "pl-4"}>
+                              {opt.name} ({opt.count})
+                            </span>
                           </div>
                         </SelectItem>
                       ))}
