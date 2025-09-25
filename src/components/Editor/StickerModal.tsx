@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,42 +20,32 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStickers, setSelectedStickers] = useState<string[]>([]);
   const [stickerSoundEffects, setStickerSoundEffects] = useState<{[key: string]: {folder: string, volume: string}}>({});
-  const [selectedCategory, setSelectedCategory] = useState(""); // Selected category instead of folder
+  const [selectedCategory, setSelectedCategory] = useState(""); // 选择的素材库文件夹（使用子文件夹名）
   
   const { materials, getMaterialUrl, getMaterialsByCategory } = useMaterials();
-  const { getImageFolders } = useFolders();
+  const { getFolderHierarchy } = useFolders();
 
-  // Get image materials only (for stickers)
+  // 仅图片素材（贴纸）
   const imageMaterials = useMemo(() => {
     return materials.filter(material => material.file_type === 'image');
   }, [materials]);
 
-  // Get image folder structure - only subfolders under "图片素材"
-  const imageFolders = useMemo(() => {
-    return getImageFolders();
-  }, [getImageFolders]);
-
-  // Get available image categories from materials
-  const availableCategories = useMemo(() => {
-    const categories = new Set<string>();
-    imageMaterials.forEach(material => {
-      if (material.subcategory) {
-        categories.add(material.subcategory);
-      }
-    });
-    return Array.from(categories).map(subcategory => ({
-      id: subcategory,
-      name: subcategory,
-      count: getMaterialsByCategory('图片素材', subcategory).length
+  // 从素材库获取“图片素材”的子文件夹作为可选项
+  const folderOptions = useMemo(() => {
+    const subs = getFolderHierarchy();
+    return subs.map((f: any) => ({
+      id: f.id,
+      name: f.name,
+      count: getMaterialsByCategory('图片素材', f.name).length,
     }));
-  }, [imageMaterials, getMaterialsByCategory]);
+  }, [getFolderHierarchy, getMaterialsByCategory, imageMaterials]);
 
-  // Set default selected category when categories are available
+  // 初始化选择第一个文件夹
   useEffect(() => {
-    if (availableCategories.length > 0 && !selectedCategory) {
-      setSelectedCategory(availableCategories[0].id);
+    if (folderOptions.length > 0 && !selectedCategory) {
+      setSelectedCategory(folderOptions[0].name);
     }
-  }, [availableCategories, selectedCategory]);
+  }, [folderOptions, selectedCategory]);
 
   const handleStickerSelect = (stickerId: string) => {
     setSelectedStickers(prev => {
@@ -140,8 +130,8 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
     </div>
   );
 
-  // If no categories available, show empty state
-  if (availableCategories.length === 0) {
+  // If no folders available, show empty state
+  if (folderOptions.length === 0) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[500px]">
@@ -177,74 +167,77 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
         <div className="flex-1 min-h-0">
           <ScrollArea className="h-full pr-4">
             <div className="space-y-4">
-              <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-                <div className="flex items-center justify-between mb-4">
-                  <TabsList>
-                    {availableCategories.map(category => (
-                      <TabsTrigger key={category.id} value={category.id}>
-                        {category.name}({category.count})
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                  
-                  <div className="relative">
-                    <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      placeholder="Enter搜索"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 w-[200px]"
-                    />
-                  </div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-[220px]">
+                      <SelectValue placeholder="选择素材库文件夹" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {folderOptions.map((opt) => (
+                        <SelectItem key={opt.id} value={opt.name}>
+                          <div className="flex items-center gap-2">
+                            <Folder size={16} />
+                            <span>{opt.name} ({opt.count})</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Enter搜索"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 w-[200px]"
+                  />
+                </div>
+              </div>
 
-                {availableCategories.map(category => (
-                  <TabsContent key={category.id} value={category.id} className="space-y-4">
-                    <div className="flex gap-4">
-                      <div className="flex-1">
-                        {filteredMaterials.length > 0 ? (
-                          <StickerGrid stickers={filteredMaterials} />
-                        ) : (
-                          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                            <Image size={48} className="mb-4" />
-                            <p>暂无贴纸素材</p>
-                            <p className="text-sm">请上传您的第一张贴纸素材</p>
-                          </div>
-                        )}
-                      </div>
-                      {selectedStickers.length > 0 && (
-                        <div className="w-48 border-l border-border pl-4">
-                          <h4 className="text-sm font-medium mb-3">预览</h4>
-                          <div className="relative bg-black rounded-lg" style={{ aspectRatio: '9/16', height: '200px' }}>
-                            <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg">
-                              {selectedStickers.map((stickerId, index) => {
-                                const sticker = imageMaterials.find(s => s.id === stickerId);
-                                if (!sticker) return null;
-                                return (
-                                  <div 
-                                    key={stickerId}
-                                    className="absolute bg-white/20 border border-white/30 rounded px-2 py-1 text-xs text-white"
-                                    style={{
-                                      top: `${20 + index * 15}%`,
-                                      right: `${10 + index * 5}%`,
-                                      transform: `rotate(${index * 5 - 10}deg)`
-                                    }}
-                                  >
-                                    贴纸{index + 1}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                          <div className="mt-2 text-xs text-muted-foreground">
-                            已选择 {selectedStickers.length} 个贴纸
-                          </div>
-                        </div>
-                      )}
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  {filteredMaterials.length > 0 ? (
+                    <StickerGrid stickers={filteredMaterials} />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                      <Image size={48} className="mb-4" />
+                      <p>暂无贴纸素材</p>
+                      <p className="text-sm">请上传您的第一张贴纸素材</p>
                     </div>
-                  </TabsContent>
-                ))}
-              </Tabs>
+                  )}
+                </div>
+                {selectedStickers.length > 0 && (
+                  <div className="w-48 border-l border-border pl-4">
+                    <h4 className="text-sm font-medium mb-3">预览</h4>
+                    <div className="relative bg-black rounded-lg" style={{ aspectRatio: '9/16', height: '200px' }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg">
+                        {selectedStickers.map((stickerId, index) => {
+                          const sticker = imageMaterials.find(s => s.id === stickerId);
+                          if (!sticker) return null;
+                          return (
+                            <div 
+                              key={stickerId}
+                              className="absolute bg-white/20 border border-white/30 rounded px-2 py-1 text-xs text-white"
+                              style={{
+                                top: `${20 + index * 15}%`,
+                                right: `${10 + index * 5}%`,
+                                transform: `rotate(${index * 5 - 10}deg)`
+                              }}
+                            >
+                              贴纸{index + 1}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      已选择 {selectedStickers.length} 个贴纸
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {selectedStickers.length > 0 && (
                 <div className="space-y-4 border-t border-border pt-4">
