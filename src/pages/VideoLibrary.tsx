@@ -255,6 +255,36 @@ const VideoLibrary = () => {
             <h1 className="text-2xl font-bold text-foreground">成片库</h1>
             <p className="text-muted-foreground mt-1">管理您导出的视频文件</p>
           </div>
+          
+          {/* Batch Actions - Top Right */}
+          {selectedVideos.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={handleBatchDelete}
+              >
+                <Trash2 size={14} className="mr-1" />
+                批量删除
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleBatchMove}
+              >
+                <MoveRight size={14} className="mr-1" />
+                批量移动
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleBatchDownload}
+              >
+                <Download size={14} className="mr-1" />
+                批量下载
+              </Button>
+            </div>
+          )}
         </div>
 
       {/* Search Bar */}
@@ -268,9 +298,9 @@ const VideoLibrary = () => {
         />
       </div>
 
-      {/* Batch Actions */}
+      {/* Selection Controls */}
       {filteredVideos.length > 0 && (
-        <div className="flex items-center justify-between mb-6 p-3 bg-muted/50 rounded-lg">
+        <div className="flex items-center justify-start mb-6 p-3 bg-muted/50 rounded-lg">
           <div className="flex items-center gap-3">
             <Checkbox
               checked={selectedVideos.length === filteredVideos.length}
@@ -280,34 +310,6 @@ const VideoLibrary = () => {
               {selectedVideos.length > 0 ? `已选择 ${selectedVideos.length} 个视频` : "全选"}
             </span>
           </div>
-          {selectedVideos.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleBatchDownload}
-              >
-                <Download size={14} className="mr-1" />
-                批量下载
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleBatchMove}
-              >
-                <MoveRight size={14} className="mr-1" />
-                批量移动
-              </Button>
-              <Button 
-                variant="destructive" 
-                size="sm"
-                onClick={handleBatchDelete}
-              >
-                <Trash2 size={14} className="mr-1" />
-                批量删除
-              </Button>
-            </div>
-          )}
         </div>
       )}
 
