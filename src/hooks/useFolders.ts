@@ -11,6 +11,60 @@ export interface Folder {
   updated_at: string
 }
 
+// 模拟文件夹数据
+const mockFolders: Folder[] = [
+  // 主文件夹 - 图片素材
+  {
+    id: 'folder-main-image',
+    name: '图片素材',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T08:00:00Z',
+    updated_at: '2024-01-10T08:00:00Z'
+  },
+  // 子文件夹 - 表情类
+  {
+    id: 'folder-emotion',
+    name: '表情类',
+    parent_id: 'folder-main-image',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T08:30:00Z',
+    updated_at: '2024-01-10T08:30:00Z'
+  },
+  // 子文件夹 - 装饰类
+  {
+    id: 'folder-decoration',
+    name: '装饰类',
+    parent_id: 'folder-main-image',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T09:00:00Z',
+    updated_at: '2024-01-10T09:00:00Z'
+  },
+  // 子文件夹 - 营销类
+  {
+    id: 'folder-marketing',
+    name: '营销类',
+    parent_id: 'folder-main-image',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T09:30:00Z',
+    updated_at: '2024-01-10T09:30:00Z'
+  },
+  // 其他主文件夹
+  {
+    id: 'folder-video',
+    name: '视频素材',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T10:00:00Z',
+    updated_at: '2024-01-10T10:00:00Z'
+  },
+  {
+    id: 'folder-audio',
+    name: '音频素材',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T10:30:00Z',
+    updated_at: '2024-01-10T10:30:00Z'
+  }
+]
+
 export const useFolders = () => {
   const [folders, setFolders] = useState<Folder[]>([])
   const [loading, setLoading] = useState(false)
@@ -19,24 +73,13 @@ export const useFolders = () => {
   const loadFolders = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('folders')
-        .select('*')
-        .order('name')
-
-      if (error) throw error
-
-      // Map database data to Folder interface
-      const mappedFolders: Folder[] = (data || []).map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        parent_id: item.parent_id || undefined,
-        user_id: item.user_id,
-        created_at: item.created_at,
-        updated_at: item.updated_at || item.created_at
-      }))
-
-      setFolders(mappedFolders)
+      // 模拟网络延迟
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // 直接使用模拟数据
+      setFolders(mockFolders)
+      
+      console.log('已加载模拟文件夹数据:', mockFolders.length, '个文件夹')
     } catch (error) {
       console.error('Error loading folders:', error)
       toast({

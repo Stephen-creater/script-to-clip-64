@@ -26,26 +26,174 @@ export interface Material {
 type MaterialInsert = Omit<Material, 'id' | 'created_at' | 'updated_at' | 'user_id'>
 type MaterialUpdate = Partial<Omit<Material, 'id' | 'created_at' | 'user_id'>>
 
-// Mock data for demo
+// Mock data for demo - 包含贴纸素材
 const mockMaterials: Material[] = [
+  // 贴纸素材 - 表情类
   {
-    id: '1',
-    name: '示例图片1',
-    original_name: 'sample1.jpg',
-    file_path: '/placeholder.svg',
+    id: 'sticker-1',
+    name: '开心表情贴纸',
+    original_name: 'test1.png',
+    file_path: '/assets/stickers/test1.png',
     file_type: 'image',
-    mime_type: 'image/jpeg',
-    file_size: 1024000,
+    mime_type: 'image/png',
+    file_size: 15360,
     category: '图片素材',
-    subcategory: '营销类',
-    width: 1920,
-    height: 1080,
-    tags: ['示例', '图片'],
+    subcategory: '表情类',
+    width: 128,
+    height: 128,
+    tags: ['表情', '贴纸', '开心', '可爱'],
     metadata: {},
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: '2024-01-15T10:30:00Z',
+    updated_at: '2024-01-15T10:30:00Z',
     user_id: 'demo-user',
   },
+  {
+    id: 'sticker-2',
+    name: '惊讶表情贴纸',
+    original_name: 'test2.png',
+    file_path: '/assets/stickers/test2.png',
+    file_type: 'image',
+    mime_type: 'image/png',
+    file_size: 18240,
+    category: '图片素材',
+    subcategory: '表情类',
+    width: 128,
+    height: 128,
+    tags: ['表情', '贴纸', '惊讶', '震惊'],
+    metadata: {},
+    created_at: '2024-01-16T09:15:00Z',
+    updated_at: '2024-01-16T09:15:00Z',
+    user_id: 'demo-user',
+  },
+  {
+    id: 'sticker-3',
+    name: '哭泣表情贴纸',
+    original_name: 'sad-face.png',
+    file_path: '/assets/stickers/test1.png', // 复用测试图片
+    file_type: 'image',
+    mime_type: 'image/png',
+    file_size: 16800,
+    category: '图片素材',
+    subcategory: '表情类',
+    width: 128,
+    height: 128,
+    tags: ['表情', '贴纸', '哭泣', '难过'],
+    metadata: {},
+    created_at: '2024-01-17T11:45:00Z',
+    updated_at: '2024-01-17T11:45:00Z',
+    user_id: 'demo-user',
+  },
+  // 贴纸素材 - 装饰类
+  {
+    id: 'sticker-4',
+    name: '爱心装饰贴纸',
+    original_name: 'heart-decoration.png',
+    file_path: '/assets/stickers/test2.png', // 复用测试图片
+    file_type: 'image',
+    mime_type: 'image/png',
+    file_size: 12800,
+    category: '图片素材',
+    subcategory: '装饰类',
+    width: 64,
+    height: 64,
+    tags: ['爱心', '装饰', '浪漫', '粉色'],
+    metadata: {},
+    created_at: '2024-01-18T14:20:00Z',
+    updated_at: '2024-01-18T14:20:00Z',
+    user_id: 'demo-user',
+  },
+  {
+    id: 'sticker-5',
+    name: '星星装饰贴纸',
+    original_name: 'star-decoration.png',
+    file_path: '/assets/stickers/test1.png', // 复用测试图片
+    file_type: 'image',
+    mime_type: 'image/png',
+    file_size: 14560,
+    category: '图片素材',
+    subcategory: '装饰类',
+    width: 64,
+    height: 64,
+    tags: ['星星', '装饰', '闪亮', '金色'],
+    metadata: {},
+    created_at: '2024-01-19T16:10:00Z',
+    updated_at: '2024-01-19T16:10:00Z',
+    user_id: 'demo-user',
+  },
+  {
+    id: 'sticker-6',
+    name: '彩虹装饰贴纸',
+    original_name: 'rainbow-decoration.png',
+    file_path: '/assets/stickers/test2.png', // 复用测试图片
+    file_type: 'image',
+    mime_type: 'image/png',
+    file_size: 19200,
+    category: '图片素材',
+    subcategory: '装饰类',
+    width: 96,
+    height: 48,
+    tags: ['彩虹', '装饰', '色彩', '梦幻'],
+    metadata: {},
+    created_at: '2024-01-20T10:30:00Z',
+    updated_at: '2024-01-20T10:30:00Z',
+    user_id: 'demo-user',
+  },
+  // 贴纸素材 - 营销类
+  {
+    id: 'sticker-7',
+    name: '折扣标签贴纸',
+    original_name: 'discount-badge.png',
+    file_path: '/assets/stickers/test1.png', // 复用测试图片
+    file_type: 'image',
+    mime_type: 'image/png',
+    file_size: 22400,
+    category: '图片素材',
+    subcategory: '营销类',
+    width: 120,
+    height: 120,
+    tags: ['营销', '折扣', '促销', '标签'],
+    metadata: {},
+    created_at: '2024-01-21T13:30:00Z',
+    updated_at: '2024-01-21T13:30:00Z',
+    user_id: 'demo-user',
+  },
+  {
+    id: 'sticker-8',
+    name: '新品上市贴纸',
+    original_name: 'new-product.png',
+    file_path: '/assets/stickers/test2.png', // 复用测试图片
+    file_type: 'image',
+    mime_type: 'image/png',
+    file_size: 18900,
+    category: '图片素材',
+    subcategory: '营销类',
+    width: 100,
+    height: 100,
+    tags: ['营销', '新品', '上市', '推广'],
+    metadata: {},
+    created_at: '2024-01-22T15:45:00Z',
+    updated_at: '2024-01-22T15:45:00Z',
+    user_id: 'demo-user',
+  },
+  {
+    id: 'sticker-9',
+    name: '限时优惠贴纸',
+    original_name: 'limited-offer.png',
+    file_path: '/assets/stickers/test1.png', // 复用测试图片
+    file_type: 'image',
+    mime_type: 'image/png',
+    file_size: 21760,
+    category: '图片素材',
+    subcategory: '营销类',
+    width: 130,
+    height: 80,
+    tags: ['营销', '限时', '优惠', '促销'],
+    metadata: {},
+    created_at: '2024-01-23T09:20:00Z',
+    updated_at: '2024-01-23T09:20:00Z',
+    user_id: 'demo-user',
+  },
+  // 其他类型素材
   {
     id: '2',
     name: '示例视频1',
@@ -90,40 +238,17 @@ export const useMaterials = () => {
   const [uploadProgress, setUploadProgress] = useState(0)
   const { toast } = useToast()
 
-  // Load materials from Supabase
+  // Load materials - 模拟模式，直接返回mock数据
   const loadMaterials = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('materials')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
+      // 模拟网络延迟
+      await new Promise(resolve => setTimeout(resolve, 500))
       
-      // Map database fields to Material interface with proper typing
-      const mappedMaterials: Material[] = (data || []).map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        original_name: item.original_name || item.name + '.png',
-        file_path: item.file_path,
-        file_type: item.file_type,
-        mime_type: item.mime_type || 'image/png',
-        file_size: item.file_size,
-        category: item.category,
-        subcategory: item.subcategory || undefined,
-        width: item.width || undefined,
-        height: item.height || undefined,
-        duration: item.duration || undefined,
-        tags: item.tags || [],
-        metadata: (item.metadata as Record<string, any>) || {},
-        created_at: item.created_at,
-        updated_at: item.updated_at || item.created_at,
-        user_id: item.user_id,
-        folder_id: item.folder_id || undefined
-      }))
+      // 直接使用模拟数据
+      setMaterials(mockMaterials)
       
-      setMaterials(mappedMaterials)
+      console.log('已加载模拟素材数据:', mockMaterials.length, '个素材')
     } catch (error) {
       console.error('Error loading materials:', error)
       toast({
