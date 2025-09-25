@@ -33,11 +33,10 @@ const Settings = () => {
                 <Input id="username" defaultValue="admin" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">邮箱</Label>
-                <Input id="email" defaultValue="admin@example.com" />
+                <Label htmlFor="password">密码</Label>
+                <Input id="password" type="password" defaultValue="********" />
               </div>
             </div>
-            <Button>保存更改</Button>
           </CardContent>
         </Card>
       </div>
