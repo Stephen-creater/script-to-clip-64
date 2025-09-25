@@ -13,13 +13,39 @@ export interface Folder {
 
 // 模拟文件夹数据
 const mockFolders: Folder[] = [
+  // 主文件夹 - 视频素材
+  {
+    id: 'folder-video',
+    name: '视频素材',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T08:00:00Z',
+    updated_at: '2024-01-10T08:00:00Z'
+  },
+  // 子文件夹 - 车窗外风景
+  {
+    id: 'folder-window-scenery',
+    name: '车窗外风景',
+    parent_id: 'folder-video',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T08:30:00Z',
+    updated_at: '2024-01-10T08:30:00Z'
+  },
+  // 子文件夹 - 车站内
+  {
+    id: 'folder-station-interior',
+    name: '车站内',
+    parent_id: 'folder-video',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T09:00:00Z',
+    updated_at: '2024-01-10T09:00:00Z'
+  },
   // 主文件夹 - 图片素材
   {
     id: 'folder-main-image',
     name: '图片素材',
     user_id: 'demo-user',
-    created_at: '2024-01-10T08:00:00Z',
-    updated_at: '2024-01-10T08:00:00Z'
+    created_at: '2024-01-10T10:00:00Z',
+    updated_at: '2024-01-10T10:00:00Z'
   },
   // 子文件夹 - 表情类
   {
@@ -27,8 +53,8 @@ const mockFolders: Folder[] = [
     name: '表情类',
     parent_id: 'folder-main-image',
     user_id: 'demo-user',
-    created_at: '2024-01-10T08:30:00Z',
-    updated_at: '2024-01-10T08:30:00Z'
+    created_at: '2024-01-10T10:30:00Z',
+    updated_at: '2024-01-10T10:30:00Z'
   },
   // 子文件夹 - 装饰类
   {
@@ -36,8 +62,8 @@ const mockFolders: Folder[] = [
     name: '装饰类',
     parent_id: 'folder-main-image',
     user_id: 'demo-user',
-    created_at: '2024-01-10T09:00:00Z',
-    updated_at: '2024-01-10T09:00:00Z'
+    created_at: '2024-01-10T11:00:00Z',
+    updated_at: '2024-01-10T11:00:00Z'
   },
   // 子文件夹 - 营销类
   {
@@ -45,23 +71,34 @@ const mockFolders: Folder[] = [
     name: '营销类',
     parent_id: 'folder-main-image',
     user_id: 'demo-user',
-    created_at: '2024-01-10T09:30:00Z',
-    updated_at: '2024-01-10T09:30:00Z'
+    created_at: '2024-01-10T11:30:00Z',
+    updated_at: '2024-01-10T11:30:00Z'
   },
-  // 其他主文件夹
-  {
-    id: 'folder-video',
-    name: '视频素材',
-    user_id: 'demo-user',
-    created_at: '2024-01-10T10:00:00Z',
-    updated_at: '2024-01-10T10:00:00Z'
-  },
+  // 主文件夹 - 音频素材
   {
     id: 'folder-audio',
     name: '音频素材',
     user_id: 'demo-user',
-    created_at: '2024-01-10T10:30:00Z',
-    updated_at: '2024-01-10T10:30:00Z'
+    created_at: '2024-01-10T12:00:00Z',
+    updated_at: '2024-01-10T12:00:00Z'
+  },
+  // 子文件夹 - BGM
+  {
+    id: 'folder-bgm',
+    name: 'BGM',
+    parent_id: 'folder-audio',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T12:30:00Z',
+    updated_at: '2024-01-10T12:30:00Z'
+  },
+  // 子文件夹 - 音效素材
+  {
+    id: 'folder-sound-effects',
+    name: '音效素材',
+    parent_id: 'folder-audio',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T13:00:00Z',
+    updated_at: '2024-01-10T13:00:00Z'
   }
 ]
 
