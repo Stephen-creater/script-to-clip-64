@@ -12,6 +12,7 @@ import {
   Clock
 } from "lucide-react";
 import FolderSidebar, { FolderItem } from "@/components/FolderManagement/FolderSidebar";
+import BatchDownloadModal from "@/components/VideoLibrary/BatchDownloadModal";
 
 interface VideoItem {
   id: string;
@@ -30,6 +31,7 @@ const VideoLibrary = () => {
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [editingVideo, setEditingVideo] = useState<string | null>(null);
   const [tempVideoName, setTempVideoName] = useState('');
+  const [batchDownloadModalOpen, setBatchDownloadModalOpen] = useState(false);
   const [folders, setFolders] = useState<FolderItem[]>([
     { id: 'all', name: '西班牙火车旅行_成片', count: 2 },
     { id: 'recent', name: '最近导出', count: 2, hasChildren: true, children: [
@@ -104,12 +106,7 @@ const VideoLibrary = () => {
   };
 
   const handleBatchDownload = () => {
-    // TODO: Implement batch download logic
-    console.log('Download videos:', selectedVideos);
-    const selectedVideoNames = videos
-      .filter(video => selectedVideos.includes(video.id))
-      .map(video => video.name);
-    alert(`开始下载 ${selectedVideoNames.length} 个文件:\n${selectedVideoNames.join('\n')}`);
+    setBatchDownloadModalOpen(true);
   };
 
   const handleFolderCreate = (name: string, parentId?: string) => {
@@ -407,6 +404,23 @@ const VideoLibrary = () => {
           </div>
         )}
       </div>
+
+      {/* Batch Download Modal */}
+      <BatchDownloadModal
+        isOpen={batchDownloadModalOpen}
+        onClose={() => {
+          setBatchDownloadModalOpen(false);
+          setSelectedVideos([]); // Clear selection after download
+        }}
+        selectedFiles={videos
+          .filter(video => selectedVideos.includes(video.id))
+          .map(video => ({
+            id: video.id,
+            name: video.name,
+            size: video.size
+          }))
+        }
+      />
     </div>
   );
 };
