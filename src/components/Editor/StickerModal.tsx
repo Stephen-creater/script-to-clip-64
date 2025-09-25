@@ -20,7 +20,8 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStickers, setSelectedStickers] = useState<string[]>([]);
   const [stickerSoundEffects, setStickerSoundEffects] = useState<{[key: string]: {folder: string, volume: string}}>({});
-  const [selectedCategory, setSelectedCategory] = useState(""); // 选择的素材库文件夹（使用子文件夹名）
+  const [selectedRootFolder, setSelectedRootFolder] = useState(""); // 选择的根文件夹
+  const [selectedSubfolder, setSelectedSubfolder] = useState(""); // 选择的子文件夹
   
   const { materials, getMaterialUrl, getMaterialsByCategory } = useMaterials();
   const { folders } = useFolders();
@@ -30,29 +31,39 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
     return materials.filter(material => material.file_type === 'image');
   }, [materials]);
 
-  // 从素材库获取所有根文件夹及其子文件夹作为可选项（任意文件夹可选）
-  const folderOptions = useMemo(() => {
-    const options: any[] = [];
-    const roots = folders.filter((f) => !f.parent_id);
-    roots.forEach((root) => {
+  // 获取根文件夹列表
+  const rootFolders = useMemo(() => {
+    return folders.filter((f) => !f.parent_id).map(root => {
       const children = folders.filter((f) => f.parent_id === root.id);
-      const rootCount = root.name === '图片素材' ? imageMaterials.length : 0;
-      options.push({ id: root.id, name: root.name, parentName: null, isRoot: true, count: rootCount });
-      children.forEach((ch) => {
-        const count = root.name === '图片素材' ? getMaterialsByCategory('图片素材', ch.name).length : 0;
-        options.push({ id: ch.id, name: ch.name, parentName: root.name, isRoot: false, count });
-      });
+      return {
+        ...root,
+        children,
+        hasChildren: children.length > 0
+      };
     });
-    return options;
-  }, [folders, imageMaterials, getMaterialsByCategory]);
+  }, [folders]);
 
+  // 获取当前选中根文件夹的子文件夹
+  const currentSubfolders = useMemo(() => {
+    if (!selectedRootFolder) return [];
+    const root = rootFolders.find(f => f.id === selectedRootFolder);
+    return root?.children || [];
+  }, [selectedRootFolder, rootFolders]);
+
+  // 初始化选择图片素材根文件夹
   useEffect(() => {
-    if (!selectedCategory && folderOptions.length > 0) {
-      const imageRoot = folderOptions.find((o: any) => o.isRoot && o.name === '图片素材');
-      const firstImageChild = folderOptions.find((o: any) => !o.isRoot && o.parentName === '图片素材');
-      setSelectedCategory((firstImageChild?.id || imageRoot?.id || folderOptions[0].id) as string);
+    if (!selectedRootFolder && rootFolders.length > 0) {
+      const imageRoot = rootFolders.find(f => f.name === '图片素材');
+      if (imageRoot) {
+        setSelectedRootFolder(imageRoot.id);
+      }
     }
-  }, [folderOptions, selectedCategory]);
+  }, [rootFolders, selectedRootFolder]);
+
+  // 当根文件夹改变时，清空子文件夹选择
+  useEffect(() => {
+    setSelectedSubfolder("");
+  }, [selectedRootFolder]);
 
   const handleStickerSelect = (stickerId: string) => {
     setSelectedStickers(prev => {
@@ -92,20 +103,27 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
 
   // Get filtered materials based on selected category and search query
   const getFilteredMaterials = () => {
-    let filtered = imageMaterials;
+    // 只有选择了具体的子文件夹才显示素材
+    if (!selectedSubfolder) return [];
 
-    const selectedOpt: any = folderOptions.find((o: any) => o.id === selectedCategory);
+    const subfolder = currentSubfolders.find(f => f.id === selectedSubfolder);
+    if (!subfolder) return [];
 
-    if (selectedOpt) {
-      if (selectedOpt.isRoot && selectedOpt.name === '图片素材') {
-        filtered = imageMaterials;
-      } else if (selectedOpt.parentName === '图片素材') {
-        filtered = getMaterialsByCategory('图片素材', selectedOpt.name);
-      } else {
-        filtered = [];
-      }
+    const rootFolder = rootFolders.find(f => f.id === selectedRootFolder);
+    if (!rootFolder) return [];
+
+    let filtered: typeof imageMaterials = [];
+
+    // 根据根文件夹类型筛选素材
+    if (rootFolder.name === '图片素材') {
+      filtered = getMaterialsByCategory('图片素材', subfolder.name);
+    } else if (rootFolder.name === '视频素材') {
+      filtered = materials.filter(m => m.category === '视频素材' && m.subcategory === subfolder.name);
+    } else if (rootFolder.name === '音频素材') {
+      filtered = materials.filter(m => m.category === '音频素材' && m.subcategory === subfolder.name);
     }
 
+    // 应用搜索过滤
     if (searchQuery) {
       filtered = filtered.filter(material => 
         material.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -144,7 +162,7 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
   );
 
   // If no folders available, show empty state
-  if (folderOptions.length === 0) {
+  if (rootFolders.length === 0) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[500px]">
@@ -182,23 +200,46 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-[260px]">
-                      <SelectValue placeholder="选择素材库文件夹" />
+                  <Select value={selectedRootFolder} onValueChange={setSelectedRootFolder}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="选择文件夹类型" />
                     </SelectTrigger>
                     <SelectContent className="z-50 bg-popover">
-                      {folderOptions.map((opt: any) => (
-                        <SelectItem key={opt.id} value={opt.id}>
+                      {rootFolders.map((folder) => (
+                        <SelectItem key={folder.id} value={folder.id}>
                           <div className="flex items-center gap-2">
                             <Folder size={16} />
-                            <span className={opt.isRoot ? "font-medium" : "pl-4"}>
-                              {opt.name} ({opt.count})
-                            </span>
+                            <span>{folder.name}</span>
+                            {folder.hasChildren && <span className="text-xs text-muted-foreground">▶</span>}
                           </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  
+                  {currentSubfolders.length > 0 && (
+                    <Select value={selectedSubfolder} onValueChange={setSelectedSubfolder}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue placeholder="选择具体分类" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-popover">
+                        {currentSubfolders.map((subfolder) => {
+                          const count = selectedRootFolder === rootFolders.find(f => f.name === '图片素材')?.id 
+                            ? getMaterialsByCategory('图片素材', subfolder.name).length
+                            : materials.filter(m => m.category === rootFolders.find(f => f.id === selectedRootFolder)?.name && m.subcategory === subfolder.name).length;
+                          
+                          return (
+                            <SelectItem key={subfolder.id} value={subfolder.id}>
+                              <div className="flex items-center gap-2">
+                                <Folder size={16} />
+                                <span>{subfolder.name} ({count})</span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div className="relative">
                   <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
@@ -213,13 +254,21 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
 
               <div className="flex gap-4">
                 <div className="flex-1">
-                  {filteredMaterials.length > 0 ? (
-                    <StickerGrid stickers={filteredMaterials} />
+                  {selectedSubfolder ? (
+                    filteredMaterials.length > 0 ? (
+                      <StickerGrid stickers={filteredMaterials} />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                        <Image size={48} className="mb-4" />
+                        <p>暂无素材</p>
+                        <p className="text-sm">此分类下暂无素材文件</p>
+                      </div>
+                    )
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                      <Image size={48} className="mb-4" />
-                      <p>暂无贴纸素材</p>
-                      <p className="text-sm">请上传您的第一张贴纸素材</p>
+                      <Folder size={48} className="mb-4" />
+                      <p>请选择具体分类</p>
+                      <p className="text-sm">请从上方下拉框中选择具体的素材分类</p>
                     </div>
                   )}
                 </div>
