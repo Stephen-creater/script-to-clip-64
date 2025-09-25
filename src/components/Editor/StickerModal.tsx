@@ -16,39 +16,46 @@ interface StickerModalProps {
   segmentId: string;
 }
 
-// Interface for folder structure
-interface Folder {
-  id: string;
-  name: string;
-  subfolders: { id: string; name: string }[];
-}
-
 export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStickers, setSelectedStickers] = useState<string[]>([]);
   const [stickerSoundEffects, setStickerSoundEffects] = useState<{[key: string]: {folder: string, volume: string}}>({});
-  const [selectedFolder, setSelectedFolder] = useState(""); // Selected folder ID
-  const [selectedSubfolder, setSelectedSubfolder] = useState(""); // For filtering by subfolder
+  const [selectedCategory, setSelectedCategory] = useState(""); // Selected category instead of folder
   
-  const { materials, getMaterialUrl } = useMaterials();
-  const { getFolderHierarchy } = useFolders();
+  const { materials, getMaterialUrl, getMaterialsByCategory } = useMaterials();
+  const { getImageFolders } = useFolders();
 
   // Get image materials only (for stickers)
   const imageMaterials = useMemo(() => {
     return materials.filter(material => material.file_type === 'image');
   }, [materials]);
 
-  // Extract folder structure from folders hook
-  const folderHierarchy = useMemo(() => {
-    return getFolderHierarchy();
-  }, [getFolderHierarchy]);
+  // Get image folder structure - only subfolders under "图片素材"
+  const imageFolders = useMemo(() => {
+    return getImageFolders();
+  }, [getImageFolders]);
 
-  // Set default selected folder when folders are available
+  // Get available image categories from materials
+  const availableCategories = useMemo(() => {
+    const categories = new Set<string>();
+    imageMaterials.forEach(material => {
+      if (material.subcategory) {
+        categories.add(material.subcategory);
+      }
+    });
+    return Array.from(categories).map(subcategory => ({
+      id: subcategory,
+      name: subcategory,
+      count: getMaterialsByCategory('图片素材', subcategory).length
+    }));
+  }, [imageMaterials, getMaterialsByCategory]);
+
+  // Set default selected category when categories are available
   useEffect(() => {
-    if (folderHierarchy.length > 0 && !selectedFolder) {
-      setSelectedFolder(folderHierarchy[0].id);
+    if (availableCategories.length > 0 && !selectedCategory) {
+      setSelectedCategory(availableCategories[0].id);
     }
-  }, [folderHierarchy, selectedFolder]);
+  }, [availableCategories, selectedCategory]);
 
   const handleStickerSelect = (stickerId: string) => {
     setSelectedStickers(prev => {
@@ -86,13 +93,13 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
     onClose();
   };
 
-  // Get filtered materials based on selected folder and search query
+  // Get filtered materials based on selected category and search query
   const getFilteredMaterials = () => {
     let filtered = imageMaterials;
 
-    // Filter by selected folder
-    if (selectedFolder) {
-      filtered = filtered.filter(material => material.folder_id === selectedFolder);
+    // Filter by selected category (subcategory)
+    if (selectedCategory) {
+      filtered = getMaterialsByCategory('图片素材', selectedCategory);
     }
 
     // Filter by search query
@@ -106,7 +113,6 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
     return filtered;
   };
 
-  const currentFolder = folderHierarchy.find(folder => folder.id === selectedFolder);
   const filteredMaterials = getFilteredMaterials();
 
   const StickerGrid = ({ stickers }: { stickers: typeof imageMaterials }) => (
@@ -134,8 +140,8 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
     </div>
   );
 
-  // If no folders available, show empty state
-  if (folderHierarchy.length === 0) {
+  // If no categories available, show empty state
+  if (availableCategories.length === 0) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[500px]">
@@ -143,9 +149,9 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
             <DialogTitle>选择贴纸</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-            <Folder size={48} className="mb-4" />
-            <p>暂无贴纸文件夹</p>
-            <p className="text-sm">请在素材库中创建文件夹并上传图片素材</p>
+            <Image size={48} className="mb-4" />
+            <p>暂无贴纸素材</p>
+            <p className="text-sm">请上传您的第一张贴纸素材</p>
           </div>
           <div className="flex justify-end">
             <Button variant="outline" onClick={onClose}>关闭</Button>
@@ -171,17 +177,14 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
         <div className="flex-1 min-h-0">
           <ScrollArea className="h-full pr-4">
             <div className="space-y-4">
-              <Tabs value={selectedFolder} onValueChange={setSelectedFolder} className="w-full">
+              <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
                 <div className="flex items-center justify-between mb-4">
                   <TabsList>
-                    {folderHierarchy.map(folder => {
-                      const folderMaterialCount = imageMaterials.filter(m => m.folder_id === folder.id).length;
-                      return (
-                        <TabsTrigger key={folder.id} value={folder.id}>
-                          {folder.name}({folderMaterialCount})
-                        </TabsTrigger>
-                      );
-                    })}
+                    {availableCategories.map(category => (
+                      <TabsTrigger key={category.id} value={category.id}>
+                        {category.name}({category.count})
+                      </TabsTrigger>
+                    ))}
                   </TabsList>
                   
                   <div className="relative">
@@ -195,8 +198,8 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
                   </div>
                 </div>
 
-                {folderHierarchy.map(folder => (
-                  <TabsContent key={folder.id} value={folder.id} className="space-y-4">
+                {availableCategories.map(category => (
+                  <TabsContent key={category.id} value={category.id} className="space-y-4">
                     <div className="flex gap-4">
                       <div className="flex-1">
                         {filteredMaterials.length > 0 ? (
@@ -205,7 +208,7 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
                           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                             <Image size={48} className="mb-4" />
                             <p>暂无贴纸素材</p>
-                            <p className="text-sm">请上传图片素材到此文件夹</p>
+                            <p className="text-sm">请上传您的第一张贴纸素材</p>
                           </div>
                         )}
                       </div>
