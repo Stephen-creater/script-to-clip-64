@@ -9,10 +9,12 @@ import {
   Download, 
   Trash2,
   Calendar,
-  Clock
+  Clock,
+  MoveRight
 } from "lucide-react";
 import FolderSidebar, { FolderItem } from "@/components/FolderManagement/FolderSidebar";
 import BatchDownloadModal from "@/components/VideoLibrary/BatchDownloadModal";
+import BatchMoveModal from "@/components/VideoLibrary/BatchMoveModal";
 
 interface VideoItem {
   id: string;
@@ -32,6 +34,7 @@ const VideoLibrary = () => {
   const [editingVideo, setEditingVideo] = useState<string | null>(null);
   const [tempVideoName, setTempVideoName] = useState('');
   const [batchDownloadModalOpen, setBatchDownloadModalOpen] = useState(false);
+  const [batchMoveModalOpen, setBatchMoveModalOpen] = useState(false);
   const [folders, setFolders] = useState<FolderItem[]>([
     { id: 'all', name: '西班牙火车旅行_成片', count: 2 },
     { id: 'recent', name: '最近导出', count: 2, hasChildren: true, children: [
@@ -107,6 +110,21 @@ const VideoLibrary = () => {
 
   const handleBatchDownload = () => {
     setBatchDownloadModalOpen(true);
+  };
+
+  const handleBatchMove = () => {
+    setBatchMoveModalOpen(true);
+  };
+
+  const handleMoveComplete = (targetFolderId: string) => {
+    // Update videos' folderId
+    setVideos(prev => prev.map(video => 
+      selectedVideos.includes(video.id) 
+        ? { ...video, folderId: targetFolderId }
+        : video
+    ));
+    setSelectedVideos([]);
+    setBatchMoveModalOpen(false);
   };
 
   const handleFolderCreate = (name: string, parentId?: string) => {
@@ -273,6 +291,14 @@ const VideoLibrary = () => {
                 批量下载
               </Button>
               <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleBatchMove}
+              >
+                <MoveRight size={14} className="mr-1" />
+                批量移动
+              </Button>
+              <Button 
                 variant="destructive" 
                 size="sm"
                 onClick={handleBatchDelete}
@@ -420,6 +446,21 @@ const VideoLibrary = () => {
             size: video.size
           }))
         }
+      />
+
+      {/* Batch Move Modal */}
+      <BatchMoveModal
+        isOpen={batchMoveModalOpen}
+        onClose={() => setBatchMoveModalOpen(false)}
+        selectedFiles={videos
+          .filter(video => selectedVideos.includes(video.id))
+          .map(video => ({
+            id: video.id,
+            name: video.name
+          }))
+        }
+        folders={folders}
+        onMoveComplete={handleMoveComplete}
       />
     </div>
   );
