@@ -232,7 +232,7 @@ const MainLayout = () => {
               </Button>
               <Button size="sm" className="bg-gradient-primary" onClick={handleExportClick}>
                 <Download size={16} className="mr-2" />
-                导出视频
+                合成视频
               </Button>
             </div>
           </div>
