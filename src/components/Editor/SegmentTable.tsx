@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   GripVertical, 
   Plus, 
@@ -275,7 +276,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
   };
 
   return (
-    <div className="flex-1 bg-background p-6">
+    <div className="flex-1 bg-background p-6 flex flex-col h-full">
       {/* Action Buttons */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -286,33 +287,6 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
           <Button variant="outline" size="sm" onClick={handleImportScript}>
             <FileText size={16} className="mr-2" />
             导入文案
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className={isAudioGenerated ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"} 
-            onClick={handleGenerateAudio}
-          >
-            <Volume2 size={16} className="mr-2" />
-            {isAudioGenerated ? "重新生成音频" : "一键生成音频"}
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className={isGlobalSubtitleConfigured ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"}
-            onClick={() => openModal('globalSubtitle')}
-          >
-            <Settings2 size={16} className="mr-2" />
-            字幕全局设置
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className={isBgmConfigured ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"}
-            onClick={() => openModal('bgm')}
-          >
-            <Music size={16} className="mr-2" />
-            BGM配乐
           </Button>
         </div>
         
@@ -328,11 +302,11 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
         )}
       </div>
 
-      {/* Table */}
-      <div className="bg-card rounded-lg border border-border overflow-hidden shadow-card">
-        <div className="overflow-x-auto">
+      {/* Table with ScrollArea */}
+      <div className="flex-1 bg-card rounded-lg border border-border overflow-hidden shadow-card">
+        <div className="bg-editor-grid border-b border-border">
           <table className="w-full">
-            <thead className="bg-editor-grid border-b border-border">
+            <thead>
               <tr>
                 <th className="w-12 p-3 text-left">
                   <Checkbox
@@ -357,96 +331,125 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                 </th>
               </tr>
             </thead>
-            <tbody>
-              {segments.map((segment, index) => (
-                <tr 
-                  key={segment.id}
-                  className={cn(
-                    "border-b border-border hover:bg-editor-hover transition-colors",
-                    selectedSegments.includes(segment.id) && "bg-editor-selected/10"
-                  )}
-                >
-                  <td className="p-3">
-                    <Checkbox
-                      checked={selectedSegments.includes(segment.id)}
-                      onCheckedChange={(checked) => handleSelectSegment(segment.id, !!checked)}
-                    />
-                  </td>
-                  <td className="p-3">
-                    <GripVertical size={16} className="text-muted-foreground cursor-grab" />
-                  </td>
-                   <td className="p-3">
-                     <Input
-                       value={segment.name}
-                       onChange={(e) => updateSegmentName(segment.id, e.target.value)}
-                       className="text-sm border-0 bg-transparent p-0 font-medium focus:border-border focus:bg-background/50"
-                       placeholder="分段名称"
-                     />
-                   </td>
-                   <td className="p-3">
-                     <Button 
-                       variant="outline" 
-                       size="sm" 
-                       className="w-full justify-start"
-                       onClick={() => openModal('materialSelection', segment.id)}
-                     >
-                       <Upload size={14} className="mr-2" />
-                       {segment.video || "选择素材"}
-                     </Button>
-                   </td>
-                  <td className="p-3">
-                    <Textarea
-                      value={segment.script}
-                      onChange={(e) => updateSegmentScript(segment.id, e.target.value)}
-                      className="min-h-[60px] text-sm resize-none border-0 bg-transparent p-0 focus:border-border focus:bg-background/50"
-                      placeholder="请输入文案内容"
-                    />
-                  </td>
-                  <td className="p-3">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full justify-start"
-                      onClick={() => openModal('animatedText', segment.id)}
-                    >
-                      <Wand2 size={14} className="mr-2" />
-                      {segment.animatedText}
-                    </Button>
-                  </td>
-                  <td className="p-3">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full justify-start"
-                      onClick={() => openModal('sticker', segment.id)}
-                    >
-                      <Settings2 size={14} className="mr-2" />
-                      {segment.sticker}
-                    </Button>
-                  </td>
-                   <td className="p-3">
-                     {segment.audioTimestamp ? (
-                       <div className="text-sm font-medium text-center py-2">
-                         {segment.audioTimestamp}
-                       </div>
-                     ) : (
-                       <div className="text-xs text-muted-foreground text-center py-2">
-                         未生成
-                       </div>
-                     )}
-                   </td>
-                </tr>
-              ))}
-            </tbody>
           </table>
         </div>
+        <ScrollArea className="h-[calc(100vh-300px)]">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <tbody>
+                {segments.map((segment, index) => (
+                  <tr 
+                    key={segment.id}
+                    className={cn(
+                      "border-b border-border hover:bg-editor-hover transition-colors",
+                      selectedSegments.includes(segment.id) && "bg-editor-selected/10"
+                    )}
+                  >
+                    <td className="w-12 p-3">
+                      <Checkbox
+                        checked={selectedSegments.includes(segment.id)}
+                        onCheckedChange={(checked) => handleSelectSegment(segment.id, !!checked)}
+                      />
+                    </td>
+                    <td className="w-8 p-3">
+                      <GripVertical size={16} className="text-muted-foreground cursor-grab" />
+                    </td>
+                     <td className="min-w-[160px] p-3">
+                       <Input
+                         value={segment.name}
+                         onChange={(e) => updateSegmentName(segment.id, e.target.value)}
+                         className="text-sm border-0 bg-transparent p-0 font-medium focus:border-border focus:bg-background/50"
+                         placeholder="分段名称"
+                       />
+                     </td>
+                     <td className="min-w-[180px] p-3">
+                       <Button 
+                         variant="outline" 
+                         size="sm" 
+                         className="w-full justify-start"
+                         onClick={() => openModal('materialSelection', segment.id)}
+                       >
+                         <Upload size={14} className="mr-2" />
+                         {segment.video || "选择素材"}
+                       </Button>
+                     </td>
+                    <td className="min-w-[320px] p-3">
+                      <Textarea
+                        value={segment.script}
+                        onChange={(e) => updateSegmentScript(segment.id, e.target.value)}
+                        className="min-h-[60px] text-sm resize-none border-0 bg-transparent p-0 focus:border-border focus:bg-background/50"
+                        placeholder="请输入文案内容"
+                      />
+                    </td>
+                    <td className="min-w-[100px] p-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full justify-start"
+                        onClick={() => openModal('animatedText', segment.id)}
+                      >
+                        <Wand2 size={14} className="mr-2" />
+                        {segment.animatedText}
+                      </Button>
+                    </td>
+                    <td className="min-w-[100px] p-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full justify-start"
+                        onClick={() => openModal('sticker', segment.id)}
+                      >
+                        <Settings2 size={14} className="mr-2" />
+                        {segment.sticker}
+                      </Button>
+                    </td>
+                     <td className="min-w-[120px] p-3">
+                       {segment.audioTimestamp ? (
+                         <div className="text-sm font-medium text-center py-2">
+                           {segment.audioTimestamp}
+                         </div>
+                       ) : (
+                         <div className="text-xs text-muted-foreground text-center py-2">
+                           未生成
+                         </div>
+                       )}
+                     </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ScrollArea>
       </div>
 
-      {/* Add Segment Button */}
-      <div className="mt-4 text-center">
-        <Button variant="outline" className="w-full" onClick={handleAddNewSegment}>
-          <Plus size={16} className="mr-2" />
-          添加
+      {/* Workflow Buttons at Bottom Left */}
+      <div className="mt-6 flex items-center gap-3">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className={isAudioGenerated ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"} 
+          onClick={handleGenerateAudio}
+        >
+          <Volume2 size={16} className="mr-2" />
+          {isAudioGenerated ? "重新生成音频" : "一键生成音频"}
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className={isGlobalSubtitleConfigured ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"}
+          onClick={() => openModal('globalSubtitle')}
+        >
+          <Settings2 size={16} className="mr-2" />
+          字幕全局设置
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className={isBgmConfigured ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"}
+          onClick={() => openModal('bgm')}
+        >
+          <Music size={16} className="mr-2" />
+          BGM配乐
         </Button>
       </div>
 
