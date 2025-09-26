@@ -174,147 +174,149 @@ export const BgmModal = ({ isOpen, onClose, onSelect, selectedBgm }: BgmModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-xl font-semibold">选择BGM配乐</DialogTitle>
         </DialogHeader>
         
-        <Tabs defaultValue="library" className="h-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="library">素材库</TabsTrigger>
-            <TabsTrigger value="upload">本地上传</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="library" className="mt-6 h-[500px] overflow-hidden">
-            <div className="flex h-full gap-4">
-              {/* Folder Navigation */}
-              <div className="w-48 border-r pr-4">
-                <h3 className="text-sm font-medium mb-3 text-muted-foreground">音频文件夹</h3>
-                <div className="space-y-2">
-                  <Button
-                    variant={selectedFolder === null ? "default" : "ghost"}
-                    size="sm"
-                    className="w-full justify-start"
-                    onClick={() => setSelectedFolder(null)}
-                  >
-                    <Folder size={16} className="mr-2" />
-                    全部音频
-                  </Button>
-                  {audioFolders.map((folder) => (
+        <div className="flex-1 flex flex-col min-h-0">
+          <Tabs defaultValue="library" className="flex-1 flex flex-col">
+            <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
+              <TabsTrigger value="library">素材库</TabsTrigger>
+              <TabsTrigger value="upload">本地上传</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="library" className="flex-1 mt-6 flex flex-col min-h-0">
+              <div className="flex-1 flex gap-4 min-h-0">
+                {/* Folder Navigation */}
+                <div className="w-48 border-r pr-4 flex-shrink-0">
+                  <h3 className="text-sm font-medium mb-3 text-muted-foreground">音频文件夹</h3>
+                  <div className="space-y-2">
                     <Button
-                      key={folder.id}
-                      variant={selectedFolder === folder.id ? "default" : "ghost"}
+                      variant={selectedFolder === null ? "default" : "ghost"}
                       size="sm"
                       className="w-full justify-start"
-                      onClick={() => setSelectedFolder(folder.id)}
+                      onClick={() => setSelectedFolder(null)}
                     >
                       <Folder size={16} className="mr-2" />
-                      {folder.name}
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        {folder.count}
-                      </span>
+                      全部音频
                     </Button>
-                  ))}
+                    {audioFolders.map((folder) => (
+                      <Button
+                        key={folder.id}
+                        variant={selectedFolder === folder.id ? "default" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start"
+                        onClick={() => setSelectedFolder(folder.id)}
+                      >
+                        <Folder size={16} className="mr-2" />
+                        {folder.name}
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {folder.count}
+                        </span>
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Audio List */}
-              <div className="flex-1 overflow-hidden">
-                <div className="flex items-center gap-2 mb-4">
-                  <Music size={16} className="text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    {selectedFolder ? audioFolders.find(f => f.id === selectedFolder)?.name : "全部音频"} 
-                    ({filteredAudio.length} 个文件)
-                  </span>
-                </div>
-                
-                <div className="h-[400px] overflow-y-auto space-y-3">
-                  {filteredAudio.map((audio) => (
-                    <div
-                      key={audio.id}
-                      className={cn(
-                        "flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all",
-                        confirmedAudio === audio.id 
-                          ? "border-primary bg-primary/5" 
-                          : "border-border hover:border-primary/50"
-                      )}
-                    >
-                      <div className="flex items-center gap-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            togglePlay(audio.id);
-                          }}
-                        >
-                          {playingAudio === audio.id ? (
-                            <Pause size={16} />
-                          ) : (
-                            <Play size={16} />
-                          )}
-                        </Button>
-                        <div>
-                          <div className="font-medium">{audio.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {audio.size} · {audio.duration}
+                {/* Audio List */}
+                <div className="flex-1 flex flex-col min-h-0">
+                  <div className="flex items-center gap-2 mb-4 flex-shrink-0">
+                    <Music size={16} className="text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      {selectedFolder ? audioFolders.find(f => f.id === selectedFolder)?.name : "全部音频"} 
+                      ({filteredAudio.length} 个文件)
+                    </span>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
+                    {filteredAudio.map((audio) => (
+                      <div
+                        key={audio.id}
+                        className={cn(
+                          "flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all",
+                          confirmedAudio === audio.id 
+                            ? "border-primary bg-primary/5" 
+                            : "border-border hover:border-primary/50"
+                        )}
+                      >
+                        <div className="flex items-center gap-4">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              togglePlay(audio.id);
+                            }}
+                          >
+                            {playingAudio === audio.id ? (
+                              <Pause size={16} />
+                            ) : (
+                              <Play size={16} />
+                            )}
+                          </Button>
+                          <div>
+                            <div className="font-medium">{audio.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {audio.size} · {audio.duration}
+                            </div>
                           </div>
                         </div>
+                        <Button
+                          size="sm"
+                          variant={confirmedAudio === audio.id ? "default" : "outline"}
+                          className={confirmedAudio === audio.id ? "bg-red-500 text-white border-red-500 hover:bg-red-600" : ""}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLibrarySelect(audio);
+                          }}
+                        >
+                          {confirmedAudio === audio.id ? "取消" : "选择"}
+                        </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        variant={confirmedAudio === audio.id ? "default" : "outline"}
-                        className={confirmedAudio === audio.id ? "bg-red-500 text-white border-red-500 hover:bg-red-600" : ""}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLibrarySelect(audio);
-                        }}
-                      >
-                        {confirmedAudio === audio.id ? "取消" : "选择"}
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="upload" className="flex-1 mt-6">
+              <div className="flex flex-col items-center justify-center h-full border-2 border-dashed border-border rounded-lg">
+                <div className="text-center space-y-4">
+                  <Upload size={48} className="mx-auto text-muted-foreground" />
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">上传音频文件</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      支持 MP3、WAV、AAC 等格式，最大 50MB
+                    </p>
+                  </div>
+                  <div>
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="bgm-file-input"
+                    />
+                    <label htmlFor="bgm-file-input">
+                      <Button asChild>
+                        <span className="cursor-pointer">
+                          <Upload size={16} className="mr-2" />
+                          选择文件
+                        </span>
                       </Button>
-                    </div>
-                  ))}
+                    </label>
+                  </div>
                 </div>
               </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="upload" className="mt-6">
-            <div className="flex flex-col items-center justify-center h-[400px] border-2 border-dashed border-border rounded-lg">
-              <div className="text-center space-y-4">
-                <Upload size={48} className="mx-auto text-muted-foreground" />
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">上传音频文件</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    支持 MP3、WAV、AAC 等格式，最大 50MB
-                  </p>
-                </div>
-                <div>
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="bgm-file-input"
-                  />
-                  <label htmlFor="bgm-file-input">
-                    <Button asChild>
-                      <span className="cursor-pointer">
-                        <Upload size={16} className="mr-2" />
-                        选择文件
-                      </span>
-                    </Button>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+          </Tabs>
+        </div>
         
         {/* Volume Control - Show when audio is selected */}
         {confirmedAudio && (
-          <div className="pt-4 border-t">
-            <div className="flex items-center gap-4 mb-4">
+          <div className="pt-4 border-t flex-shrink-0">
+            <div className="flex items-center gap-4">
               <Volume2 size={16} className="text-muted-foreground" />
               <span className="text-sm font-medium">音量调节</span>
               <div className="flex-1 flex items-center gap-3">
@@ -333,7 +335,7 @@ export const BgmModal = ({ isOpen, onClose, onSelect, selectedBgm }: BgmModalPro
           </div>
         )}
         
-        <div className="flex justify-end gap-3 pt-4 border-t">
+        <div className="flex justify-end gap-3 pt-4 border-t flex-shrink-0">
           <Button variant="outline" onClick={onClose}>
             取消
           </Button>
