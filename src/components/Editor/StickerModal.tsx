@@ -19,7 +19,7 @@ interface StickerModalProps {
 export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStickers, setSelectedStickers] = useState<string[]>([]);
-  const [stickerSoundEffects, setStickerSoundEffects] = useState<{[key: string]: {folder: string, volume: string}}>({});
+  const [sharedSoundEffect, setSharedSoundEffect] = useState<{folder: string, volume: string}>({folder: '', volume: '50'});
   const [selectedRootFolder, setSelectedRootFolder] = useState(""); // 选择的根文件夹
   const [selectedSubfolder, setSelectedSubfolder] = useState(""); // 选择的子文件夹
   
@@ -67,37 +67,22 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
 
   const handleStickerSelect = (stickerId: string) => {
     setSelectedStickers(prev => {
-      const newSelected = prev.includes(stickerId) 
+      return prev.includes(stickerId) 
         ? prev.filter(id => id !== stickerId)
         : [...prev, stickerId];
-      
-      // Clean up sound effects for unselected stickers
-      if (prev.includes(stickerId)) {
-        setStickerSoundEffects(prevEffects => {
-          const newEffects = { ...prevEffects };
-          delete newEffects[stickerId];
-          return newEffects;
-        });
-      }
-      
-      return newSelected;
     });
   };
 
-  const updateStickerSoundEffect = (stickerId: string, field: 'folder' | 'volume', value: string) => {
-    setStickerSoundEffects(prev => ({
+  const updateSharedSoundEffect = (field: 'folder' | 'volume', value: string) => {
+    setSharedSoundEffect(prev => ({
       ...prev,
-      [stickerId]: {
-        ...prev[stickerId],
-        folder: field === 'folder' ? value : (prev[stickerId]?.folder || ''),
-        volume: field === 'volume' ? value : (prev[stickerId]?.volume || '50')
-      }
+      [field]: value
     }));
   };
 
   const handleSubmit = () => {
     console.log("Selected stickers:", selectedStickers);
-    console.log("Sticker sound effects:", stickerSoundEffects);
+    console.log("Shared sound effect:", sharedSoundEffect);
     onClose();
   };
 
@@ -305,76 +290,70 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
 
               {selectedStickers.length > 0 && (
                 <div className="space-y-4 border-t border-border pt-4">
-                  <h4 className="text-sm font-medium">贴纸音效设置</h4>
-                  {selectedStickers.map((stickerId, index) => {
-                    const stickerName = imageMaterials.find(s => s.id === stickerId)?.name || `贴纸${index + 1}`;
-                    const currentEffect = stickerSoundEffects[stickerId];
+                  <h4 className="text-sm font-medium">贴纸音效配置</h4>
+                  <div className="space-y-3 p-4 border border-border rounded-lg">
+                    <Label className="text-sm font-medium">贴纸音效</Label>
                     
-                    return (
-                      <div key={stickerId} className="space-y-3 p-4 border border-border rounded-lg">
-                        <Label className="text-sm font-medium">贴纸{index + 1} ({stickerName}) 音效</Label>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor={`soundEffect-${stickerId}`}>音效选择</Label>
-                          <Select 
-                            value={currentEffect?.folder || ''} 
-                            onValueChange={(value) => updateStickerSoundEffect(stickerId, 'folder', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="请选择音效文件夹" />
-                            </SelectTrigger>
-                             <SelectContent>
-                               <SelectItem value="funny">
-                                 <div className="flex items-center gap-2">
-                                   <Folder size={16} />
-                                   <span>搞笑音效</span>
-                                 </div>
-                               </SelectItem>
-                               <SelectItem value="transition">
-                                 <div className="flex items-center gap-2">
-                                   <Folder size={16} />
-                                   <span>转场音效</span>
-                                 </div>
-                               </SelectItem>
-                               <SelectItem value="environment">
-                                 <div className="flex items-center gap-2">
-                                   <Folder size={16} />
-                                   <span>环境音效</span>
-                                 </div>
-                               </SelectItem>
-                               <SelectItem value="special">
-                                 <div className="flex items-center gap-2">
-                                   <Folder size={16} />
-                                   <span>特效音效</span>
-                                 </div>
-                               </SelectItem>
-                             </SelectContent>
-                          </Select>
-                        </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="soundEffect">音效选择</Label>
+                      <Select 
+                        value={sharedSoundEffect.folder} 
+                        onValueChange={(value) => updateSharedSoundEffect('folder', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="请选择音效文件夹" />
+                        </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="funny">
+                             <div className="flex items-center gap-2">
+                               <Folder size={16} />
+                               <span>搞笑音效</span>
+                             </div>
+                           </SelectItem>
+                           <SelectItem value="transition">
+                             <div className="flex items-center gap-2">
+                               <Folder size={16} />
+                               <span>转场音效</span>
+                             </div>
+                           </SelectItem>
+                           <SelectItem value="environment">
+                             <div className="flex items-center gap-2">
+                               <Folder size={16} />
+                               <span>环境音效</span>
+                             </div>
+                           </SelectItem>
+                           <SelectItem value="special">
+                             <div className="flex items-center gap-2">
+                               <Folder size={16} />
+                               <span>特效音效</span>
+                             </div>
+                           </SelectItem>
+                         </SelectContent>
+                      </Select>
+                    </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor={`volume-${stickerId}`}>音量</Label>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              id={`volume-${stickerId}`}
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={currentEffect?.volume || '50'}
-                              onChange={(e) => updateStickerSoundEffect(stickerId, 'volume', e.target.value)}
-                              className="flex-1"
-                            />
-                            <span className="text-sm text-muted-foreground">%</span>
-                          </div>
-                        </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="volume">音量</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="volume"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={sharedSoundEffect.volume}
+                          onChange={(e) => updateSharedSoundEffect('volume', e.target.value)}
+                          className="flex-1"
+                        />
+                        <span className="text-sm text-muted-foreground">%</span>
                       </div>
-                    );
-                  })}
+                    </div>
+                  </div>
                   
                   <div className="flex items-start gap-2 p-3 bg-muted rounded-lg">
                     <Music size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
                     <div className="text-sm text-muted-foreground">
                       <p className="font-medium mb-1">音效说明：</p>
+                      <p>• 所有贴纸共享同一音效配置</p>
                       <p>• 音效出现时间与贴纸出现时间同步</p>
                       <p>• 音效播放时长为音效文件本身的时长</p>
                     </div>
