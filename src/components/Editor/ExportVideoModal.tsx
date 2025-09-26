@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, Download, Upload } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { ChevronLeft, Download, Upload, Video } from "lucide-react";
 import { SubtitleModal } from "./SubtitleModal";
 
 interface ExportVideoModalProps {
@@ -17,6 +18,8 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
   const [step, setStep] = useState<'main' | 'settings' | 'folderSelect'>('main');
   const [exportPath, setExportPath] = useState("0918");
   const [quantity, setQuantity] = useState("1");
+  const [isComposing, setIsComposing] = useState(false);
+  const [composingProgress, setComposingProgress] = useState(0);
   
   const [newFolderName, setNewFolderName] = useState("");
   
@@ -67,9 +70,24 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
   };
 
   const handleExport = () => {
-    // Handle export logic here
-    console.log("Exporting video with settings:", { exportPath, quantity, globalSettings });
-    onClose();
+    setIsComposing(true);
+    setComposingProgress(0);
+    
+    // Simulate composing progress for 2 seconds
+    const progressInterval = setInterval(() => {
+      setComposingProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          setTimeout(() => {
+            setIsComposing(false);
+            setComposingProgress(0);
+            onClose();
+          }, 100);
+          return 100;
+        }
+        return prev + 5; // Increase by 5% every 100ms to complete in 2s
+      });
+    }, 100);
   };
 
   const openGlobalModal = (type: 'subtitle') => {
@@ -99,7 +117,7 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
                 </Button>
               )}
               <DialogTitle>
-                {step === 'main' ? '导出' : step === 'folderSelect' ? '选择文件夹' : '全局样式设置'}
+                {step === 'main' ? '合成视频' : step === 'folderSelect' ? '选择文件夹' : '全局样式设置'}
               </DialogTitle>
             </div>
           </DialogHeader>
@@ -143,8 +161,8 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
                   取消
                 </Button>
                 <Button onClick={handleExport} className="flex-1 bg-blue-600 hover:bg-blue-700">
-                  <Download size={16} className="mr-2" />
-                  导出
+                  <Video size={16} className="mr-2" />
+                  开始合成
                 </Button>
               </div>
             </div>
@@ -191,6 +209,24 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
               <p className="text-sm text-muted-foreground">全局样式设置页面</p>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Composing Progress Modal */}
+      <Dialog open={isComposing} onOpenChange={() => {}}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center">正在合成视频</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex justify-center">
+              <Video size={48} className="text-blue-600 animate-pulse" />
+            </div>
+            <Progress value={composingProgress} className="h-2" />
+            <p className="text-center text-sm text-muted-foreground">
+              合成进度: {composingProgress.toFixed(0)}%
+            </p>
+          </div>
         </DialogContent>
       </Dialog>
 
