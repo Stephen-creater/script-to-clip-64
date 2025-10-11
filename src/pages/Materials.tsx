@@ -281,7 +281,7 @@ const Materials = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold">素材库</h1>
+            <h1 className="text-display">素材库</h1>
             <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
               演示模式 - 数据不会保存
             </Badge>

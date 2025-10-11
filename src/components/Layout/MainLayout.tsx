@@ -149,7 +149,7 @@ const MainLayout = () => {
       )}>
         <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
           <h1 className={cn(
-            "text-xl font-bold bg-gradient-primary bg-clip-text text-transparent transition-opacity duration-300",
+            "text-heading-2 bg-gradient-primary bg-clip-text text-transparent transition-opacity duration-300",
             sidebarOpen ? "opacity-100" : "opacity-0 w-0"
           )}>
             智能混剪平台
@@ -215,7 +215,7 @@ const MainLayout = () => {
                   className="flex items-center gap-2 cursor-pointer hover:bg-accent/50 px-2 py-1 rounded group"
                   onClick={handleTitleClick}
                 >
-                  <h2 className="text-lg font-semibold text-foreground">{projectName}</h2>
+                  <h2 className="text-heading-3 text-foreground">{projectName}</h2>
                   <Edit2 size={14} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               )}

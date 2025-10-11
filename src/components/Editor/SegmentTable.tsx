@@ -315,12 +315,12 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                   />
                 </th>
                 <th className="w-8 p-4"></th>
-                <th className="min-w-[160px] p-4 text-left text-sm font-medium text-foreground">分段名称</th>
-                <th className="min-w-[180px] p-4 text-left text-sm font-medium text-foreground">画面</th>
-                <th className="min-w-[320px] p-4 text-left text-sm font-medium text-foreground">文案</th>
-                <th className="min-w-[100px] p-4 text-left text-sm font-medium text-foreground">花字</th>
-                <th className="min-w-[100px] p-4 text-left text-sm font-medium text-foreground">视频贴纸</th>
-                <th className="min-w-[120px] p-4 text-left text-sm font-medium text-foreground">
+                <th className="min-w-[160px] p-4 text-left text-body-small font-semibold text-foreground">分段名称</th>
+                <th className="min-w-[180px] p-4 text-left text-body-small font-semibold text-foreground">画面</th>
+                <th className="min-w-[320px] p-4 text-left text-body-small font-semibold text-foreground">文案</th>
+                <th className="min-w-[100px] p-4 text-left text-body-small font-semibold text-foreground">花字</th>
+                <th className="min-w-[100px] p-4 text-left text-body-small font-semibold text-foreground">视频贴纸</th>
+                <th className="min-w-[120px] p-4 text-left text-body-small font-semibold text-foreground">
                   {isAudioGenerated ? (
                     <span>
                       音频（<span className="text-blue-500">已生成，请预览</span>）

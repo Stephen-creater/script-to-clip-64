@@ -122,4 +122,52 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Typography Hierarchy */
+  h1 {
+    @apply text-3xl font-bold leading-tight tracking-tight;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold leading-snug tracking-tight;
+  }
+
+  h3 {
+    @apply text-xl font-semibold leading-snug;
+  }
+
+  h4 {
+    @apply text-lg font-medium leading-normal;
+  }
+}
+
+@layer components {
+  /* Typography utility classes */
+  .text-display {
+    @apply text-3xl font-bold leading-tight tracking-tight;
+  }
+
+  .text-heading-1 {
+    @apply text-2xl font-semibold leading-snug tracking-tight;
+  }
+
+  .text-heading-2 {
+    @apply text-xl font-semibold leading-snug;
+  }
+
+  .text-heading-3 {
+    @apply text-lg font-medium leading-normal;
+  }
+
+  .text-body {
+    @apply text-base leading-relaxed;
+  }
+
+  .text-body-small {
+    @apply text-sm leading-relaxed;
+  }
+
+  .text-caption {
+    @apply text-xs leading-normal;
+  }
 }

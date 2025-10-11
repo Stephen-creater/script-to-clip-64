@@ -174,11 +174,11 @@ const ProjectLibrary = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-display bg-gradient-primary bg-clip-text text-transparent">
               项目库
             </h1>
             <div className="flex items-center gap-2 mt-2">
-              <p className="text-muted-foreground">管理您的视频项目和模板</p>
+              <p className="text-body-small text-muted-foreground">管理您的视频项目和模板</p>
               <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
                 演示模式 - 数据不会保存
               </Badge>
@@ -206,10 +206,10 @@ const ProjectLibrary = () => {
               >
                 <CardHeader className="text-center">
                   <Video size={48} className="mx-auto mb-2 text-primary" />
-                  <CardTitle className="text-lg">从空白创建</CardTitle>
+                  <CardTitle className="text-heading-3">从空白创建</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground text-center">
+                  <p className="text-body-small text-muted-foreground text-center">
                     从零开始创建全新的视频项目
                   </p>
                 </CardContent>
@@ -221,10 +221,10 @@ const ProjectLibrary = () => {
               >
                 <CardHeader className="text-center">
                   <FileText size={48} className="mx-auto mb-2 text-primary" />
-                  <CardTitle className="text-lg">从模板创建</CardTitle>
+                  <CardTitle className="text-heading-3">从模板创建</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground text-center">
+                  <p className="text-body-small text-muted-foreground text-center">
                     使用预设的节奏结构快速开始
                   </p>
                 </CardContent>
@@ -304,13 +304,13 @@ const ProjectLibrary = () => {
                     onChange={(e) => setTempProjectName(e.target.value)}
                     onBlur={() => handleSaveRename(project.id)}
                     onKeyDown={(e) => handleKeyDown(e, project.id)}
-                    className="text-base font-semibold h-auto p-1 border-primary"
+                    className="text-heading-3 h-auto p-1 border-primary"
                     autoFocus
                     maxLength={100}
                   />
                 ) : (
                   <CardTitle 
-                    className="text-base font-semibold truncate cursor-pointer hover:text-primary transition-colors"
+                    className="text-heading-3 truncate cursor-pointer hover:text-primary transition-colors"
                     onClick={() => handleStartRename(project.id, project.name)}
                     title="点击编辑项目名称"
                   >
@@ -320,7 +320,7 @@ const ProjectLibrary = () => {
               </div>
               
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <div className="flex items-center justify-between text-body-small text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock size={14} />
                     <span>{formatDuration(project.duration)}</span>
@@ -328,7 +328,7 @@ const ProjectLibrary = () => {
                   <span>{project.segments_count} 分段</span>
                 </div>
                 
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1 text-body-small text-muted-foreground">
                   <Calendar size={14} />
                   <span>{formatDate(project.updated_at)}</span>
                 </div>
@@ -339,33 +339,33 @@ const ProjectLibrary = () => {
 
             <CardFooter className="p-4 pt-0 mt-auto">
               <div className="flex gap-1 w-full">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1 text-xs"
-                  onClick={() => handleCopyProject(project.id)}
-                >
-                  <Copy size={12} className="mr-1" />
-                  复制
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1 text-xs"
-                  onClick={() => handleSaveAsTemplate(project.id)}
-                >
-                  <Star size={12} className="mr-1" />
-                  存为模板
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1 text-xs text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                  onClick={() => handleDeleteProject(project.id)}
-                >
-                  <Trash2 size={12} className="mr-1" />
-                  删除
-                </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 text-caption"
+              onClick={() => handleCopyProject(project.id)}
+            >
+              <Copy size={12} className="mr-1" />
+              复制
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 text-caption"
+              onClick={() => handleSaveAsTemplate(project.id)}
+            >
+              <Star size={12} className="mr-1" />
+              存为模板
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 text-caption text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              onClick={() => handleDeleteProject(project.id)}
+            >
+              <Trash2 size={12} className="mr-1" />
+              删除
+            </Button>
               </div>
             </CardFooter>
             </Card>
@@ -377,8 +377,8 @@ const ProjectLibrary = () => {
             <div className="text-center py-12">
               <div className="text-muted-foreground mb-4">
                 <Video size={48} className="mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium">暂无项目</p>
-                <p className="text-sm">
+                <p className="text-heading-3">暂无项目</p>
+                <p className="text-body-small">
                   {searchTerm ? '没有找到匹配的项目' : '创建您的第一个视频项目吧'}
                 </p>
               </div>

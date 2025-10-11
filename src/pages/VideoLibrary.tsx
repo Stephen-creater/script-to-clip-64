@@ -252,8 +252,8 @@ const VideoLibrary = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">成片库</h1>
-            <p className="text-muted-foreground mt-1">管理您导出的视频文件</p>
+            <h1 className="text-display text-foreground">成片库</h1>
+            <p className="text-body-small text-muted-foreground mt-1">管理您导出的视频文件</p>
           </div>
           
           {/* Batch Actions - Top Right */}
@@ -317,26 +317,26 @@ const VideoLibrary = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">总视频数</CardTitle>
+            <CardTitle className="text-body-small text-muted-foreground">总视频数</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{videos.length}</div>
+            <div className="text-heading-1">{videos.length}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">总大小</CardTitle>
+            <CardTitle className="text-body-small text-muted-foreground">总大小</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24.3MB</div>
+            <div className="text-heading-1">24.3MB</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">本月导出</CardTitle>
+            <CardTitle className="text-body-small text-muted-foreground">本月导出</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2</div>
+            <div className="text-heading-1">2</div>
           </CardContent>
         </Card>
       </div>

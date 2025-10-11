@@ -8,10 +8,10 @@ const Settings = () => {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <h1 className="text-display bg-gradient-primary bg-clip-text text-transparent">
           设置
         </h1>
-        <p className="text-muted-foreground mt-2">配置您的工作环境和偏好</p>
+        <p className="text-body-small text-muted-foreground mt-2">配置您的工作环境和偏好</p>
       </div>
 
       <div className="space-y-6">
