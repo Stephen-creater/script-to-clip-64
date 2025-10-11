@@ -115,9 +115,10 @@ const Editor = () => {
             style={{ 
               bottom: '15%',
               minWidth: '120px',
-              maxWidth: '90%',
+              maxWidth: '80%',
               whiteSpace: 'normal',
-              wordBreak: 'break-word'
+              wordBreak: 'break-word',
+              textWrap: 'balance' as any
             }}
           >
             {currentSegment.script}
