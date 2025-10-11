@@ -114,11 +114,11 @@ const Editor = () => {
             className="absolute left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded text-xs text-center leading-relaxed"
             style={{ 
               bottom: '15%',
-              minWidth: '120px',
-              maxWidth: '80%',
+              minWidth: '200px',
+              maxWidth: '85%',
               whiteSpace: 'normal',
               wordBreak: 'break-word',
-              textWrap: 'balance' as any
+              textWrap: 'pretty' as any
             }}
           >
             {currentSegment.script}
