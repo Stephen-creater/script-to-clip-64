@@ -6,6 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { 
   Plus, 
   Search, 
   Filter,
@@ -20,15 +30,19 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProjects } from "@/hooks/useProjects";
+import { useToast } from "@/hooks/use-toast";
 
 const ProjectLibrary = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingProject, setEditingProject] = useState<string | null>(null);
   const [tempProjectName, setTempProjectName] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
   const { 
     projects, 
@@ -116,16 +130,35 @@ const ProjectLibrary = () => {
 
   const handleCopyProject = async (projectId: string) => {
     await copyProject(projectId);
+    toast({
+      title: "复制成功",
+      description: "项目已复制到项目库",
+    });
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    if (confirm('确定要删除这个项目吗？此操作无法撤销。')) {
-      await deleteProject(projectId);
+    setProjectToDelete(projectId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (projectToDelete) {
+      await deleteProject(projectToDelete);
+      toast({
+        title: "删除成功",
+        description: "项目已删除",
+      });
+      setProjectToDelete(null);
     }
+    setDeleteDialogOpen(false);
   };
 
   const handleSaveAsTemplate = async (projectId: string) => {
     await toggleTemplate(projectId);
+    toast({
+      title: "保存成功",
+      description: "已保存为模板",
+    });
   };
 
   const handleStartRename = (projectId: string, currentName: string) => {
@@ -136,6 +169,10 @@ const ProjectLibrary = () => {
   const handleSaveRename = async (projectId: string) => {
     if (tempProjectName.trim() && tempProjectName !== projects.find(p => p.id === projectId)?.name) {
       await updateProject(projectId, { name: tempProjectName.trim() });
+      toast({
+        title: "重命名成功",
+        description: `已将项目重命名为"${tempProjectName.trim()}"`,
+      });
     }
     setEditingProject(null);
     setTempProjectName('');
@@ -266,7 +303,7 @@ const ProjectLibrary = () => {
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>加载项目库...</p>
+            <p className="text-body-small text-muted-foreground">加载项目库...</p>
           </div>
         </div>
       ) : (
@@ -426,6 +463,24 @@ const ProjectLibrary = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除这个项目吗？此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
     );
   };

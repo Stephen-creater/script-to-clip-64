@@ -6,6 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { 
   Upload, 
   Search, 
   Filter,
@@ -24,13 +34,16 @@ import {
 import { cn } from "@/lib/utils";
 import FolderSidebar, { FolderItem } from "@/components/FolderManagement/FolderSidebar";
 import { useMaterials } from "@/hooks/useMaterials";
+import { useToast } from "@/hooks/use-toast";
 
 const Materials = () => {
+  const { toast } = useToast();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [selectedFolder, setSelectedFolder] = useState('all');
   const [expandedFolders, setExpandedFolders] = useState<string[]>(['all', 'images', 'audio']);
   const [searchTerm, setSearchTerm] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { 
@@ -226,13 +239,19 @@ const Materials = () => {
 
   const handleBatchDelete = async () => {
     if (selectedItems.length === 0) return;
-    
-    if (confirm(`确定要删除选中的 ${selectedItems.length} 个文件吗？`)) {
-      for (const itemId of selectedItems) {
-        await deleteMaterial(itemId);
-      }
-      setSelectedItems([]);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmBatchDelete = async () => {
+    for (const itemId of selectedItems) {
+      await deleteMaterial(itemId);
     }
+    toast({
+      title: "删除成功",
+      description: `已删除 ${selectedItems.length} 个文件`,
+    });
+    setSelectedItems([]);
+    setDeleteDialogOpen(false);
   };
 
   const handleFolderToggle = (folderId: string) => {
@@ -256,7 +275,7 @@ const Materials = () => {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>加载素材库...</p>
+          <p className="text-body-small text-muted-foreground">加载素材库...</p>
         </div>
       </div>
     );
@@ -330,11 +349,11 @@ const Materials = () => {
           <Card className="mb-4">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <Upload size={16} className="text-primary" />
+                <Upload size={16} className="text-primary animate-pulse" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">正在上传到 {getFolderInfo(selectedFolder).category}...</p>
+                  <p className="text-body-small font-medium">正在上传到 {getFolderInfo(selectedFolder).category}...</p>
                   <Progress value={uploadProgress} className="h-2 mt-2" />
-                  <p className="text-xs text-muted-foreground mt-1">{uploadProgress}% 完成</p>
+                  <p className="text-caption text-muted-foreground mt-1">{uploadProgress}% 完成</p>
                 </div>
               </div>
             </CardContent>
@@ -343,8 +362,8 @@ const Materials = () => {
 
         {/* Selection Bar */}
         {selectedItems.length > 0 && (
-          <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg mb-4">
-            <span className="text-sm">已选择 {selectedItems.length} 个文件</span>
+          <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg mb-4 border border-primary/20">
+            <span className="text-body-small font-medium">已选择 {selectedItems.length} 个文件</span>
             <div className="flex items-center gap-2">
               <Button 
                 variant="destructive" 
@@ -499,6 +518,24 @@ const Materials = () => {
         )}
       </div>
 
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除选中的 {selectedItems.length} 个文件吗？此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBatchDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -512,4 +549,4 @@ const Materials = () => {
   );
 };
 
-  export default Materials;
+export default Materials;
