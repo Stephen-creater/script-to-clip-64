@@ -323,7 +323,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                 <th className="min-w-[120px] p-4 text-left text-body-small font-semibold text-foreground">
                   {isAudioGenerated ? (
                     <span>
-                      音频（<span className="text-blue-500">已生成，请预览</span>）
+                      音频（<span className="text-info">已生成，请预览</span>）
                     </span>
                   ) : (
                     "音频"
@@ -427,7 +427,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
         <Button 
           variant="outline" 
           size="sm" 
-          className={isAudioGenerated ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"} 
+          className={isAudioGenerated ? "bg-info/10 text-info border-info/20 hover:bg-info/20" : "hover:bg-primary/10 hover:text-primary hover:border-primary/20"} 
           onClick={handleGenerateAudio}
         >
           <Volume2 size={16} className="mr-2" />
@@ -436,7 +436,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
         <Button 
           variant="outline" 
           size="sm" 
-          className={isGlobalSubtitleConfigured ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"}
+          className={isGlobalSubtitleConfigured ? "bg-info/10 text-info border-info/20 hover:bg-info/20" : "hover:bg-primary/10 hover:text-primary hover:border-primary/20"}
           onClick={() => openModal('globalSubtitle')}
         >
           <Settings2 size={16} className="mr-2" />
@@ -445,7 +445,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
         <Button 
           variant="outline" 
           size="sm" 
-          className={isBgmConfigured ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600" : "hover:bg-gradient-primary hover:text-white hover:border-transparent"}
+          className={isBgmConfigured ? "bg-info/10 text-info border-info/20 hover:bg-info/20" : "hover:bg-primary/10 hover:text-primary hover:border-primary/20"}
           onClick={() => openModal('bgm')}
         >
           <Music size={16} className="mr-2" />

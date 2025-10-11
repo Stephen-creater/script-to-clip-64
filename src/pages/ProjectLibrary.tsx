@@ -76,13 +76,13 @@ const ProjectLibrary = () => {
     switch (status) {
       case 'completed':
       case 'published':
-        return <Badge variant="default" className="bg-green-500">已完成</Badge>;
+        return <Badge variant="outline" className="bg-success/10 text-success border-success/20">已完成</Badge>;
       case 'draft':
         return <Badge variant="secondary">草稿</Badge>;
       case 'processing':
-        return <Badge variant="outline" className="border-yellow-500 text-yellow-600">处理中</Badge>;
+        return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">处理中</Badge>;
       case 'archived':
-        return <Badge variant="outline" className="border-gray-500 text-gray-600">已归档</Badge>;
+        return <Badge variant="outline" className="bg-muted text-muted-foreground border-border">已归档</Badge>;
       default:
         return <Badge variant="secondary">未知</Badge>;
     }
@@ -179,8 +179,8 @@ const ProjectLibrary = () => {
             </h1>
             <div className="flex items-center gap-2 mt-2">
               <p className="text-body-small text-muted-foreground">管理您的视频项目和模板</p>
-              <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
-                演示模式 - 数据不会保存
+              <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+                演示模式
               </Badge>
             </div>
           </div>

@@ -282,8 +282,8 @@ const Materials = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <h1 className="text-display">素材库</h1>
-            <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
-              演示模式 - 数据不会保存
+            <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+              演示模式
             </Badge>
             <Button 
               className="bg-gradient-primary"
