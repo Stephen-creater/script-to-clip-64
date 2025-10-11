@@ -144,13 +144,13 @@ const MainLayout = () => {
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <div className={cn(
-        "bg-sidebar border-r border-sidebar-border transition-all duration-300",
-        sidebarOpen ? "w-64" : "w-16"
+        "bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
+        sidebarOpen ? "w-64" : "w-20"
       )}>
         <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
           <h1 className={cn(
-            "text-xl font-bold bg-gradient-primary bg-clip-text text-transparent transition-opacity",
-            sidebarOpen ? "opacity-100" : "opacity-0"
+            "text-xl font-bold bg-gradient-primary bg-clip-text text-transparent transition-opacity duration-300",
+            sidebarOpen ? "opacity-100" : "opacity-0 w-0"
           )}>
             智能混剪平台
           </h1>
@@ -158,28 +158,37 @@ const MainLayout = () => {
             variant="ghost"
             size="sm"
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-sidebar-foreground hover:bg-sidebar-accent"
+            className="text-sidebar-foreground hover:bg-sidebar-accent transition-transform duration-200 hover:scale-110"
           >
             {sidebarOpen ? <X size={16} /> : <Menu size={16} />}
           </Button>
         </div>
 
         <nav className="p-4 space-y-2">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                location.pathname === item.href
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-              )}
-            >
-              <item.icon size={20} />
-              {sidebarOpen && <span>{item.name}</span>}
-            </Link>
-          ))}
+          {navigation.map((item) => {
+            const isActive = location.pathname === item.href;
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                )}
+                title={!sidebarOpen ? item.name : undefined}
+              >
+                <item.icon size={20} className="flex-shrink-0 transition-transform duration-200 hover:scale-110" />
+                <span className={cn(
+                  "transition-all duration-300",
+                  sidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"
+                )}>
+                  {item.name}
+                </span>
+              </Link>
+            );
+          })}
         </nav>
       </div>
 

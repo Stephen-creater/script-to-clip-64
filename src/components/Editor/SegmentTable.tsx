@@ -308,19 +308,19 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
           <table className="w-full">
             <thead>
               <tr>
-                <th className="w-12 p-3 text-left">
+                <th className="w-12 p-4 text-left">
                   <Checkbox
                     checked={selectedSegments.length === segments.length}
                     onCheckedChange={handleSelectAll}
                   />
                 </th>
-                <th className="w-8 p-3"></th>
-                <th className="min-w-[160px] p-3 text-left text-sm font-medium text-foreground">分段名称</th>
-                <th className="min-w-[180px] p-3 text-left text-sm font-medium text-foreground">画面</th>
-                <th className="min-w-[320px] p-3 text-left text-sm font-medium text-foreground">文案</th>
-                <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">花字</th>
-                <th className="min-w-[100px] p-3 text-left text-sm font-medium text-foreground">视频贴纸</th>
-                <th className="min-w-[120px] p-3 text-left text-sm font-medium text-foreground">
+                <th className="w-8 p-4"></th>
+                <th className="min-w-[160px] p-4 text-left text-sm font-medium text-foreground">分段名称</th>
+                <th className="min-w-[180px] p-4 text-left text-sm font-medium text-foreground">画面</th>
+                <th className="min-w-[320px] p-4 text-left text-sm font-medium text-foreground">文案</th>
+                <th className="min-w-[100px] p-4 text-left text-sm font-medium text-foreground">花字</th>
+                <th className="min-w-[100px] p-4 text-left text-sm font-medium text-foreground">视频贴纸</th>
+                <th className="min-w-[120px] p-4 text-left text-sm font-medium text-foreground">
                   {isAudioGenerated ? (
                     <span>
                       音频（<span className="text-blue-500">已生成，请预览</span>）
@@ -345,24 +345,24 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                       selectedSegments.includes(segment.id) && "bg-editor-selected/10"
                     )}
                   >
-                    <td className="w-12 p-3">
+                    <td className="w-12 p-4 border-r border-border/50">
                       <Checkbox
                         checked={selectedSegments.includes(segment.id)}
                         onCheckedChange={(checked) => handleSelectSegment(segment.id, !!checked)}
                       />
                     </td>
-                    <td className="w-8 p-3">
+                    <td className="w-8 p-4 border-r border-border/50">
                       <GripVertical size={16} className="text-muted-foreground cursor-grab" />
                     </td>
-                     <td className="min-w-[160px] p-3">
+                     <td className="min-w-[160px] p-4 border-r border-border/50">
                        <Input
                          value={segment.name}
                          onChange={(e) => updateSegmentName(segment.id, e.target.value)}
-                         className="text-sm border-0 bg-transparent p-0 font-medium focus:border-border focus:bg-background/50"
+                         className="text-sm border-0 bg-transparent p-1 font-medium focus:border-border focus:bg-background/50"
                          placeholder="分段名称"
                        />
                      </td>
-                     <td className="min-w-[180px] p-3">
+                     <td className="min-w-[180px] p-4 border-r border-border/50">
                        <Button 
                          variant="outline" 
                          size="sm" 
@@ -373,15 +373,15 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                          {segment.video || "选择素材"}
                        </Button>
                      </td>
-                    <td className="min-w-[320px] p-3">
+                    <td className="min-w-[320px] p-4 border-r border-border/50">
                       <Textarea
                         value={segment.script}
                         onChange={(e) => updateSegmentScript(segment.id, e.target.value)}
-                        className="min-h-[60px] text-sm resize-none border-0 bg-transparent p-0 focus:border-border focus:bg-background/50"
+                        className="min-h-[80px] text-sm resize-none border-0 bg-transparent p-1 focus:border-border focus:bg-background/50"
                         placeholder="请输入文案内容"
                       />
                     </td>
-                    <td className="min-w-[100px] p-3">
+                    <td className="min-w-[100px] p-4 border-r border-border/50">
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -392,7 +392,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                         {segment.animatedText}
                       </Button>
                     </td>
-                    <td className="min-w-[100px] p-3">
+                    <td className="min-w-[100px] p-4 border-r border-border/50">
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -403,7 +403,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                         {segment.sticker}
                       </Button>
                     </td>
-                     <td className="min-w-[120px] p-3">
+                     <td className="min-w-[120px] p-4">
                        {segment.audioTimestamp ? (
                          <div className="text-sm font-medium text-center py-2">
                            {segment.audioTimestamp}
