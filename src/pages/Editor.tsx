@@ -111,15 +111,13 @@ const Editor = () => {
         {/* Subtitle */}
         {currentSegment.script && (
           <div 
-            className="absolute left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded text-xs max-w-[90%] text-center inline-block"
+            className="absolute left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded text-xs text-center leading-relaxed"
             style={{ 
               bottom: '15%',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              wordBreak: 'break-word',
-              whiteSpace: 'pre-wrap'
+              minWidth: '120px',
+              maxWidth: '90%',
+              whiteSpace: 'normal',
+              wordBreak: 'break-word'
             }}
           >
             {currentSegment.script}
