@@ -81,13 +81,28 @@ const FolderSidebar = ({
   const [renamingFolder, setRenamingFolder] = useState<FolderItem | null>(null);
   const [deletingFolder, setDeletingFolder] = useState<FolderItem | null>(null);
   const [parentFolderId, setParentFolderId] = useState<string | undefined>();
+  const [parentFolder, setParentFolder] = useState<FolderItem | null>(null);
+
+  const findFolder = (folders: FolderItem[], id: string): FolderItem | null => {
+    for (const folder of folders) {
+      if (folder.id === id) return folder;
+      if (folder.children) {
+        const found = findFolder(folder.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
 
   const handleCreateFolder = () => {
     if (newFolderName.trim()) {
-      onFolderCreate(newFolderName.trim(), newFolderType, parentFolderId);
+      // Use parent folder type if creating a subfolder, otherwise use selected type
+      const folderType = parentFolder?.type || newFolderType;
+      onFolderCreate(newFolderName.trim(), folderType, parentFolderId);
       setNewFolderName("");
       setNewFolderType('video');
       setParentFolderId(undefined);
+      setParentFolder(null);
       setShowCreateDialog(false);
     }
   };
@@ -112,7 +127,20 @@ const FolderSidebar = ({
   const openCreateDialog = (parentId?: string) => {
     setParentFolderId(parentId);
     setNewFolderName("");
-    setNewFolderType('video');
+    
+    // Find parent folder if creating subfolder
+    if (parentId) {
+      const parent = findFolder(folders, parentId);
+      setParentFolder(parent);
+      // Inherit parent's type if it exists
+      if (parent?.type) {
+        setNewFolderType(parent.type);
+      }
+    } else {
+      setParentFolder(null);
+      setNewFolderType('video');
+    }
+    
     setShowCreateDialog(true);
   };
 
@@ -244,7 +272,7 @@ const FolderSidebar = ({
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>新建文件夹</DialogTitle>
+            <DialogTitle>{parentFolder ? `在 "${parentFolder.name}" 下新建子文件夹` : '新建文件夹'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
@@ -256,38 +284,53 @@ const FolderSidebar = ({
                 onKeyPress={(e) => e.key === 'Enter' && handleCreateFolder()}
               />
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">文件夹类型</label>
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  type="button"
-                  variant={newFolderType === 'video' ? 'default' : 'outline'}
-                  className="flex flex-col items-center gap-2 h-auto py-3"
-                  onClick={() => setNewFolderType('video')}
-                >
-                  <FileVideo size={20} />
-                  <span className="text-xs">视频</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant={newFolderType === 'image' ? 'default' : 'outline'}
-                  className="flex flex-col items-center gap-2 h-auto py-3"
-                  onClick={() => setNewFolderType('image')}
-                >
-                  <FileImage size={20} />
-                  <span className="text-xs">图片</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant={newFolderType === 'audio' ? 'default' : 'outline'}
-                  className="flex flex-col items-center gap-2 h-auto py-3"
-                  onClick={() => setNewFolderType('audio')}
-                >
-                  <FileAudio size={20} />
-                  <span className="text-xs">音频</span>
-                </Button>
+            {/* Only show type selector when creating top-level folder */}
+            {!parentFolder && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">文件夹类型</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    type="button"
+                    variant={newFolderType === 'video' ? 'default' : 'outline'}
+                    className="flex flex-col items-center gap-2 h-auto py-3"
+                    onClick={() => setNewFolderType('video')}
+                  >
+                    <FileVideo size={20} />
+                    <span className="text-xs">视频</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={newFolderType === 'image' ? 'default' : 'outline'}
+                    className="flex flex-col items-center gap-2 h-auto py-3"
+                    onClick={() => setNewFolderType('image')}
+                  >
+                    <FileImage size={20} />
+                    <span className="text-xs">图片</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={newFolderType === 'audio' ? 'default' : 'outline'}
+                    className="flex flex-col items-center gap-2 h-auto py-3"
+                    onClick={() => setNewFolderType('audio')}
+                  >
+                    <FileAudio size={20} />
+                    <span className="text-xs">音频</span>
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
+            {/* Show inherited type for subfolders */}
+            {parentFolder && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {parentFolder.type === 'video' && <FileVideo size={16} className="text-blue-500" />}
+                {parentFolder.type === 'image' && <FileImage size={16} className="text-green-500" />}
+                {parentFolder.type === 'audio' && <FileAudio size={16} className="text-purple-500" />}
+                <span>
+                  类型：{parentFolder.type === 'video' ? '视频' : parentFolder.type === 'image' ? '图片' : '音频'}
+                  （继承自父文件夹）
+                </span>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
