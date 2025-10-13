@@ -1,12 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, User, Sliders } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
+import { Search, User, Move, ZoomIn } from "lucide-react";
 
 interface DigitalHumanModalProps {
   isOpen: boolean;
@@ -28,8 +27,12 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedHuman, setSelectedHuman] = useState<string>("");
   const [position, setPosition] = useState({ x: 50, y: 80 });
-  const [scale, setScale] = useState([100]);
+  const [scale, setScale] = useState(100);
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const humanRef = useRef<HTMLDivElement>(null);
 
   const filteredHumans = useMemo(() => {
     let filtered = DIGITAL_HUMAN_TEMPLATES;
@@ -49,12 +52,55 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
     return filtered;
   }, [selectedType, searchQuery]);
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!previewRef.current || !selectedHuman) return;
+    
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('resize-handle')) {
+      setIsResizing(true);
+    } else {
+      setIsDragging(true);
+    }
+    e.preventDefault();
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!previewRef.current || !humanRef.current) return;
+
+    if (isDragging) {
+      const rect = previewRef.current.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      
+      setPosition({
+        x: Math.max(10, Math.min(90, x)),
+        y: Math.max(10, Math.min(90, y))
+      });
+    } else if (isResizing) {
+      const rect = previewRef.current.getBoundingClientRect();
+      const humanRect = humanRef.current.getBoundingClientRect();
+      const centerX = humanRect.left + humanRect.width / 2;
+      const centerY = humanRect.top + humanRect.height / 2;
+      const distance = Math.sqrt(
+        Math.pow(e.clientX - centerX, 2) + Math.pow(e.clientY - centerY, 2)
+      );
+      const baseDistance = Math.min(rect.width, rect.height) * 0.2;
+      const newScale = Math.max(50, Math.min(150, (distance / baseDistance) * 100));
+      setScale(newScale);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setIsResizing(false);
+  };
+
   const handleSubmit = () => {
     if (!selectedHuman) return;
     console.log("Selected digital human:", {
       humanId: selectedHuman,
       position,
-      scale: scale[0] / 100
+      scale: scale / 100
     });
     onClose();
   };
@@ -128,101 +174,98 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
                 </div>
 
                 {selectedHuman && (
-                  <div className="w-64 border-l border-border pl-4 space-y-4">
+                  <div className="w-80 border-l border-border pl-4 space-y-4">
                     <div>
-                      <h4 className="text-sm font-medium mb-3">预览</h4>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-medium">预览</h4>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Move size={14} />
+                          <span>拖动调整</span>
+                          <ZoomIn size={14} className="ml-2" />
+                          <span>边角缩放</span>
+                        </div>
+                      </div>
                       <div 
-                        className="relative bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden" 
-                        style={{ aspectRatio: '9/16', height: '200px' }}
+                        ref={previewRef}
+                        className="relative bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden cursor-move select-none" 
+                        style={{ aspectRatio: '9/16', height: '320px' }}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseUp}
                       >
                         <div 
-                          className="absolute bg-white/20 border-2 border-primary rounded-lg flex items-center justify-center"
+                          ref={humanRef}
+                          className="absolute bg-white/20 border-2 border-primary rounded-lg flex items-center justify-center transition-none"
                           style={{
                             left: `${position.x}%`,
                             top: `${position.y}%`,
-                            width: `${40 * scale[0] / 100}%`,
-                            height: `${40 * scale[0] / 100}%`,
+                            width: `${40 * scale / 100}%`,
+                            height: `${40 * scale / 100}%`,
                             transform: `translate(-50%, -50%)`,
+                            cursor: isDragging ? 'grabbing' : 'grab'
                           }}
+                          onMouseDown={handleMouseDown}
                         >
-                          <User size={32} className="text-primary" />
+                          <User size={32} className="text-primary pointer-events-none" />
+                          
+                          {/* 四个角的缩放手柄 */}
+                          <div 
+                            className="resize-handle absolute -top-1 -left-1 w-3 h-3 bg-primary rounded-full cursor-nwse-resize hover:scale-125 transition-transform"
+                            onMouseDown={handleMouseDown}
+                          />
+                          <div 
+                            className="resize-handle absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full cursor-nesw-resize hover:scale-125 transition-transform"
+                            onMouseDown={handleMouseDown}
+                          />
+                          <div 
+                            className="resize-handle absolute -bottom-1 -left-1 w-3 h-3 bg-primary rounded-full cursor-nesw-resize hover:scale-125 transition-transform"
+                            onMouseDown={handleMouseDown}
+                          />
+                          <div 
+                            className="resize-handle absolute -bottom-1 -right-1 w-3 h-3 bg-primary rounded-full cursor-nwse-resize hover:scale-125 transition-transform"
+                            onMouseDown={handleMouseDown}
+                          />
+                        </div>
+                        
+                        <div className="absolute bottom-2 left-2 right-2 text-center text-xs text-white/60 bg-black/30 rounded px-2 py-1">
+                          位置: {Math.round(position.x)}%, {Math.round(position.y)}% | 大小: {Math.round(scale)}%
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <Label className="text-sm mb-2 block">位置调整</Label>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Label className="text-xs w-12">水平</Label>
-                            <Slider
-                              value={[position.x]}
-                              onValueChange={(value) => setPosition({ ...position, x: value[0] })}
-                              min={0}
-                              max={100}
-                              step={1}
-                              className="flex-1"
-                            />
-                            <span className="text-xs text-muted-foreground w-12 text-right">{position.x}%</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Label className="text-xs w-12">垂直</Label>
-                            <Slider
-                              value={[position.y]}
-                              onValueChange={(value) => setPosition({ ...position, y: value[0] })}
-                              min={0}
-                              max={100}
-                              step={1}
-                              className="flex-1"
-                            />
-                            <span className="text-xs text-muted-foreground w-12 text-right">{position.y}%</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label className="text-sm mb-2 block">大小调整</Label>
-                        <div className="flex items-center gap-2">
-                          <Sliders size={14} className="text-muted-foreground" />
-                          <Slider
-                            value={scale}
-                            onValueChange={setScale}
-                            min={50}
-                            max={150}
-                            step={5}
-                            className="flex-1"
-                          />
-                          <span className="text-xs text-muted-foreground w-12 text-right">{scale[0]}%</span>
-                        </div>
-                      </div>
-
-                      <div className="pt-2 space-y-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => setPosition({ x: 20, y: 80 })}
-                        >
-                          左下角
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => setPosition({ x: 80, y: 80 })}
-                        >
-                          右下角
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => setPosition({ x: 50, y: 50 })}
-                        >
-                          居中
-                        </Button>
-                      </div>
+                    <div className="pt-2 space-y-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setPosition({ x: 20, y: 80 })}
+                      >
+                        左下角
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setPosition({ x: 80, y: 80 })}
+                      >
+                        右下角
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setPosition({ x: 50, y: 50 })}
+                      >
+                        居中
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setScale(100)}
+                      >
+                        重置大小
+                      </Button>
                     </div>
                   </div>
                 )}
