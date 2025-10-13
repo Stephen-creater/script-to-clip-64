@@ -210,36 +210,34 @@ const FolderSidebar = ({
           
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">{folder.count}</span>
-            {folder.id !== 'all' && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
-                  >
-                    <MoreVertical size={12} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => openCreateDialog(folder.id)}>
-                    <FolderPlus size={14} className="mr-2" />
-                    新建子文件夹
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => openRenameDialog(folder)}>
-                    <Edit2 size={14} className="mr-2" />
-                    重命名
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => openDeleteDialog(folder)}
-                    className="text-destructive"
-                  >
-                    <Trash2 size={14} className="mr-2" />
-                    删除
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                >
+                  <MoreVertical size={12} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => openCreateDialog(folder.id)}>
+                  <FolderPlus size={14} className="mr-2" />
+                  新建子文件夹
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => openRenameDialog(folder)}>
+                  <Edit2 size={14} className="mr-2" />
+                  重命名
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => openDeleteDialog(folder)}
+                  className="text-destructive"
+                >
+                  <Trash2 size={14} className="mr-2" />
+                  删除
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         
