@@ -232,41 +232,6 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
                         </div>
                       </div>
                     </div>
-
-                    <div className="pt-2 space-y-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setPosition({ x: 20, y: 80 })}
-                      >
-                        左下角
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setPosition({ x: 80, y: 80 })}
-                      >
-                        右下角
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setPosition({ x: 50, y: 50 })}
-                      >
-                        居中
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setScale(100)}
-                      >
-                        重置大小
-                      </Button>
-                    </div>
                   </div>
                 )}
               </div>
