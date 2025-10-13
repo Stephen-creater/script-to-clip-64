@@ -23,6 +23,7 @@ import { DigitalHumanModal } from "./DigitalHumanModal";
 import { BgmModal } from "./BgmModal";
 import { AudioGenerationModal } from "./AudioGenerationModal";
 import { MaterialSelectionModal } from "./MaterialSelectionModal";
+import { VoiceSelectionModal } from "./VoiceSelectionModal";
 
 interface Segment {
   id: string;
@@ -107,9 +108,11 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
-    type: 'animatedText' | 'sticker' | 'digitalHuman' | 'globalSubtitle' | 'bgm' | 'audioGeneration' | 'materialSelection' | null;
+    type: 'animatedText' | 'sticker' | 'digitalHuman' | 'globalSubtitle' | 'bgm' | 'audioGeneration' | 'materialSelection' | 'voiceSelection' | null;
     segmentId: string | null;
   }>({ type: null, segmentId: null });
+  
+  const [selectedVoiceId, setSelectedVoiceId] = useState<string>("");
   
   const [isAudioGenerated, setIsAudioGenerated] = useState(false);
   const [isGlobalSubtitleConfigured, setIsGlobalSubtitleConfigured] = useState(false);
@@ -149,7 +152,13 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
   };
 
   const handleGenerateAudio = () => {
-    // Open audio generation modal
+    // Open voice selection modal first
+    setActiveModal({ type: 'voiceSelection', segmentId: null });
+  };
+
+  const handleVoiceSelected = (voiceId: string) => {
+    setSelectedVoiceId(voiceId);
+    // After voice selection, open audio generation modal
     setActiveModal({ type: 'audioGeneration', segmentId: null });
   };
 
@@ -541,6 +550,14 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
         />
       )}
       
+      {activeModal.type === 'voiceSelection' && (
+        <VoiceSelectionModal
+          isOpen={true}
+          onClose={closeModal}
+          onConfirm={handleVoiceSelected}
+        />
+      )}
+
       {activeModal.type === 'audioGeneration' && (
         <AudioGenerationModal
           isOpen={true}
