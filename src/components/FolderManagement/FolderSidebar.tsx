@@ -60,6 +60,7 @@ interface FolderSidebarProps {
   onFolderRename: (folderId: string, newName: string) => void;
   onFolderDelete: (folderId: string) => void;
   title?: string;
+  defaultType?: 'video' | 'image' | 'audio'; // 默认文件夹类型，设置后将隐藏类型选择
 }
 
 const FolderSidebar = ({
@@ -71,7 +72,8 @@ const FolderSidebar = ({
   onFolderCreate,
   onFolderRename,
   onFolderDelete,
-  title = "文件夹"
+  title = "文件夹",
+  defaultType
 }: FolderSidebarProps) => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
@@ -96,11 +98,11 @@ const FolderSidebar = ({
 
   const handleCreateFolder = () => {
     if (newFolderName.trim()) {
-      // Use parent folder type if creating a subfolder, otherwise use selected type
-      const folderType = parentFolder?.type || newFolderType;
+      // Priority: defaultType > parent folder type > selected type
+      const folderType = defaultType || parentFolder?.type || newFolderType;
       onFolderCreate(newFolderName.trim(), folderType, parentFolderId);
       setNewFolderName("");
-      setNewFolderType('video');
+      setNewFolderType(defaultType || 'video');
       setParentFolderId(undefined);
       setParentFolder(null);
       setShowCreateDialog(false);
@@ -132,13 +134,18 @@ const FolderSidebar = ({
     if (parentId) {
       const parent = findFolder(folders, parentId);
       setParentFolder(parent);
-      // Inherit parent's type if it exists
+      // Inherit parent's type if it exists, or use defaultType, or fallback to 'video'
       if (parent?.type) {
         setNewFolderType(parent.type);
+      } else if (defaultType) {
+        setNewFolderType(defaultType);
+      } else {
+        setNewFolderType('video');
       }
     } else {
       setParentFolder(null);
-      setNewFolderType('video');
+      // Use defaultType if provided, otherwise 'video'
+      setNewFolderType(defaultType || 'video');
     }
     
     setShowCreateDialog(true);
@@ -282,8 +289,8 @@ const FolderSidebar = ({
                 onKeyPress={(e) => e.key === 'Enter' && handleCreateFolder()}
               />
             </div>
-            {/* Only show type selector when creating top-level folder */}
-            {!parentFolder && (
+            {/* Only show type selector when creating top-level folder and no defaultType is set */}
+            {!defaultType && !parentFolder && (
               <div>
                 <label className="text-sm font-medium mb-2 block">文件夹类型</label>
                 <div className="grid grid-cols-3 gap-2">
@@ -318,7 +325,7 @@ const FolderSidebar = ({
               </div>
             )}
             {/* Show inherited type for subfolders */}
-            {parentFolder && (
+            {!defaultType && parentFolder && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 {parentFolder.type === 'video' && <FileVideo size={16} className="text-blue-500" />}
                 {parentFolder.type === 'image' && <FileImage size={16} className="text-green-500" />}

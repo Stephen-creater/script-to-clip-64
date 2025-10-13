@@ -246,6 +246,7 @@ const VideoLibrary = () => {
         onFolderRename={handleFolderRename}
         onFolderDelete={handleFolderDelete}
         title="视频文件夹"
+        defaultType="video"
       />
 
       <div className="flex-1 p-6">
