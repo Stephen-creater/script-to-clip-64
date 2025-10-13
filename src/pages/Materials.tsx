@@ -64,31 +64,34 @@ const Materials = () => {
       id: 'all', 
       name: '视频素材', 
       count: materials.filter(m => m.file_type === 'video').length,
+      type: 'video',
       hasChildren: true,
       children: [
-        { id: 'window-scenery', name: '车窗外风景', count: getMaterialsByCategory('视频素材', '车窗外风景').length, parentId: 'all' },
-        { id: 'station-interior', name: '车站内', count: getMaterialsByCategory('视频素材', '车站内').length, parentId: 'all' },
+        { id: 'window-scenery', name: '车窗外风景', count: getMaterialsByCategory('视频素材', '车窗外风景').length, parentId: 'all', type: 'video' },
+        { id: 'station-interior', name: '车站内', count: getMaterialsByCategory('视频素材', '车站内').length, parentId: 'all', type: 'video' },
       ]
     },
     { 
       id: 'images', 
       name: '图片素材', 
       count: materials.filter(m => m.file_type === 'image').length,
+      type: 'image',
       hasChildren: true,
       children: [
-        { id: 'emotion', name: '表情类', count: getMaterialsByCategory('图片素材', '表情类').length, parentId: 'images' },
-        { id: 'decorative', name: '装饰类', count: getMaterialsByCategory('图片素材', '装饰类').length, parentId: 'images' },
-        { id: 'marketing', name: '营销类', count: getMaterialsByCategory('图片素材', '营销类').length, parentId: 'images' },
+        { id: 'emotion', name: '表情类', count: getMaterialsByCategory('图片素材', '表情类').length, parentId: 'images', type: 'image' },
+        { id: 'decorative', name: '装饰类', count: getMaterialsByCategory('图片素材', '装饰类').length, parentId: 'images', type: 'image' },
+        { id: 'marketing', name: '营销类', count: getMaterialsByCategory('图片素材', '营销类').length, parentId: 'images', type: 'image' },
       ]
     },
     { 
       id: 'audio', 
       name: '音频素材', 
       count: materials.filter(m => m.file_type === 'audio').length,
+      type: 'audio',
       hasChildren: true,
       children: [
-        { id: 'bgm', name: 'BGM', count: getMaterialsByCategory('音频素材', 'BGM').length, parentId: 'audio' },
-        { id: 'sound-effects', name: '音效素材', count: getMaterialsByCategory('音频素材', '音效素材').length, parentId: 'audio' },
+        { id: 'bgm', name: 'BGM', count: getMaterialsByCategory('音频素材', 'BGM').length, parentId: 'audio', type: 'audio' },
+        { id: 'sound-effects', name: '音效素材', count: getMaterialsByCategory('音频素材', '音效素材').length, parentId: 'audio', type: 'audio' },
       ]
     },
   ];
