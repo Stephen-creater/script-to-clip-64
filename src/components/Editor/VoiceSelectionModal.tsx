@@ -87,7 +87,7 @@ export const VoiceSelectionModal = ({
   const handleConfirm = () => {
     if (selectedVoice) {
       onConfirm(selectedVoice);
-      onClose();
+      // Don't call onClose here - let parent component handle the flow
     }
   };
 

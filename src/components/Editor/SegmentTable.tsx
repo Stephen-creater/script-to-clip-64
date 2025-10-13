@@ -158,8 +158,11 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
 
   const handleVoiceSelected = (voiceId: string) => {
     setSelectedVoiceId(voiceId);
-    // After voice selection, open audio generation modal
-    setActiveModal({ type: 'audioGeneration', segmentId: null });
+    // Close voice selection modal and open audio generation modal
+    closeModal();
+    setTimeout(() => {
+      setActiveModal({ type: 'audioGeneration', segmentId: null });
+    }, 100);
   };
 
   const handleAudioGenerationComplete = () => {
