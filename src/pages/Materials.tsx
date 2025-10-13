@@ -289,7 +289,12 @@ const Materials = () => {
         expandedFolders={expandedFolders}
         onFolderSelect={setSelectedFolder}
         onFolderToggle={handleFolderToggle}
-        onFolderCreate={() => {}}
+        onFolderCreate={(name: string, type: 'video' | 'image' | 'audio') => {
+          toast({
+            title: "提示",
+            description: `文件夹 "${name}" (${type === 'video' ? '视频' : type === 'image' ? '图片' : '音频'}) 创建功能即将上线`,
+          });
+        }}
         onFolderRename={() => {}}
         onFolderDelete={() => {}}
         title="素材文件夹"

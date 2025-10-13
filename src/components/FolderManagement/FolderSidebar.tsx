@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   FolderPlus, 
   Folder,
@@ -9,7 +10,10 @@ import {
   MoreVertical,
   Edit2,
   Trash2,
-  FolderOpen
+  FolderOpen,
+  FileVideo,
+  FileImage,
+  FileAudio
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -43,6 +47,7 @@ export interface FolderItem {
   hasChildren?: boolean;
   children?: FolderItem[];
   parentId?: string;
+  type?: 'video' | 'image' | 'audio';
 }
 
 interface FolderSidebarProps {
@@ -51,7 +56,7 @@ interface FolderSidebarProps {
   expandedFolders: string[];
   onFolderSelect: (folderId: string) => void;
   onFolderToggle: (folderId: string) => void;
-  onFolderCreate: (name: string, parentId?: string) => void;
+  onFolderCreate: (name: string, type: 'video' | 'image' | 'audio', parentId?: string) => void;
   onFolderRename: (folderId: string, newName: string) => void;
   onFolderDelete: (folderId: string) => void;
   title?: string;
@@ -72,14 +77,16 @@ const FolderSidebar = ({
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderType, setNewFolderType] = useState<'video' | 'image' | 'audio'>('video');
   const [renamingFolder, setRenamingFolder] = useState<FolderItem | null>(null);
   const [deletingFolder, setDeletingFolder] = useState<FolderItem | null>(null);
   const [parentFolderId, setParentFolderId] = useState<string | undefined>();
 
   const handleCreateFolder = () => {
     if (newFolderName.trim()) {
-      onFolderCreate(newFolderName.trim(), parentFolderId);
+      onFolderCreate(newFolderName.trim(), newFolderType, parentFolderId);
       setNewFolderName("");
+      setNewFolderType('video');
       setParentFolderId(undefined);
       setShowCreateDialog(false);
     }
@@ -105,7 +112,25 @@ const FolderSidebar = ({
   const openCreateDialog = (parentId?: string) => {
     setParentFolderId(parentId);
     setNewFolderName("");
+    setNewFolderType('video');
     setShowCreateDialog(true);
+  };
+
+  const getFolderIcon = (folder: FolderItem, isExpanded: boolean) => {
+    if (!folder.type) {
+      return isExpanded ? <FolderOpen size={16} /> : <Folder size={16} />;
+    }
+    
+    switch (folder.type) {
+      case 'video':
+        return <FileVideo size={16} className="text-blue-500" />;
+      case 'image':
+        return <FileImage size={16} className="text-green-500" />;
+      case 'audio':
+        return <FileAudio size={16} className="text-purple-500" />;
+      default:
+        return isExpanded ? <FolderOpen size={16} /> : <Folder size={16} />;
+    }
   };
 
   const openRenameDialog = (folder: FolderItem) => {
@@ -145,13 +170,13 @@ const FolderSidebar = ({
             }}
           >
             <div className="w-[14px] flex justify-center">
-              {hasChildren && (
+            {hasChildren && (
                 isExpanded ? 
                   <ChevronDown size={14} /> : 
                   <ChevronRight size={14} />
               )}
             </div>
-            {isExpanded ? <FolderOpen size={16} /> : <Folder size={16} />}
+            {getFolderIcon(folder, isExpanded)}
             <span className="text-sm">{folder.name}</span>
           </div>
           
@@ -221,13 +246,48 @@ const FolderSidebar = ({
           <DialogHeader>
             <DialogTitle>新建文件夹</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <Input
-              placeholder="输入文件夹名称..."
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleCreateFolder()}
-            />
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">文件夹名称</label>
+              <Input
+                placeholder="输入文件夹名称..."
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleCreateFolder()}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">文件夹类型</label>
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  type="button"
+                  variant={newFolderType === 'video' ? 'default' : 'outline'}
+                  className="flex flex-col items-center gap-2 h-auto py-3"
+                  onClick={() => setNewFolderType('video')}
+                >
+                  <FileVideo size={20} />
+                  <span className="text-xs">视频</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant={newFolderType === 'image' ? 'default' : 'outline'}
+                  className="flex flex-col items-center gap-2 h-auto py-3"
+                  onClick={() => setNewFolderType('image')}
+                >
+                  <FileImage size={20} />
+                  <span className="text-xs">图片</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant={newFolderType === 'audio' ? 'default' : 'outline'}
+                  className="flex flex-col items-center gap-2 h-auto py-3"
+                  onClick={() => setNewFolderType('audio')}
+                >
+                  <FileAudio size={20} />
+                  <span className="text-xs">音频</span>
+                </Button>
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
