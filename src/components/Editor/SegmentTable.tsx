@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { AnimatedTextModal } from "./AnimatedTextModal";
 import { GlobalSubtitleModal } from "./GlobalSubtitleModal";
 import { StickerModal } from "./StickerModal";
+import { DigitalHumanModal } from "./DigitalHumanModal";
 import { BgmModal } from "./BgmModal";
 import { AudioGenerationModal } from "./AudioGenerationModal";
 import { MaterialSelectionModal } from "./MaterialSelectionModal";
@@ -31,6 +32,7 @@ interface Segment {
   script: string;
   animatedText: string;
   sticker: string;
+  digitalHuman: string;
   audio: string;
   audioTimestamp?: string;
 }
@@ -54,6 +56,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "1",
       animatedText: "未设置",
       sticker: "未设置",
+      digitalHuman: "未设置",
       audio: ""
     },
     {
@@ -64,6 +67,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "2",
       animatedText: "未设置",
       sticker: "未设置",
+      digitalHuman: "未设置",
       audio: ""
     },
     {
@@ -74,6 +78,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "3",
       animatedText: "未设置",
       sticker: "未设置",
+      digitalHuman: "未设置",
       audio: ""
     },
     {
@@ -84,6 +89,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "4",
       animatedText: "未设置",
       sticker: "未设置",
+      digitalHuman: "未设置",
       audio: ""
     },
     {
@@ -94,13 +100,14 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "5",
       animatedText: "未设置",
       sticker: "未设置",
+      digitalHuman: "未设置",
       audio: ""
     }
   ]);
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
-    type: 'animatedText' | 'sticker' | 'globalSubtitle' | 'bgm' | 'audioGeneration' | 'materialSelection' | null;
+    type: 'animatedText' | 'sticker' | 'digitalHuman' | 'globalSubtitle' | 'bgm' | 'audioGeneration' | 'materialSelection' | null;
     segmentId: string | null;
   }>({ type: null, segmentId: null });
   
@@ -185,6 +192,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
         script: "",
         animatedText: "未设置",
         sticker: "未设置",
+        digitalHuman: "未设置",
         audio: ""
     };
     const newSegments = renumberSegments([...segments, newSegment]);
@@ -203,6 +211,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
         script: line.trim(),
         animatedText: "未设置",
         sticker: "未设置",
+        digitalHuman: "未设置",
         audio: ""
       }));
       const allSegments = renumberSegments([...segments, ...newSegments]);
@@ -218,7 +227,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
     setSelectedSegments([]);
   };
 
-  const openModal = (type: 'animatedText' | 'sticker' | 'globalSubtitle' | 'bgm' | 'materialSelection', segmentId?: string) => {
+  const openModal = (type: 'animatedText' | 'sticker' | 'digitalHuman' | 'globalSubtitle' | 'bgm' | 'materialSelection', segmentId?: string) => {
     setActiveModal({ type, segmentId: segmentId || null });
   };
 
@@ -320,6 +329,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                 <th className="min-w-[320px] p-4 text-left text-body-small font-semibold text-foreground">文案</th>
                 <th className="min-w-[100px] p-4 text-left text-body-small font-semibold text-foreground">花字</th>
                 <th className="min-w-[100px] p-4 text-left text-body-small font-semibold text-foreground">视频贴纸</th>
+                <th className="min-w-[100px] p-4 text-left text-body-small font-semibold text-foreground">数字人</th>
                 <th className="min-w-[120px] p-4 text-left text-body-small font-semibold text-foreground">
                   {isAudioGenerated ? (
                     <span>
@@ -403,6 +413,17 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                         {segment.sticker}
                       </Button>
                     </td>
+                    <td className="min-w-[100px] p-4 border-r border-border/50">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full justify-start"
+                        onClick={() => openModal('digitalHuman', segment.id)}
+                      >
+                        <Settings2 size={14} className="mr-2" />
+                        {segment.digitalHuman}
+                      </Button>
+                    </td>
                      <td className="min-w-[120px] p-4">
                        {segment.audioTimestamp ? (
                          <div className="text-sm font-medium text-center py-2">
@@ -475,6 +496,14 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       
       {activeModal.type === 'sticker' && (
         <StickerModal
+          isOpen={true}
+          onClose={closeModal}
+          segmentId={activeModal.segmentId!}
+        />
+      )}
+      
+      {activeModal.type === 'digitalHuman' && (
+        <DigitalHumanModal
           isOpen={true}
           onClose={closeModal}
           segmentId={activeModal.segmentId!}

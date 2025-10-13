@@ -13,6 +13,7 @@ interface Segment {
   script: string;
   animatedText: string;
   sticker: string;
+  digitalHuman: string;
   audio: string;
 }
 
