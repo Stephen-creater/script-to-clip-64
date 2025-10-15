@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Folder, Music, Plus } from "lucide-react";
+import { Music, Plus } from "lucide-react";
 import { TemplateCreationModal } from "./TemplateCreationModal";
+import { AudioSelectionModal } from "./AudioSelectionModal";
 
 interface AnimatedTextModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
   });
 
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
 
   const handleSubmit = () => {
     const updatedData = {
@@ -42,6 +44,11 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
     // Here you would typically save the template data to state or backend
     console.log("创建新模板:", templateData);
     // For now, we'll just log it
+  };
+
+  const handleAudioSelect = (fileId: string, fileName: string, folderId?: string) => {
+    setFormData(prev => ({ ...prev, soundEffect: fileName }));
+    console.log("选择音效:", { fileId, fileName, folderId });
   };
 
   return (
@@ -103,37 +110,14 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
             <div className="space-y-2">
               <Label htmlFor="soundEffect">音效选择</Label>
               <div className="space-y-3">
-                <Select value={formData.soundEffect} onValueChange={(value) => setFormData(prev => ({ ...prev, soundEffect: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="请选择音效文件夹" />
-                  </SelectTrigger>
-                   <SelectContent>
-                     <SelectItem value="funny">
-                       <div className="flex items-center gap-2">
-                         <Folder size={16} />
-                         <span>搞笑音效</span>
-                       </div>
-                     </SelectItem>
-                     <SelectItem value="transition">
-                       <div className="flex items-center gap-2">
-                         <Folder size={16} />
-                         <span>转场音效</span>
-                       </div>
-                     </SelectItem>
-                     <SelectItem value="environment">
-                       <div className="flex items-center gap-2">
-                         <Folder size={16} />
-                         <span>环境音效</span>
-                       </div>
-                     </SelectItem>
-                     <SelectItem value="special">
-                       <div className="flex items-center gap-2">
-                         <Folder size={16} />
-                         <span>特效音效</span>
-                       </div>
-                     </SelectItem>
-                   </SelectContent>
-                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => setIsAudioModalOpen(true)}
+                >
+                  {formData.soundEffect || "请选择音效文件夹"}
+                </Button>
                 
                 <div className="space-y-2">
                   <Label htmlFor="volume">音量</Label>
@@ -178,6 +162,12 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
         onCreateTemplate={handleCreateTemplate}
+      />
+
+      <AudioSelectionModal
+        isOpen={isAudioModalOpen}
+        onClose={() => setIsAudioModalOpen(false)}
+        onSelect={handleAudioSelect}
       />
     </>
   );
