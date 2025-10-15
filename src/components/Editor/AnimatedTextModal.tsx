@@ -29,7 +29,9 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [resizeStart, setResizeStart] = useState({ fontSize: 48, mouseY: 0 });
   const previewRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = () => {
@@ -49,6 +51,7 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!previewRef.current) return;
+    e.stopPropagation();
     setIsDragging(true);
     const rect = previewRef.current.getBoundingClientRect();
     setDragStart({
@@ -57,21 +60,40 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
     });
   };
 
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    setResizeStart({
+      fontSize: formData.fontSize,
+      mouseY: e.clientY
+    });
+  };
+
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !previewRef.current) return;
-    const rect = previewRef.current.getBoundingClientRect();
-    const newX = ((e.clientX - dragStart.x) / rect.width) * 100;
-    const newY = ((e.clientY - dragStart.y) / rect.height) * 100;
-    
-    setFormData(prev => ({
-      ...prev,
-      x: Math.max(0, Math.min(100, newX)),
-      y: Math.max(0, Math.min(100, newY))
-    }));
+    if (isDragging && !isResizing && previewRef.current) {
+      const rect = previewRef.current.getBoundingClientRect();
+      const newX = ((e.clientX - dragStart.x) / rect.width) * 100;
+      const newY = ((e.clientY - dragStart.y) / rect.height) * 100;
+      
+      setFormData(prev => ({
+        ...prev,
+        x: Math.max(0, Math.min(100, newX)),
+        y: Math.max(0, Math.min(100, newY))
+      }));
+    } else if (isResizing) {
+      const deltaY = resizeStart.mouseY - e.clientY;
+      const newFontSize = resizeStart.fontSize + deltaY * 0.5;
+      
+      setFormData(prev => ({
+        ...prev,
+        fontSize: Math.max(12, Math.min(120, Math.round(newFontSize)))
+      }));
+    }
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
+    setIsResizing(false);
   };
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -86,11 +108,11 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
   };
 
   useEffect(() => {
-    if (isDragging) {
+    if (isDragging || isResizing) {
       document.addEventListener('mouseup', handleMouseUp as any);
       return () => document.removeEventListener('mouseup', handleMouseUp as any);
     }
-  }, [isDragging]);
+  }, [isDragging, isResizing]);
 
   const handleCreateTemplate = (templateData: any) => {
     // Here you would typically save the template data to state or backend
@@ -214,30 +236,51 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
                   
                   {formData.content && (
                     <div
-                      className="absolute cursor-move select-none"
+                      className="absolute select-none group"
                       style={{
                         left: `${formData.x}%`,
                         top: `${formData.y}%`,
                         transform: 'translate(-50%, -50%)',
-                        fontSize: `${formData.fontSize}px`,
-                        fontWeight: 'bold',
-                        color: '#FFD700',
-                        textShadow: '2px 2px 4px rgba(0,0,0,0.5), -1px -1px 2px rgba(255,255,255,0.3)',
-                        WebkitTextStroke: '1px rgba(0,0,0,0.3)',
                         zIndex: 10
                       }}
-                      onMouseDown={handleMouseDown}
                     >
-                      <div className="flex items-center gap-1">
-                        <Move size={12} className="opacity-50" />
-                        {formData.content}
+                      {/* 花字文本 */}
+                      <div
+                        className="cursor-move relative"
+                        style={{
+                          fontSize: `${formData.fontSize}px`,
+                          fontWeight: 'bold',
+                          color: '#FFD700',
+                          textShadow: '2px 2px 4px rgba(0,0,0,0.5), -1px -1px 2px rgba(255,255,255,0.3)',
+                          WebkitTextStroke: '1px rgba(0,0,0,0.3)',
+                        }}
+                        onMouseDown={handleMouseDown}
+                      >
+                        <div className="flex items-center gap-1">
+                          <Move size={12} className="opacity-50" />
+                          {formData.content}
+                        </div>
                       </div>
+                      
+                      {/* 缩放控制点 */}
+                      <div className="absolute -top-2 -left-2 w-4 h-4 bg-primary rounded-full border-2 border-background cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                        onMouseDown={handleResizeMouseDown}
+                      />
+                      <div className="absolute -top-2 -right-2 w-4 h-4 bg-primary rounded-full border-2 border-background cursor-nesw-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                        onMouseDown={handleResizeMouseDown}
+                      />
+                      <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-primary rounded-full border-2 border-background cursor-nesw-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                        onMouseDown={handleResizeMouseDown}
+                      />
+                      <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-primary rounded-full border-2 border-background cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                        onMouseDown={handleResizeMouseDown}
+                      />
                     </div>
                   )}
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                💡 提示：拖拽调整位置 • 滚轮调整大小 • 当前大小: {formData.fontSize}px
+                💡 提示：拖拽调整位置 • 滚轮/边角调整大小 • 当前大小: {formData.fontSize}px
               </p>
             </div>
           </div>
