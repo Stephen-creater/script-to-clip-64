@@ -51,13 +51,10 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
     });
   }, [folders, materials]);
 
-  // 初始化选择第一个子文件夹
+  // 初始化选择第一个根文件夹
   useEffect(() => {
     if (!selectedFolderId && folderHierarchy.length > 0) {
-      const firstRoot = folderHierarchy[0];
-      if (firstRoot.children && firstRoot.children.length > 0) {
-        setSelectedFolderId(firstRoot.children[0].id);
-      }
+      setSelectedFolderId(folderHierarchy[0].id);
     }
   }, [folderHierarchy, selectedFolderId]);
 
@@ -93,7 +90,28 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
   const filteredMaterials = useMemo(() => {
     if (!selectedFolderId) return [];
 
-    // 找到选中的文件夹
+    // 查找选中的文件夹是根文件夹还是子文件夹
+    const rootFolder = folderHierarchy.find(r => r.id === selectedFolderId);
+    
+    if (rootFolder) {
+      // 选中的是根文件夹，返回该分类下的所有素材
+      let filtered = materials.filter(m => 
+        m.category === rootFolder.name &&
+        (m.file_type === 'video' || m.file_type === 'image')
+      );
+
+      // 应用搜索过滤
+      if (searchQuery) {
+        filtered = filtered.filter(material => 
+          material.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (material.original_name && material.original_name.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+      }
+
+      return filtered;
+    }
+
+    // 查找是否为子文件夹
     let selectedFolder = null;
     let parentFolder = null;
     for (const root of folderHierarchy) {
@@ -107,7 +125,7 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
 
     if (!selectedFolder || !parentFolder) return [];
 
-    // 筛选该分类下的素材（视频或图片）
+    // 筛选该子分类下的素材
     let filtered = materials.filter(m => 
       m.category === parentFolder.name && 
       m.subcategory === selectedFolder.name &&
@@ -184,44 +202,74 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[85vh] p-0 gap-0">
-        <DialogHeader className="px-6 py-4 border-b">
+      <DialogContent className="max-w-4xl max-h-[85vh] p-0 gap-0 flex flex-col">
+        <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
           <DialogTitle>选择视频贴纸</DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">导出尺寸: 1080*1920</p>
         </DialogHeader>
         
-        <div className="flex overflow-hidden" style={{ height: 'calc(85vh - 140px)' }}>
+        <div className="flex flex-1 overflow-hidden min-h-0">
           {/* 左侧文件夹列表 */}
-          <div className="w-64 border-r bg-muted/30">
+          <div className="w-64 border-r bg-muted/30 flex-shrink-0">
             <ScrollArea className="h-full">
-              <div className="p-4 space-y-1">
-                {folderHierarchy.map(root => (
-                  <div key={root.id} className="space-y-1">
-                    <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground">
-                      <Folder size={16} />
-                      <span>{root.name}</span>
-                    </div>
-                    {root.children?.map(child => (
+              <div className="p-4 space-y-2">
+                {folderHierarchy.map(root => {
+                  const isRootOpen = selectedFolderId === root.id || root.children?.some(c => c.id === selectedFolderId);
+                  const rootMaterialCount = materials.filter(m => 
+                    m.category === root.name && 
+                    (m.file_type === 'video' || m.file_type === 'image')
+                  ).length;
+                  
+                  return (
+                    <div key={root.id} className="space-y-1">
                       <div
-                        key={child.id}
-                        onClick={() => setSelectedFolderId(child.id)}
+                        onClick={() => setSelectedFolderId(root.id)}
                         className={`flex items-center justify-between gap-2 px-3 py-2 rounded-md cursor-pointer transition-all text-sm ${
-                          selectedFolderId === child.id
+                          selectedFolderId === root.id
                             ? 'bg-primary text-primary-foreground shadow-sm'
                             : 'hover:bg-secondary/80'
                         }`}
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <ChevronRight size={14} className="flex-shrink-0" />
-                          <span className="truncate">{child.name}</span>
+                          <ChevronRight 
+                            size={14} 
+                            className={`flex-shrink-0 transition-transform ${isRootOpen ? 'rotate-90' : ''}`}
+                          />
+                          <Folder size={16} className="flex-shrink-0" />
+                          <span className="truncate font-medium">{root.name}</span>
                         </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {child.materialCount}
+                        <Badge 
+                          variant={selectedFolderId === root.id ? "secondary" : "outline"} 
+                          className="text-xs"
+                        >
+                          {rootMaterialCount}
                         </Badge>
                       </div>
-                    ))}
-                  </div>
-                ))}
+                      {isRootOpen && root.children?.map(child => (
+                        <div
+                          key={child.id}
+                          onClick={() => setSelectedFolderId(child.id)}
+                          className={`flex items-center justify-between gap-2 px-3 py-2 rounded-md cursor-pointer transition-all text-sm ml-4 ${
+                            selectedFolderId === child.id
+                              ? 'bg-primary text-primary-foreground shadow-sm'
+                              : 'hover:bg-secondary/80'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <Folder size={14} className="flex-shrink-0" />
+                            <span className="truncate">{child.name}</span>
+                          </div>
+                          <Badge 
+                            variant={selectedFolderId === child.id ? "secondary" : "outline"} 
+                            className="text-xs"
+                          >
+                            {child.materialCount}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
             </ScrollArea>
           </div>
@@ -290,66 +338,63 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
 
         {/* 音效配置区域 */}
         {selectedStickers.length > 0 && (
-          <div className="px-6 py-4 border-t bg-muted/20">
-            <ScrollArea className="max-h-64">
-
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium">贴纸音效配置</h4>
-                <div className="space-y-3 p-4 border rounded-lg bg-background">
-                  <div className="space-y-2">
-                    <Label htmlFor="soundEffect">音效选择</Label>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="flex-1 justify-start"
-                        onClick={() => setIsAudioModalOpen(true)}
-                      >
-                        <Music className="mr-2 h-4 w-4" />
-                        {sharedSoundEffect.file || sharedSoundEffect.folder || "选择音频素材"}
-                      </Button>
-                    </div>
-                    {sharedSoundEffect.folder && (
-                      <div className="text-xs text-muted-foreground">
-                        文件夹: {sharedSoundEffect.folder}
-                        {sharedSoundEffect.file && ` / 文件: ${sharedSoundEffect.file}`}
-                      </div>
-                    )}
+          <div className="px-6 py-4 border-t bg-muted/20 flex-shrink-0">
+            <div className="space-y-4 max-h-64 overflow-y-auto">
+              <h4 className="text-sm font-medium">贴纸音效配置</h4>
+              <div className="space-y-3 p-4 border rounded-lg bg-background">
+                <div className="space-y-2">
+                  <Label htmlFor="soundEffect">音效选择</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 justify-start"
+                      onClick={() => setIsAudioModalOpen(true)}
+                    >
+                      <Music className="mr-2 h-4 w-4" />
+                      {sharedSoundEffect.file || sharedSoundEffect.folder || "选择音频素材"}
+                    </Button>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="volume">音量</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="volume"
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={sharedSoundEffect.volume}
-                        onChange={(e) => updateSharedSoundEffect('volume', e.target.value)}
-                        className="flex-1"
-                      />
-                      <span className="text-sm text-muted-foreground">%</span>
+                  {sharedSoundEffect.folder && (
+                    <div className="text-xs text-muted-foreground">
+                      文件夹: {sharedSoundEffect.folder}
+                      {sharedSoundEffect.file && ` / 文件: ${sharedSoundEffect.file}`}
                     </div>
-                  </div>
+                  )}
                 </div>
-                
-                <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
-                  <Music size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-muted-foreground">
-                    <p className="font-medium mb-1">音效说明：</p>
-                    <p>• 所有贴纸共享同一音效配置</p>
-                    <p>• 音效出现时间与贴纸出现时间同步</p>
-                    <p>• 音效播放时长为音效文件本身的时长</p>
+
+                <div className="space-y-2">
+                  <Label htmlFor="volume">音量</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="volume"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={sharedSoundEffect.volume}
+                      onChange={(e) => updateSharedSoundEffect('volume', e.target.value)}
+                      className="flex-1"
+                    />
+                    <span className="text-sm text-muted-foreground">%</span>
                   </div>
                 </div>
               </div>
-            </ScrollArea>
+              
+              <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+                <Music size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-medium mb-1">音效说明：</p>
+                  <p>• 所有贴纸共享同一音效配置</p>
+                  <p>• 音效出现时间与贴纸出现时间同步</p>
+                  <p>• 音效播放时长为音效文件本身的时长</p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
         {/* 底部按钮 */}
-        <div className="flex justify-between items-center px-6 py-4 border-t">
+        <div className="flex justify-between items-center px-6 py-4 border-t flex-shrink-0">
           <div className="text-sm text-muted-foreground">
             支持多选贴纸，可重叠显示
           </div>
