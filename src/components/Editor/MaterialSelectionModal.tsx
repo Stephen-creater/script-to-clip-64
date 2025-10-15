@@ -3,8 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { FolderOpen, ChevronRight, ChevronDown, X } from "lucide-react";
+import { FolderOpen, ChevronRight, ChevronDown, X, FileVideo, Folder } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFolders } from "@/hooks/useFolders";
 
 interface MaterialSelectionModalProps {
   isOpen: boolean;
@@ -18,63 +19,40 @@ interface FolderItem {
   count: number;
   parentId?: string;
   children?: FolderItem[];
-  addedDate?: string;
+  type?: 'video' | 'image' | 'audio';
+  hasChildren?: boolean;
 }
 
-// Mock folder structure matching Materials page structure
-const mockFolders: FolderItem[] = [
-  {
-    id: "all",
-    name: "视频素材",
-    count: 0,
-    addedDate: "2024-01-15",
-    children: [
-      { id: "window-scenery", name: "车窗外风景", count: 0, parentId: "all", addedDate: "2024-01-14" },
-      { id: "station-interior", name: "车站内", count: 0, parentId: "all", addedDate: "2024-01-13" },
-    ]
-  },
-  {
-    id: "images",
-    name: "图片素材",
-    count: 0,
-    addedDate: "2024-01-14",
-    children: [
-      {
-        id: "marketing",
-        name: "营销类",
-        count: 0,
-        parentId: "images",
-        addedDate: "2024-01-13",
-        children: [
-          { id: "brand", name: "品牌+符号", count: 0, parentId: "marketing", addedDate: "2024-01-12" },
-          { id: "promo", name: "促销生活", count: 0, parentId: "marketing", addedDate: "2024-01-11" },
-          { id: "coupon", name: "优惠码", count: 0, parentId: "marketing", addedDate: "2024-01-10" },
-        ]
-      },
-      { id: "decorative", name: "装饰类", count: 0, parentId: "images", addedDate: "2024-01-09" },
-    ]
-  },
-  {
-    id: "audio",
-    name: "音频素材",
-    count: 0,
-    addedDate: "2024-01-08",
-    children: [
-      { id: "bgm", name: "BGM", count: 0, parentId: "audio", addedDate: "2024-01-07" },
-      { id: "sound-effects", name: "音效素材", count: 0, parentId: "audio", addedDate: "2024-01-06" },
-    ]
-  }
-];
+// Convert Folder type from hook to FolderItem
+const convertToFolderItem = (folders: any[]): FolderItem[] => {
+  return folders.map(folder => ({
+    id: folder.id,
+    name: folder.name,
+    count: 0, // Will be calculated from materials count
+    parentId: folder.parent_id,
+    type: folder.type as 'video' | 'image' | 'audio',
+    hasChildren: folder.children && folder.children.length > 0,
+    children: folder.children ? convertToFolderItem(folder.children) : undefined
+  }));
+};
 
-// Get recently added folders (last 5)
+// Filter folders by type (video only for material selection)
+const filterFoldersByType = (folders: FolderItem[], type: 'video' | 'image' | 'audio'): FolderItem[] => {
+  return folders
+    .filter(folder => folder.type === type)
+    .map(folder => ({
+      ...folder,
+      children: folder.children ? filterFoldersByType(folder.children, type) : undefined
+    }));
+};
+
+// Get recently added folders (last 5) - for video folders only
 const getRecentlyAddedFolders = (folders: FolderItem[]): FolderItem[] => {
   const allFolders: FolderItem[] = [];
   
   const flattenFolders = (folders: FolderItem[]) => {
     folders.forEach(folder => {
-      if (folder.id !== "all") { // Exclude "全部素材"
-        allFolders.push(folder);
-      }
+      allFolders.push(folder);
       if (folder.children) {
         flattenFolders(folder.children);
       }
@@ -83,24 +61,30 @@ const getRecentlyAddedFolders = (folders: FolderItem[]): FolderItem[] => {
   
   flattenFolders(folders);
   
-  return allFolders
-    .sort((a, b) => new Date(b.addedDate || '').getTime() - new Date(a.addedDate || '').getTime())
-    .slice(0, 5);
+  // Sort by most recent (using reverse order since we don't have actual dates)
+  return allFolders.slice(0, 5);
 };
 
-
 export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSelectionModalProps) => {
+  const { folders, loading } = useFolders();
   const [selectedFolder, setSelectedFolder] = useState<string>("");
-  const [expandedFolders, setExpandedFolders] = useState<string[]>(["all", "images", "audio"]);
+  const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
 
+  // Convert and filter to show only video type folders
+  const convertedFolders = convertToFolderItem(folders);
+  const videoFolders = filterFoldersByType(convertedFolders, 'video');
+  
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedFolder("");
+      // Auto-expand all video folders
+      const allVideoFolderIds = videoFolders.map(f => f.id);
+      setExpandedFolders(allVideoFolderIds);
     }
-  }, [isOpen]);
+  }, [isOpen, videoFolders]);
 
-  const recentlyAddedFolders = getRecentlyAddedFolders(mockFolders);
+  const recentlyAddedFolders = getRecentlyAddedFolders(videoFolders);
 
   const handleFolderSelect = (folderId: string, folderName: string) => {
     setSelectedFolder(folderId);
@@ -108,7 +92,7 @@ export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSe
 
   const handleConfirm = () => {
     if (selectedFolder) {
-      const folder = findFolderById(mockFolders, selectedFolder);
+      const folder = findFolderById(videoFolders, selectedFolder);
       if (folder) {
         onSelect(selectedFolder, folder.name);
       }
@@ -135,40 +119,51 @@ export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSe
     );
   };
 
+  const getFolderIcon = (folder: FolderItem, isExpanded: boolean) => {
+    if (folder.type === 'video') {
+      return <FileVideo size={16} className="text-blue-500" />;
+    }
+    return isExpanded ? <FolderOpen size={16} /> : <Folder size={16} />;
+  };
+
   const renderFolderTree = (folders: FolderItem[], level = 0) => {
     return folders.map(folder => {
       const isExpanded = expandedFolders.includes(folder.id);
       const isSelected = selectedFolder === folder.id;
-      const hasChildren = folder.children && folder.children.length > 0;
+      const hasChildren = folder.hasChildren || (folder.children && folder.children.length > 0);
 
       return (
         <div key={folder.id}>
           <div
             className={cn(
-              "flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors hover:bg-muted/50",
-              isSelected && "bg-primary/10 text-primary"
+              "group flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors",
+              isSelected
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-secondary"
             )}
-            style={{ paddingLeft: `${level * 16 + 12}px` }}
-            onClick={() => handleFolderSelect(folder.id, folder.name)}
+            style={{ marginLeft: level * 20 }}
+            onClick={() => {
+              if (hasChildren) {
+                toggleFolder(folder.id);
+              }
+              handleFolderSelect(folder.id, folder.name);
+            }}
           >
-            <div className="w-4 flex justify-center">
-              {hasChildren && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFolder(folder.id);
-                  }}
-                  className="p-0 hover:bg-muted rounded-sm"
-                >
-                  {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                </button>
-              )}
+            <div className="flex items-center gap-2 flex-1">
+              <div className="w-[14px] flex justify-center">
+                {hasChildren && (
+                  isExpanded ? 
+                    <ChevronDown size={14} /> : 
+                    <ChevronRight size={14} />
+                )}
+              </div>
+              {getFolderIcon(folder, isExpanded)}
+              <span className="text-sm">{folder.name}</span>
             </div>
-            <FolderOpen size={16} />
-            <span className="text-sm flex-1">{folder.name}</span>
+            <span className="text-xs text-muted-foreground">{folder.count}</span>
           </div>
           {hasChildren && isExpanded && (
-            <div className="mt-1">
+            <div>
               {renderFolderTree(folder.children!, level + 1)}
             </div>
           )}
@@ -211,9 +206,19 @@ export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSe
           {/* All Folders Section */}
           <div className="flex-1">
             <ScrollArea className="h-[300px]">
-              <div className="space-y-1">
-                {renderFolderTree(mockFolders)}
-              </div>
+              {loading ? (
+                <div className="text-center text-sm text-muted-foreground py-4">
+                  加载中...
+                </div>
+              ) : videoFolders.length === 0 ? (
+                <div className="text-center text-sm text-muted-foreground py-4">
+                  暂无视频文件夹
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {renderFolderTree(videoFolders)}
+                </div>
+              )}
             </ScrollArea>
           </div>
         </div>
