@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -107,19 +107,28 @@ export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSe
   const [selectedFolder, setSelectedFolder] = useState<string>("");
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
 
-  // Build hierarchy and filter to show only video type folders
-  const allFolders = buildFolderHierarchy(folders);
-  const videoFolders = filterFoldersByType(allFolders, 'video');
+  // Build hierarchy and filter to show only video type folders (memoized to prevent re-renders)
+  const videoFolders = useMemo(() => {
+    const allFolders = buildFolderHierarchy(folders);
+    return filterFoldersByType(allFolders, 'video');
+  }, [folders]);
   
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedFolder("");
       // Auto-expand all video folders
-      const allVideoFolderIds = videoFolders.map(f => f.id);
+      const allVideoFolderIds: string[] = [];
+      const collectIds = (folders: FolderItem[]) => {
+        folders.forEach(f => {
+          allVideoFolderIds.push(f.id);
+          if (f.children) collectIds(f.children);
+        });
+      };
+      collectIds(videoFolders);
       setExpandedFolders(allVideoFolderIds);
     }
-  }, [isOpen, videoFolders]);
+  }, [isOpen]); // Only depend on isOpen, not videoFolders
 
   const recentlyAddedFolders = getRecentlyAddedFolders(videoFolders);
 
