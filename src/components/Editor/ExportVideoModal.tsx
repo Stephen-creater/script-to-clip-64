@@ -1,14 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, Download, Upload, Video, CheckCircle2, XCircle } from "lucide-react";
+import { ChevronLeft, Video } from "lucide-react";
 import { SubtitleModal } from "./SubtitleModal";
 import { useFolders } from "@/hooks/useFolders";
+import { toast } from "@/hooks/use-toast";
 
 interface ExportVideoModalProps {
   isOpen: boolean;
@@ -16,15 +15,11 @@ interface ExportVideoModalProps {
 }
 
 export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => {
+  const navigate = useNavigate();
   const { folders: allFolders } = useFolders();
   const [step, setStep] = useState<'main' | 'settings' | 'folderSelect'>('main');
   const [exportPath, setExportPath] = useState("");
   const [quantity, setQuantity] = useState("1");
-  const [isComposing, setIsComposing] = useState(false);
-  const [composingProgress, setComposingProgress] = useState(0);
-  const [showResults, setShowResults] = useState(false);
-  const [videoResults, setVideoResults] = useState<boolean[]>([]);
-  
   const [newFolderName, setNewFolderName] = useState("");
   
   // 获取视频文件夹下的所有子文件夹
@@ -88,37 +83,15 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
   };
 
   const handleExport = () => {
-    const count = parseInt(quantity) || 1;
+    // Show toast notification
+    toast({
+      title: "正在为你生成，请耐心等待",
+      description: `正在生成 ${quantity} 个视频，已提交到后台处理`,
+    });
     
-    // Initialize video results with ~15% failure rate
-    const results = Array.from({ length: count }, () => Math.random() > 0.15);
-    setVideoResults(results);
-    
-    setIsComposing(true);
-    setComposingProgress(0);
-    setShowResults(false);
-    
-    // Simulate composing progress for 2 seconds
-    const progressInterval = setInterval(() => {
-      setComposingProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          setTimeout(() => {
-            setIsComposing(false);
-            setShowResults(true);
-          }, 100);
-          return 100;
-        }
-        return prev + 5; // Increase by 5% every 100ms to complete in 2s
-      });
-    }, 100);
-  };
-
-  const handleCloseResults = () => {
-    setShowResults(false);
-    setComposingProgress(0);
-    setVideoResults([]);
+    // Close modal and navigate to project library
     onClose();
+    navigate('/');
   };
 
   const openGlobalModal = (type: 'subtitle') => {
@@ -246,82 +219,6 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
               <p className="text-sm text-muted-foreground">全局样式设置页面</p>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Composing Progress Modal */}
-      <Dialog open={isComposing} onOpenChange={() => {}}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-center">正在合成视频</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex justify-center">
-              <Video size={48} className="text-blue-600 animate-pulse" />
-            </div>
-            <Progress value={composingProgress} className="h-2" />
-            <p className="text-center text-sm text-muted-foreground">
-              合成进度: {composingProgress.toFixed(0)}%
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Results Modal */}
-      <Dialog open={showResults} onOpenChange={handleCloseResults}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Video size={20} className="text-primary" />
-              视频合成完成
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 text-center">
-                <CheckCircle2 size={32} className="text-green-600 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-green-600">
-                  {videoResults.filter(Boolean).length}
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">合成成功</div>
-              </div>
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-center">
-                <XCircle size={32} className="text-red-600 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-red-600">
-                  {videoResults.length - videoResults.filter(Boolean).length}
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">合成失败</div>
-              </div>
-            </div>
-
-            <div className="bg-card border border-border rounded-lg p-4 max-h-[200px] overflow-y-auto">
-              <div className="text-sm font-medium mb-2">详细结果:</div>
-              <div className="space-y-1 text-xs">
-                {videoResults.map((success, index) => (
-                  <div 
-                    key={index} 
-                    className={`flex items-center gap-2 ${
-                      success ? 'text-green-600' : 'text-red-600'
-                    }`}
-                  >
-                    {success ? (
-                      <CheckCircle2 size={14} />
-                    ) : (
-                      <XCircle size={14} />
-                    )}
-                    视频{index + 1} {success ? '合成成功' : '合成失败'}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Button onClick={handleCloseResults} className="flex-1">
-                确定
-              </Button>
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
 
