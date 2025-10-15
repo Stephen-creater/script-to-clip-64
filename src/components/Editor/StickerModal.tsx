@@ -338,8 +338,8 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
 
         {/* 音效配置区域 */}
         {selectedStickers.length > 0 && (
-          <div className="border-t bg-muted/20 flex-shrink-0 max-h-[280px] overflow-hidden flex flex-col">
-            <ScrollArea className="flex-1">
+          <div className="border-t bg-muted/20 flex-shrink-0">
+            <ScrollArea className="h-[240px]">
               <div className="px-6 py-4 space-y-4">
                 <h4 className="text-sm font-medium">贴纸音效配置</h4>
                 <div className="space-y-3 p-4 border rounded-lg bg-background">
