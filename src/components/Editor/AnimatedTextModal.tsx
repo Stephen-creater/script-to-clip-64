@@ -74,6 +74,17 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
     setIsDragging(false);
   };
 
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = -e.deltaY;
+    const scaleFactor = delta > 0 ? 1.05 : 0.95;
+    
+    setFormData(prev => ({
+      ...prev,
+      fontSize: Math.max(12, Math.min(120, Math.round(prev.fontSize * scaleFactor)))
+    }));
+  };
+
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mouseup', handleMouseUp as any);
@@ -138,22 +149,6 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="fontSize">字体大小</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="fontSize"
-                    type="number"
-                    min="12"
-                    max="120"
-                    value={formData.fontSize}
-                    onChange={(e) => setFormData(prev => ({ ...prev, fontSize: parseInt(e.target.value) || 48 }))}
-                    className="flex-1"
-                  />
-                  <span className="text-sm text-muted-foreground">px</span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="soundEffect">音效选择</Label>
                 <div className="space-y-3">
                   <Button
@@ -195,43 +190,54 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
 
             {/* 右侧预览 */}
             <div className="space-y-2">
-              <Label>预览</Label>
-              <div 
-                ref={previewRef}
-                className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden border-2 border-border cursor-crosshair"
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-              >
-                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">
-                  拖拽花字调整位置
-                </div>
-                
-                {formData.content && (
-                  <div
-                    className="absolute cursor-move select-none"
-                    style={{
-                      left: `${formData.x}%`,
-                      top: `${formData.y}%`,
-                      transform: 'translate(-50%, -50%)',
-                      fontSize: `${formData.fontSize}px`,
-                      fontWeight: 'bold',
-                      color: '#FFD700',
-                      textShadow: '2px 2px 4px rgba(0,0,0,0.5), -1px -1px 2px rgba(255,255,255,0.3)',
-                      WebkitTextStroke: '1px rgba(0,0,0,0.3)',
-                      zIndex: 10
-                    }}
-                    onMouseDown={handleMouseDown}
-                  >
-                    <div className="flex items-center gap-1">
-                      <Move size={16} className="opacity-50" />
-                      {formData.content}
+              <Label>预览 (9:16竖屏)</Label>
+              <div className="flex justify-center">
+                <div 
+                  ref={previewRef}
+                  className="relative bg-muted rounded-lg overflow-hidden border-2 border-border cursor-crosshair"
+                  style={{
+                    width: '100%',
+                    maxWidth: '300px',
+                    aspectRatio: '9/16'
+                  }}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onWheel={handleWheel}
+                >
+                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm px-4 text-center">
+                    <div>
+                      <p>拖拽花字调整位置</p>
+                      <p className="text-xs mt-1">滚轮缩放大小</p>
                     </div>
                   </div>
-                )}
+                  
+                  {formData.content && (
+                    <div
+                      className="absolute cursor-move select-none"
+                      style={{
+                        left: `${formData.x}%`,
+                        top: `${formData.y}%`,
+                        transform: 'translate(-50%, -50%)',
+                        fontSize: `${formData.fontSize}px`,
+                        fontWeight: 'bold',
+                        color: '#FFD700',
+                        textShadow: '2px 2px 4px rgba(0,0,0,0.5), -1px -1px 2px rgba(255,255,255,0.3)',
+                        WebkitTextStroke: '1px rgba(0,0,0,0.3)',
+                        zIndex: 10
+                      }}
+                      onMouseDown={handleMouseDown}
+                    >
+                      <div className="flex items-center gap-1">
+                        <Move size={12} className="opacity-50" />
+                        {formData.content}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                💡 提示：点击并拖拽花字文本可调整位置，通过左侧"字体大小"调整大小
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                💡 提示：拖拽调整位置 • 滚轮调整大小 • 当前大小: {formData.fontSize}px
               </p>
             </div>
           </div>
