@@ -29,7 +29,7 @@ interface VideoItem {
 const VideoLibrary = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFolder, setSelectedFolder] = useState('all');
-  const [expandedFolders, setExpandedFolders] = useState<string[]>(['recent']);
+  const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [editingVideo, setEditingVideo] = useState<string | null>(null);
   const [tempVideoName, setTempVideoName] = useState('');
@@ -37,10 +37,8 @@ const VideoLibrary = () => {
   const [batchMoveModalOpen, setBatchMoveModalOpen] = useState(false);
   const [folders, setFolders] = useState<FolderItem[]>([
     { id: 'all', name: '西班牙火车旅行_成片', count: 2 },
-    { id: 'recent', name: '最近导出', count: 2, hasChildren: true, children: [
-      { id: 'project1', name: '西班牙项目', count: 2, parentId: 'recent' },
-      { id: 'project2', name: '法国项目', count: 0, parentId: 'recent' }
-    ]}
+    { id: 'yingtie1015', name: '英铁1015', count: 1 },
+    { id: 'yingtie1016', name: '英铁1016', count: 1 }
   ]);
   
   const [videos, setVideos] = useState<VideoItem[]>([
@@ -51,7 +49,7 @@ const VideoLibrary = () => {
       size: "12.5MB",
       createdAt: "2024-01-15 14:30",
       thumbnail: "",
-      folderId: "project1"
+      folderId: "yingtie1015"
     },
     {
       id: "2", 
@@ -60,7 +58,7 @@ const VideoLibrary = () => {
       size: "11.8MB",
       createdAt: "2024-01-14 16:45",
       thumbnail: "",
-      folderId: "project1"
+      folderId: "yingtie1016"
     }
   ]);
 
@@ -69,13 +67,8 @@ const VideoLibrary = () => {
     let folderFilteredVideos = videos;
     
     if (selectedFolder !== 'all') {
-      if (selectedFolder === 'recent') {
-        // Show all videos from recent export subfolders
-        folderFilteredVideos = videos.filter(v => ['project1', 'project2'].includes(v.folderId));
-      } else {
-        // Show videos from specific folder
-        folderFilteredVideos = videos.filter(v => v.folderId === selectedFolder);
-      }
+      // Show videos from specific folder
+      folderFilteredVideos = videos.filter(v => v.folderId === selectedFolder);
     }
     
     // Apply search filter
