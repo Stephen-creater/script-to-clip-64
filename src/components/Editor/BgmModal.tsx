@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState, useEffect, useMemo } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { Upload, Music, Play, Pause, Folder, Volume2 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Music, Play, Pause, Folder, Volume2, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useMaterials } from "@/hooks/useMaterials";
 
 interface BgmModalProps {
   isOpen: boolean;
@@ -13,309 +14,252 @@ interface BgmModalProps {
   selectedBgm?: { name: string, type: string, id?: string, volume?: number } | null;
 }
 
-interface MaterialItem {
+interface FolderStructure {
   id: string;
   name: string;
-  type: 'video' | 'image' | 'audio';
-  thumbnail: string;
-  duration?: string;
-  size: string;
-  date: string;
-  folderId: string;
+  category: string;
+  subcategory?: string;
+  children?: FolderStructure[];
 }
 
-interface FolderItem {
-  id: string;
-  name: string;
-  count: number;
-  parentId?: string;
-  children?: FolderItem[];
-}
-
-// 音频素材库数据 - 来自用户上传的文件夹
-const audioFolders: FolderItem[] = [
-  { id: 'bgm', name: 'BGM', count: 12 },
-  { id: 'sound_effects', name: '音效素材', count: 10 },
-];
-
-const audioMaterials: MaterialItem[] = [
+// 音频文件夹结构
+const audioFolderStructure: FolderStructure[] = [
   {
-    id: '3',
-    name: '轻松愉悦.mp3',
-    type: 'audio',
-    thumbnail: '/placeholder.svg',
-    duration: '02:30',
-    size: '3.8 MB',
-    date: '2024-01-13',
-    folderId: 'bgm'
-  },
-  {
-    id: '9',
-    name: '激励节拍.mp3',
-    type: 'audio',
-    thumbnail: '/placeholder.svg',
-    duration: '03:15',
-    size: '4.2 MB',
-    date: '2024-01-12',
-    folderId: 'bgm'
-  },
-  {
-    id: '12',
-    name: '温馨时光.mp3',
-    type: 'audio',
-    thumbnail: '/placeholder.svg',
-    duration: '02:45',
-    size: '4.1 MB',
-    date: '2024-01-11',
-    folderId: 'bgm'
-  },
-  {
-    id: '13',
-    name: '商务专业.mp3',
-    type: 'audio',
-    thumbnail: '/placeholder.svg',
-    duration: '03:00',
-    size: '4.5 MB',
-    date: '2024-01-10',
-    folderId: 'bgm'
-  },
-  {
-    id: '10',
-    name: '搞笑音效.mp3',
-    type: 'audio',
-    thumbnail: '/placeholder.svg',
-    duration: '00:02',
-    size: '0.5 MB',
-    date: '2024-01-11',
-    folderId: 'sound_effects'
-  },
-  {
-    id: '11',
-    name: '动作音效.mp3',
-    type: 'audio',
-    thumbnail: '/placeholder.svg',
-    duration: '00:01',
-    size: '0.3 MB',
-    date: '2024-01-10',
-    folderId: 'sound_effects'
-  },
+    id: 'audio',
+    name: '音乐素材',
+    category: 'audio',
+    children: [
+      { id: 'audio-bgm', name: 'BGM', category: 'audio', subcategory: 'BGM' },
+      { id: 'audio-sound', name: '音效素材', category: 'audio', subcategory: '音效' },
+    ]
+  }
 ];
 
 export const BgmModal = ({ isOpen, onClose, onSelect, selectedBgm }: BgmModalProps) => {
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const { materials, getMaterialsByCategory } = useMaterials();
+  const [selectedFolder, setSelectedFolder] = useState<FolderStructure | null>(null);
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['audio']));
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [confirmedAudio, setConfirmedAudio] = useState<string | null>(null);
   const [volume, setVolume] = useState<number>(50);
 
-  // Initialize confirmed audio based on selectedBgm prop
+  // Initialize folder and audio selection
   useEffect(() => {
-    if (selectedBgm && selectedBgm.type === 'library') {
-      const matchedAudio = audioMaterials.find(audio => audio.name === selectedBgm.name);
-      if (matchedAudio) {
-        setConfirmedAudio(matchedAudio.id);
-        setVolume(selectedBgm.volume || 50);
+    if (isOpen) {
+      const rootFolder = audioFolderStructure[0];
+      setSelectedFolder(rootFolder);
+      setExpandedFolders(new Set(['audio']));
+      
+      if (selectedBgm && selectedBgm.type === 'library') {
+        const matchedAudio = materials.find(m => m.name === selectedBgm.name && m.category === 'audio');
+        if (matchedAudio) {
+          setConfirmedAudio(matchedAudio.id);
+          setVolume(selectedBgm.volume || 50);
+        }
+      } else {
+        setConfirmedAudio(null);
+        setVolume(50);
       }
-    } else {
-      setConfirmedAudio(null);
-      setVolume(50);
     }
-  }, [selectedBgm, isOpen]);
+  }, [selectedBgm, isOpen, materials]);
 
-  // Get filtered audio materials based on selected folder
-  const getFilteredAudio = () => {
-    if (!selectedFolder) {
-      return audioMaterials;
+  // Get filtered audio materials
+  const filteredMaterials = useMemo(() => {
+    if (!selectedFolder) return [];
+    
+    if (selectedFolder.subcategory) {
+      return getMaterialsByCategory('audio', selectedFolder.subcategory);
+    } else {
+      return getMaterialsByCategory('audio');
     }
-    return audioMaterials.filter(audio => audio.folderId === selectedFolder);
+  }, [selectedFolder, getMaterialsByCategory]);
+
+  const handleFolderClick = (folder: FolderStructure) => {
+    setSelectedFolder(folder);
+    
+    if (folder.children && folder.children.length > 0) {
+      setExpandedFolders(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(folder.id)) {
+          newSet.delete(folder.id);
+        } else {
+          newSet.add(folder.id);
+        }
+        return newSet;
+      });
+    }
   };
 
-  const filteredAudio = getFilteredAudio();
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      onSelect?.({ type: 'upload', file, name: file.name, volume });
-      onClose();
-    }
-  };
-
-  const handleLibrarySelect = (audio: MaterialItem) => {
-    if (confirmedAudio === audio.id) {
-      // Cancel selection
+  const handleLibrarySelect = (materialId: string) => {
+    if (confirmedAudio === materialId) {
       setConfirmedAudio(null);
     } else {
-      // Confirm selection
-      setConfirmedAudio(audio.id);
+      setConfirmedAudio(materialId);
     }
   };
 
   const handleConfirm = () => {
     if (confirmedAudio) {
-      const selectedAudio = audioMaterials.find(audio => audio.id === confirmedAudio);
+      const selectedAudio = materials.find(m => m.id === confirmedAudio);
       if (selectedAudio) {
-        onSelect?.({ type: 'library', url: `/materials/${selectedAudio.name}`, name: selectedAudio.name, volume });
+        onSelect?.({ 
+          type: 'library', 
+          url: selectedAudio.file_path, 
+          name: selectedAudio.name, 
+          volume 
+        });
       }
     } else {
-      // No audio selected, send cancellation
       onSelect?.({ type: 'library', url: '', name: '', cancelled: true });
     }
     onClose();
   };
 
-  const togglePlay = (audioId: string) => {
-    if (playingAudio === audioId) {
+  const togglePlay = (materialId: string) => {
+    if (playingAudio === materialId) {
       setPlayingAudio(null);
     } else {
-      setPlayingAudio(audioId);
-      // In a real app, you would actually play the audio here
-      setTimeout(() => setPlayingAudio(null), 3000); // Mock play duration
+      setPlayingAudio(materialId);
+      setTimeout(() => setPlayingAudio(null), 3000);
     }
+  };
+
+  const getTotalCount = (folder: FolderStructure): number => {
+    if (folder.subcategory) {
+      return getMaterialsByCategory(folder.category, folder.subcategory).length;
+    } else {
+      return getMaterialsByCategory(folder.category).length;
+    }
+  };
+
+  const renderFolderTree = (folders: FolderStructure[], level = 0) => {
+    return folders.map((folder) => {
+      const isExpanded = expandedFolders.has(folder.id);
+      const isSelected = selectedFolder?.id === folder.id;
+      const hasChildren = folder.children && folder.children.length > 0;
+      const count = getTotalCount(folder);
+
+      return (
+        <div key={folder.id}>
+          <div
+            className={cn(
+              "flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors",
+              isSelected 
+                ? "bg-primary text-primary-foreground shadow-sm" 
+                : "hover:bg-secondary/80",
+              level > 0 && "ml-4"
+            )}
+            onClick={() => handleFolderClick(folder)}
+          >
+            {hasChildren && (
+              <ChevronRight 
+                size={14} 
+                className={cn(
+                  "transition-transform flex-shrink-0",
+                  isExpanded && "rotate-90"
+                )}
+              />
+            )}
+            {!hasChildren && <div className="w-3.5 flex-shrink-0" />}
+            <Folder size={14} className="flex-shrink-0" />
+            <span className="text-sm flex-1 truncate">{folder.name}</span>
+            <span className="text-xs opacity-70 flex-shrink-0">{count}</span>
+          </div>
+          
+          {hasChildren && isExpanded && (
+            <div className="mt-1">
+              {renderFolderTree(folder.children, level + 1)}
+            </div>
+          )}
+        </div>
+      );
+    });
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="max-w-4xl max-h-[85vh] p-0 gap-0 flex flex-col">
+        <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
           <DialogTitle className="text-xl font-semibold">选择BGM配乐</DialogTitle>
         </DialogHeader>
         
-        <div className="flex-1 flex flex-col min-h-0">
-          <Tabs defaultValue="library" className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
-              <TabsTrigger value="library">素材库</TabsTrigger>
-              <TabsTrigger value="upload">本地上传</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="library" className="flex-1 mt-6 flex flex-col min-h-0">
-              <div className="flex-1 flex gap-4 min-h-0">
-                {/* Folder Navigation */}
-                <div className="w-48 border-r pr-4 flex-shrink-0">
-                  <h3 className="text-sm font-medium mb-3 text-muted-foreground">音频文件夹</h3>
-                  <div className="space-y-2">
-                    <Button
-                      variant={selectedFolder === null ? "default" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start"
-                      onClick={() => setSelectedFolder(null)}
-                    >
-                      <Folder size={16} className="mr-2" />
-                      全部音频
-                    </Button>
-                    {audioFolders.map((folder) => (
-                      <Button
-                        key={folder.id}
-                        variant={selectedFolder === folder.id ? "default" : "ghost"}
-                        size="sm"
-                        className="w-full justify-start"
-                        onClick={() => setSelectedFolder(folder.id)}
-                      >
-                        <Folder size={16} className="mr-2" />
-                        {folder.name}
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          {folder.count}
-                        </span>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
+        <div className="flex flex-1 overflow-hidden min-h-0">
+          {/* Left Sidebar - Folder Navigation */}
+          <div className="w-56 border-r bg-muted/30 p-4 flex-shrink-0 overflow-y-auto">
+            <h3 className="text-sm font-medium mb-3 text-muted-foreground">素材分类</h3>
+            <div className="space-y-1">
+              {renderFolderTree(audioFolderStructure)}
+            </div>
+          </div>
 
-                {/* Audio List */}
-                <div className="flex-1 flex flex-col min-h-0">
-                  <div className="flex items-center gap-2 mb-4 flex-shrink-0">
-                    <Music size={16} className="text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      {selectedFolder ? audioFolders.find(f => f.id === selectedFolder)?.name : "全部音频"} 
-                      ({filteredAudio.length} 个文件)
-                    </span>
-                  </div>
-                  
-                  <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
-                    {filteredAudio.map((audio) => (
-                      <div
-                        key={audio.id}
-                        className={cn(
-                          "flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all",
-                          confirmedAudio === audio.id 
-                            ? "border-primary bg-primary/5" 
-                            : "border-border hover:border-primary/50"
-                        )}
+          {/* Main Content - Audio List */}
+          <div className="flex-1 flex flex-col min-h-0 min-w-0">
+            <ScrollArea className="flex-1">
+              <div className="p-6 space-y-3">
+                <div className="flex items-center gap-2 mb-4">
+                  <Music size={16} className="text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {selectedFolder?.name || "全部音频"} ({filteredMaterials.length} 个文件)
+                  </span>
+                </div>
+                
+                {filteredMaterials.map((audio) => (
+                  <div
+                    key={audio.id}
+                    className={cn(
+                      "flex items-center justify-between p-4 rounded-lg border transition-all",
+                      confirmedAudio === audio.id 
+                        ? "border-primary bg-primary/5" 
+                        : "border-border hover:border-primary/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePlay(audio.id);
+                        }}
                       >
-                        <div className="flex items-center gap-4">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              togglePlay(audio.id);
-                            }}
-                          >
-                            {playingAudio === audio.id ? (
-                              <Pause size={16} />
-                            ) : (
-                              <Play size={16} />
-                            )}
-                          </Button>
-                          <div>
-                            <div className="font-medium">{audio.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {audio.size} · {audio.duration}
-                            </div>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant={confirmedAudio === audio.id ? "default" : "outline"}
-                          className={confirmedAudio === audio.id ? "bg-red-500 text-white border-red-500 hover:bg-red-600" : ""}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleLibrarySelect(audio);
-                          }}
-                        >
-                          {confirmedAudio === audio.id ? "取消" : "选择"}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="upload" className="flex-1 mt-6">
-              <div className="flex flex-col items-center justify-center h-full border-2 border-dashed border-border rounded-lg">
-                <div className="text-center space-y-4">
-                  <Upload size={48} className="mx-auto text-muted-foreground" />
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">上传音频文件</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      支持 MP3、WAV、AAC 等格式，最大 50MB
-                    </p>
-                  </div>
-                  <div>
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                      id="bgm-file-input"
-                    />
-                    <label htmlFor="bgm-file-input">
-                      <Button asChild>
-                        <span className="cursor-pointer">
-                          <Upload size={16} className="mr-2" />
-                          选择文件
-                        </span>
+                        {playingAudio === audio.id ? (
+                          <Pause size={16} />
+                        ) : (
+                          <Play size={16} />
+                        )}
                       </Button>
-                    </label>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{audio.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {audio.file_size ? `${(audio.file_size / 1024 / 1024).toFixed(1)} MB` : ''} 
+                          {audio.duration ? ` · ${audio.duration}` : ''}
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={confirmedAudio === audio.id ? "default" : "outline"}
+                      className={cn(
+                        "flex-shrink-0",
+                        confirmedAudio === audio.id && "bg-red-500 text-white border-red-500 hover:bg-red-600"
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLibrarySelect(audio.id);
+                      }}
+                    >
+                      {confirmedAudio === audio.id ? "取消" : "选择"}
+                    </Button>
                   </div>
-                </div>
+                ))}
               </div>
-            </TabsContent>
-          </Tabs>
+            </ScrollArea>
+          </div>
         </div>
         
-        {/* Volume Control - Show when audio is selected */}
+        {/* Volume Control */}
         {confirmedAudio && (
-          <div className="pt-4 border-t flex-shrink-0">
+          <div className="px-6 py-4 border-t flex-shrink-0">
             <div className="flex items-center gap-4">
               <Volume2 size={16} className="text-muted-foreground" />
               <span className="text-sm font-medium">音量调节</span>
@@ -335,17 +279,14 @@ export const BgmModal = ({ isOpen, onClose, onSelect, selectedBgm }: BgmModalPro
           </div>
         )}
         
-        <div className="flex justify-end gap-3 pt-4 border-t flex-shrink-0">
+        <DialogFooter className="px-6 py-4 border-t flex-shrink-0">
           <Button variant="outline" onClick={onClose}>
             取消
           </Button>
-          <Button 
-            variant="default"
-            onClick={handleConfirm}
-          >
+          <Button variant="default" onClick={handleConfirm}>
             确定
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
