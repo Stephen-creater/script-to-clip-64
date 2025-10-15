@@ -23,17 +23,54 @@ interface FolderItem {
   hasChildren?: boolean;
 }
 
-// Convert Folder type from hook to FolderItem
-const convertToFolderItem = (folders: any[]): FolderItem[] => {
-  return folders.map(folder => ({
-    id: folder.id,
-    name: folder.name,
-    count: 0, // Will be calculated from materials count
-    parentId: folder.parent_id,
-    type: folder.type as 'video' | 'image' | 'audio',
-    hasChildren: folder.children && folder.children.length > 0,
-    children: folder.children ? convertToFolderItem(folder.children) : undefined
-  }));
+// Determine folder type based on name
+const getFolderType = (folderName: string): 'video' | 'image' | 'audio' | undefined => {
+  if (folderName === '视频素材' || folderName.includes('视频')) return 'video';
+  if (folderName === '图片素材' || folderName.includes('图片')) return 'image';
+  if (folderName === '音频素材' || folderName.includes('音频')) return 'audio';
+  return undefined;
+};
+
+// Build folder hierarchy with type inheritance
+const buildFolderHierarchy = (folders: any[]): FolderItem[] => {
+  const folderMap = new Map<string, FolderItem>();
+  const rootFolders: FolderItem[] = [];
+
+  // First pass: create all folder items
+  folders.forEach(folder => {
+    const folderType = getFolderType(folder.name);
+    folderMap.set(folder.id, {
+      id: folder.id,
+      name: folder.name,
+      count: 3, // Mock count for display
+      parentId: folder.parent_id,
+      type: folderType,
+      hasChildren: false,
+      children: []
+    });
+  });
+
+  // Second pass: build hierarchy and inherit types
+  folders.forEach(folder => {
+    const currentFolder = folderMap.get(folder.id)!;
+    
+    if (folder.parent_id) {
+      const parentFolder = folderMap.get(folder.parent_id);
+      if (parentFolder) {
+        // Inherit type from parent if current folder has no type
+        if (!currentFolder.type && parentFolder.type) {
+          currentFolder.type = parentFolder.type;
+        }
+        parentFolder.children = parentFolder.children || [];
+        parentFolder.children.push(currentFolder);
+        parentFolder.hasChildren = true;
+      }
+    } else {
+      rootFolders.push(currentFolder);
+    }
+  });
+
+  return rootFolders;
 };
 
 // Filter folders by type (video only for material selection)
@@ -70,9 +107,9 @@ export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSe
   const [selectedFolder, setSelectedFolder] = useState<string>("");
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
 
-  // Convert and filter to show only video type folders
-  const convertedFolders = convertToFolderItem(folders);
-  const videoFolders = filterFoldersByType(convertedFolders, 'video');
+  // Build hierarchy and filter to show only video type folders
+  const allFolders = buildFolderHierarchy(folders);
+  const videoFolders = filterFoldersByType(allFolders, 'video');
   
   // Reset state when modal opens
   useEffect(() => {
