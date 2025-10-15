@@ -290,10 +290,10 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
             </div>
 
             {/* 素材网格和预览 */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto min-h-0">
               <div className="p-6">
-                <div className="flex gap-6">
-                  <div className="flex-1">
+                <div className="flex gap-6 h-full">
+                  <div className="flex-1 min-w-0">
                     {filteredMaterials.length > 0 ? (
                       <StickerGrid stickers={filteredMaterials} />
                     ) : (
@@ -306,9 +306,9 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
                   </div>
                   
                   {selectedStickers.length > 0 && (
-                    <div className="w-56">
+                    <div className="w-48 flex-shrink-0">
                       <h4 className="text-sm font-medium mb-3">预览</h4>
-                      <div className="relative bg-black rounded-lg overflow-hidden" style={{ aspectRatio: '9/16' }}>
+                      <div className="relative bg-black rounded-lg overflow-hidden w-full" style={{ aspectRatio: '9/16' }}>
                         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700">
                           {selectedStickers.map((stickerId, index) => (
                             <div 
@@ -338,58 +338,60 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
 
         {/* 音效配置区域 */}
         {selectedStickers.length > 0 && (
-          <div className="px-6 py-4 border-t bg-muted/20 flex-shrink-0">
-            <div className="space-y-4 max-h-64 overflow-y-auto">
-              <h4 className="text-sm font-medium">贴纸音效配置</h4>
-              <div className="space-y-3 p-4 border rounded-lg bg-background">
-                <div className="space-y-2">
-                  <Label htmlFor="soundEffect">音效选择</Label>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1 justify-start"
-                      onClick={() => setIsAudioModalOpen(true)}
-                    >
-                      <Music className="mr-2 h-4 w-4" />
-                      {sharedSoundEffect.file || sharedSoundEffect.folder || "选择音频素材"}
-                    </Button>
-                  </div>
-                  {sharedSoundEffect.folder && (
-                    <div className="text-xs text-muted-foreground">
-                      文件夹: {sharedSoundEffect.folder}
-                      {sharedSoundEffect.file && ` / 文件: ${sharedSoundEffect.file}`}
+          <div className="border-t bg-muted/20 flex-shrink-0 max-h-[280px] overflow-hidden flex flex-col">
+            <ScrollArea className="flex-1">
+              <div className="px-6 py-4 space-y-4">
+                <h4 className="text-sm font-medium">贴纸音效配置</h4>
+                <div className="space-y-3 p-4 border rounded-lg bg-background">
+                  <div className="space-y-2">
+                    <Label htmlFor="soundEffect">音效选择</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1 justify-start"
+                        onClick={() => setIsAudioModalOpen(true)}
+                      >
+                        <Music className="mr-2 h-4 w-4" />
+                        {sharedSoundEffect.file || sharedSoundEffect.folder || "选择音频素材"}
+                      </Button>
                     </div>
-                  )}
-                </div>
+                    {sharedSoundEffect.folder && (
+                      <div className="text-xs text-muted-foreground">
+                        文件夹: {sharedSoundEffect.folder}
+                        {sharedSoundEffect.file && ` / 文件: ${sharedSoundEffect.file}`}
+                      </div>
+                    )}
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="volume">音量</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="volume"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={sharedSoundEffect.volume}
-                      onChange={(e) => updateSharedSoundEffect('volume', e.target.value)}
-                      className="flex-1"
-                    />
-                    <span className="text-sm text-muted-foreground">%</span>
+                  <div className="space-y-2">
+                    <Label htmlFor="volume">音量</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="volume"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={sharedSoundEffect.volume}
+                        onChange={(e) => updateSharedSoundEffect('volume', e.target.value)}
+                        className="flex-1"
+                      />
+                      <span className="text-sm text-muted-foreground">%</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+                  <Music size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-muted-foreground">
+                    <p className="font-medium mb-1">音效说明：</p>
+                    <p>• 所有贴纸共享同一音效配置</p>
+                    <p>• 音效出现时间与贴纸出现时间同步</p>
+                    <p>• 音效播放时长为音效文件本身的时长</p>
                   </div>
                 </div>
               </div>
-              
-              <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
-                <Music size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-muted-foreground">
-                  <p className="font-medium mb-1">音效说明：</p>
-                  <p>• 所有贴纸共享同一音效配置</p>
-                  <p>• 音效出现时间与贴纸出现时间同步</p>
-                  <p>• 音效播放时长为音效文件本身的时长</p>
-                </div>
-              </div>
-            </div>
+            </ScrollArea>
           </div>
         )}
 
