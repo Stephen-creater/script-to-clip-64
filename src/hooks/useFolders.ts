@@ -13,6 +13,41 @@ export interface Folder {
 
 // 模拟文件夹数据
 const mockFolders: Folder[] = [
+  // 主文件夹 - 视频文件夹
+  {
+    id: 'folder-video-library',
+    name: '视频文件夹',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T07:00:00Z',
+    updated_at: '2024-01-10T07:00:00Z'
+  },
+  // 子文件夹 - 西班牙火车旅行_成片
+  {
+    id: 'folder-xibanya',
+    name: '西班牙火车旅行_成片',
+    parent_id: 'folder-video-library',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T07:10:00Z',
+    updated_at: '2024-01-10T07:10:00Z'
+  },
+  // 子文件夹 - 英铁1015
+  {
+    id: 'folder-yingtie1015',
+    name: '英铁1015',
+    parent_id: 'folder-video-library',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T07:20:00Z',
+    updated_at: '2024-01-10T07:20:00Z'
+  },
+  // 子文件夹 - 英铁1016
+  {
+    id: 'folder-yingtie1016',
+    name: '英铁1016',
+    parent_id: 'folder-video-library',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T07:30:00Z',
+    updated_at: '2024-01-10T07:30:00Z'
+  },
   // 主文件夹 - 视频素材
   {
     id: 'folder-video',
