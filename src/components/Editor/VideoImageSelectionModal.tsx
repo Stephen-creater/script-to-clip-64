@@ -106,9 +106,29 @@ export const VideoImageSelectionModal = ({ isOpen, onClose, onSelect }: VideoIma
   const [selectedFile, setSelectedFile] = useState<{ id: string; name: string } | null>(null);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
-  // 构建视频和图片文件夹层级结构
+  // 构建视频和图片文件夹层级结构（排除成片库）
   const videoImageFolders = useMemo(() => {
-    const hierarchy = buildFolderHierarchy(folders);
+    // 排除"视频文件夹"（成片库）及其所有子文件夹
+    const excludedFolderIds = new Set<string>();
+    const videoLibraryFolder = folders.find(f => f.name === '视频文件夹' && !f.parent_id);
+    
+    if (videoLibraryFolder) {
+      excludedFolderIds.add(videoLibraryFolder.id);
+      // 收集所有子文件夹ID
+      const collectChildrenIds = (parentId: string) => {
+        folders.forEach(f => {
+          if (f.parent_id === parentId) {
+            excludedFolderIds.add(f.id);
+            collectChildrenIds(f.id);
+          }
+        });
+      };
+      collectChildrenIds(videoLibraryFolder.id);
+    }
+    
+    // 过滤掉成片库文件夹
+    const materialFolders = folders.filter(f => !excludedFolderIds.has(f.id));
+    const hierarchy = buildFolderHierarchy(materialFolders);
     return filterFoldersByTypes(hierarchy, ['video', 'image']);
   }, [folders]);
 
