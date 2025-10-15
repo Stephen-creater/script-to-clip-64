@@ -257,15 +257,12 @@ export const AudioSelectionModal = ({ isOpen, onClose, onSelect }: AudioSelectio
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[70vh] flex flex-col">
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <DialogTitle>请选择音效文件夹</DialogTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X size={16} />
-          </Button>
+      <DialogContent className="max-w-2xl max-h-[80vh] p-0 gap-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
+          <DialogTitle className="text-lg font-semibold">请选择音效文件夹</DialogTitle>
         </DialogHeader>
         
-        <div className="flex-1 space-y-4">
+        <div className="px-6 py-4 space-y-6 overflow-y-auto" style={{ maxHeight: 'calc(80vh - 140px)' }}>
           {/* Recently Added Section */}
           <div>
             <h3 className="text-sm font-medium mb-3 text-muted-foreground">最近添加</h3>
@@ -275,8 +272,10 @@ export const AudioSelectionModal = ({ isOpen, onClose, onSelect }: AudioSelectio
                   key={folder.id}
                   variant={selectedFolder === folder.id ? "default" : "secondary"}
                   className={cn(
-                    "cursor-pointer px-3 py-1 text-sm",
-                    selectedFolder === folder.id && "bg-primary text-primary-foreground"
+                    "cursor-pointer px-4 py-1.5 text-sm rounded-full transition-all",
+                    selectedFolder === folder.id 
+                      ? "bg-primary text-primary-foreground shadow-sm" 
+                      : "hover:bg-secondary/80"
                   )}
                   onClick={() => handleFolderSelect(folder.id, folder.name)}
                 >
@@ -287,64 +286,74 @@ export const AudioSelectionModal = ({ isOpen, onClose, onSelect }: AudioSelectio
           </div>
 
           {/* All Folders Section */}
-          <div className="flex-1">
-            <ScrollArea className="h-[200px]">
-              {loading ? (
-                <div className="text-center text-sm text-muted-foreground py-4">
-                  加载中...
-                </div>
-              ) : audioFolders.length === 0 ? (
-                <div className="text-center text-sm text-muted-foreground py-4">
-                  暂无音频文件夹
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {renderFolderTree(audioFolders)}
-                </div>
-              )}
-            </ScrollArea>
+          <div>
+            <h3 className="text-sm font-medium mb-3 text-muted-foreground">文件夹</h3>
+            <div className="border rounded-lg">
+              <ScrollArea className="h-[240px]">
+                {loading ? (
+                  <div className="text-center text-sm text-muted-foreground py-8">
+                    加载中...
+                  </div>
+                ) : audioFolders.length === 0 ? (
+                  <div className="text-center text-sm text-muted-foreground py-8">
+                    暂无音频文件夹
+                  </div>
+                ) : (
+                  <div className="space-y-0.5 p-2">
+                    {renderFolderTree(audioFolders)}
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
           </div>
 
           {/* Audio Files Section - Show when folder is selected */}
           {selectedFolder && audioFiles.length > 0 && (
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-medium mb-3">文件列表</h3>
-              <ScrollArea className="h-[150px]">
-                <div className="space-y-1">
-                  {audioFiles.map(file => (
-                    <div
-                      key={file.id}
-                      className={cn(
-                        "flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors",
-                        selectedFile === file.id
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-secondary"
-                      )}
-                      onClick={() => handleFileSelect(file.id)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Music size={14} />
-                        <span className="text-sm">{file.name}</span>
+            <div>
+              <h3 className="text-sm font-medium mb-3 text-muted-foreground">文件列表</h3>
+              <div className="border rounded-lg">
+                <ScrollArea className="h-[180px]">
+                  <div className="space-y-0.5 p-2">
+                    {audioFiles.map(file => (
+                      <div
+                        key={file.id}
+                        className={cn(
+                          "flex items-center justify-between px-3 py-2.5 rounded-md cursor-pointer transition-all",
+                          selectedFile === file.id
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "hover:bg-secondary/80"
+                        )}
+                        onClick={() => handleFileSelect(file.id)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Music size={16} className="shrink-0" />
+                          <span className="text-sm font-medium">{file.name}</span>
+                        </div>
+                        {file.duration && (
+                          <span className="text-xs opacity-80 font-mono">
+                            {Math.floor(file.duration / 60)}:{(file.duration % 60).toFixed(0).padStart(2, '0')}
+                          </span>
+                        )}
                       </div>
-                      {file.duration && (
-                        <span className="text-xs text-muted-foreground">
-                          {Math.floor(file.duration / 60)}:{(file.duration % 60).toFixed(0).padStart(2, '0')}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
             </div>
           )}
         </div>
         
         {/* Footer */}
-        <div className="flex justify-end pt-4 border-t border-border">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t bg-muted/30">
+          <Button 
+            variant="outline"
+            onClick={onClose}
+          >
+            取消
+          </Button>
           <Button 
             onClick={handleConfirm}
             disabled={!selectedFolder}
-            className="bg-teal-500 hover:bg-teal-600 text-white"
           >
             确定
           </Button>
