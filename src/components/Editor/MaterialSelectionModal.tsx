@@ -107,9 +107,26 @@ export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSe
   const [selectedFolder, setSelectedFolder] = useState<string>("");
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
 
-  // Build hierarchy and filter to show only video type folders (memoized to prevent re-renders)
+  // Build hierarchy and filter to show only video type folders (exclude finished library "视频文件夹")
   const videoFolders = useMemo(() => {
-    const allFolders = buildFolderHierarchy(folders);
+    // Collect ids to exclude: "视频文件夹" and all its descendants
+    const excludedIds = new Set<string>();
+    const finishedRoot = folders.find(f => f.name === '视频文件夹' && !f.parent_id);
+    if (finishedRoot) {
+      excludedIds.add(finishedRoot.id);
+      const collectChildren = (pid: string) => {
+        folders.forEach(f => {
+          if (f.parent_id === pid) {
+            excludedIds.add(f.id);
+            collectChildren(f.id);
+          }
+        });
+      };
+      collectChildren(finishedRoot.id);
+    }
+
+    const materialFolders = folders.filter(f => !excludedIds.has(f.id));
+    const allFolders = buildFolderHierarchy(materialFolders);
     return filterFoldersByType(allFolders, 'video');
   }, [folders]);
   
