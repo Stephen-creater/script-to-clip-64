@@ -1,14 +1,21 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Search, Folder, Music, Image, ChevronRight } from "lucide-react";
+import { Search, Folder, Music, Image, ChevronRight, Move } from "lucide-react";
 import { useMaterials } from "@/hooks/useMaterials";
 import { useFolders } from "@/hooks/useFolders";
 import { AudioSelectionModal } from "./AudioSelectionModal";
+
+interface StickerPosition {
+  id: string;
+  x: number;
+  y: number;
+  scale: number;
+}
 
 interface StickerModalProps {
   isOpen: boolean;
@@ -18,10 +25,16 @@ interface StickerModalProps {
 
 export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStickers, setSelectedStickers] = useState<string[]>([]);
+  const [selectedStickers, setSelectedStickers] = useState<StickerPosition[]>([]);
   const [sharedSoundEffect, setSharedSoundEffect] = useState<{folder: string, file: string, volume: string}>({folder: '', file: '', volume: '50'});
   const [selectedFolderId, setSelectedFolderId] = useState<string>("");
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
+  const [activeStickerIndex, setActiveStickerIndex] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [resizeStart, setResizeStart] = useState({ scale: 1, mouseY: 0 });
+  const previewRef = useRef<HTMLDivElement>(null);
   
   const { materials, getMaterialUrl } = useMaterials();
   const { folders } = useFolders();
@@ -60,11 +73,81 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
 
   const handleStickerSelect = (stickerId: string) => {
     setSelectedStickers(prev => {
-      return prev.includes(stickerId) 
-        ? prev.filter(id => id !== stickerId)
-        : [...prev, stickerId];
+      const exists = prev.find(s => s.id === stickerId);
+      if (exists) {
+        return prev.filter(s => s.id !== stickerId);
+      } else {
+        const newSticker: StickerPosition = {
+          id: stickerId,
+          x: 50 + prev.length * 5,
+          y: 30 + prev.length * 10,
+          scale: 1
+        };
+        return [...prev, newSticker];
+      }
     });
   };
+
+  const handleStickerMouseDown = (e: React.MouseEvent, index: number) => {
+    e.stopPropagation();
+    setActiveStickerIndex(index);
+    setIsDragging(true);
+    if (!previewRef.current) return;
+    const rect = previewRef.current.getBoundingClientRect();
+    const sticker = selectedStickers[index];
+    setDragStart({
+      x: e.clientX - (rect.width * sticker.x / 100),
+      y: e.clientY - (rect.height * sticker.y / 100)
+    });
+  };
+
+  const handleResizeMouseDown = (e: React.MouseEvent, index: number) => {
+    e.stopPropagation();
+    setActiveStickerIndex(index);
+    setIsResizing(true);
+    setResizeStart({
+      scale: selectedStickers[index].scale,
+      mouseY: e.clientY
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (activeStickerIndex === null) return;
+
+    if (isDragging && !isResizing && previewRef.current) {
+      const rect = previewRef.current.getBoundingClientRect();
+      const newX = ((e.clientX - dragStart.x) / rect.width) * 100;
+      const newY = ((e.clientY - dragStart.y) / rect.height) * 100;
+      
+      setSelectedStickers(prev => prev.map((sticker, idx) => 
+        idx === activeStickerIndex
+          ? { ...sticker, x: Math.max(0, Math.min(100, newX)), y: Math.max(0, Math.min(100, newY)) }
+          : sticker
+      ));
+    } else if (isResizing) {
+      const deltaY = resizeStart.mouseY - e.clientY;
+      const newScale = resizeStart.scale + deltaY * 0.003;
+      
+      setSelectedStickers(prev => prev.map((sticker, idx) => 
+        idx === activeStickerIndex
+          ? { ...sticker, scale: Math.max(0.3, Math.min(3, newScale)) }
+          : sticker
+      ));
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setIsResizing(false);
+    setActiveStickerIndex(null);
+  };
+
+  useEffect(() => {
+    if (isDragging || isResizing) {
+      document.addEventListener('mouseup', handleMouseUp as any);
+      return () => document.removeEventListener('mouseup', handleMouseUp as any);
+    }
+  }, [isDragging, isResizing]);
 
   const updateSharedSoundEffect = (field: 'folder' | 'file' | 'volume', value: string) => {
     setSharedSoundEffect(prev => ({
@@ -149,7 +232,7 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
         <div
           key={sticker.id}
           className={`relative cursor-pointer border-2 rounded-lg p-2 transition-all ${
-            selectedStickers.includes(sticker.id) 
+            selectedStickers.find(s => s.id === sticker.id)
               ? 'border-primary bg-primary/10 shadow-sm' 
               : 'border-border hover:border-primary/50 hover:shadow-sm'
           }`}
@@ -307,26 +390,66 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
                   
                   {selectedStickers.length > 0 && (
                     <div className="w-48 flex-shrink-0">
-                      <h4 className="text-sm font-medium mb-3">预览</h4>
-                      <div className="relative bg-black rounded-lg overflow-hidden w-full" style={{ aspectRatio: '9/16' }}>
+                      <h4 className="text-sm font-medium mb-3">预览 (9:16)</h4>
+                      <div 
+                        ref={previewRef}
+                        className="relative bg-black rounded-lg overflow-hidden w-full cursor-crosshair" 
+                        style={{ aspectRatio: '9/16' }}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseUp}
+                      >
                         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700">
-                          {selectedStickers.map((stickerId, index) => (
-                            <div 
-                              key={stickerId}
-                              className="absolute bg-white/20 border border-white/30 rounded px-2 py-1 text-xs text-white backdrop-blur-sm"
-                              style={{
-                                top: `${20 + index * 15}%`,
-                                right: `${10 + index * 5}%`,
-                                transform: `rotate(${index * 5 - 10}deg)`
-                              }}
-                            >
-                              贴纸{index + 1}
-                            </div>
-                          ))}
+                          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/30 text-xs">
+                            拖拽/缩放
+                          </div>
+                          {selectedStickers.map((sticker, index) => {
+                            const material = materials.find(m => m.id === sticker.id);
+                            return (
+                              <div
+                                key={sticker.id}
+                                className="absolute select-none group"
+                                style={{
+                                  left: `${sticker.x}%`,
+                                  top: `${sticker.y}%`,
+                                  transform: `translate(-50%, -50%) scale(${sticker.scale})`,
+                                  zIndex: activeStickerIndex === index ? 20 : 10 + index
+                                }}
+                              >
+                                {/* 贴纸内容 */}
+                                <div
+                                  className="cursor-move relative bg-white/20 border border-white/30 rounded px-3 py-2 text-xs text-white backdrop-blur-sm"
+                                  onMouseDown={(e) => handleStickerMouseDown(e, index)}
+                                >
+                                  <div className="flex items-center gap-1">
+                                    <Move size={10} className="opacity-50" />
+                                    <span>贴纸{index + 1}</span>
+                                  </div>
+                                </div>
+                                
+                                {/* 缩放控制点 */}
+                                <div className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-primary rounded-full border border-background cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onMouseDown={(e) => handleResizeMouseDown(e, index)}
+                                />
+                                <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary rounded-full border border-background cursor-nesw-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onMouseDown={(e) => handleResizeMouseDown(e, index)}
+                                />
+                                <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-primary rounded-full border border-background cursor-nesw-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onMouseDown={(e) => handleResizeMouseDown(e, index)}
+                                />
+                                <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-primary rounded-full border border-background cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onMouseDown={(e) => handleResizeMouseDown(e, index)}
+                                />
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                      <div className="mt-3 text-xs text-muted-foreground text-center">
+                      <div className="mt-2 text-xs text-muted-foreground text-center">
                         已选择 {selectedStickers.length} 个贴纸
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground text-center">
+                        💡 拖拽调整位置 • 边角调整大小
                       </div>
                     </div>
                   )}
