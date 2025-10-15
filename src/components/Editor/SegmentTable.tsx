@@ -329,20 +329,22 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
           <table className="w-full">
             <thead>
               <tr>
-                <th className="w-12 p-4 text-center">
-                  <Checkbox
-                    checked={selectedSegments.length === segments.length}
-                    onCheckedChange={handleSelectAll}
-                  />
+                <th className="w-12 p-4">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      checked={selectedSegments.length === segments.length}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </div>
                 </th>
                 <th className="w-8 p-4"></th>
-                <th className="min-w-[160px] p-4 text-center text-body-small font-semibold text-foreground">分段名称</th>
-                <th className="min-w-[180px] p-4 text-center text-body-small font-semibold text-foreground">画面</th>
-                <th className="min-w-[320px] p-4 text-center text-body-small font-semibold text-foreground">文案</th>
-                <th className="min-w-[100px] p-4 text-center text-body-small font-semibold text-foreground">花字</th>
-                <th className="min-w-[100px] p-4 text-center text-body-small font-semibold text-foreground">视频贴纸</th>
-                <th className="min-w-[100px] p-4 text-center text-body-small font-semibold text-foreground">数字人</th>
-                <th className="min-w-[120px] p-4 text-center text-body-small font-semibold text-foreground">
+                <th className="min-w-[160px] px-4 py-4 text-center text-body-small font-semibold text-foreground">分段名称</th>
+                <th className="min-w-[180px] px-4 py-4 text-center text-body-small font-semibold text-foreground">画面</th>
+                <th className="min-w-[320px] px-4 py-4 text-center text-body-small font-semibold text-foreground">文案</th>
+                <th className="min-w-[100px] px-4 py-4 text-center text-body-small font-semibold text-foreground">花字</th>
+                <th className="min-w-[100px] px-4 py-4 text-center text-body-small font-semibold text-foreground">视频贴纸</th>
+                <th className="min-w-[100px] px-4 py-4 text-center text-body-small font-semibold text-foreground">数字人</th>
+                <th className="min-w-[120px] px-4 py-4 text-center text-body-small font-semibold text-foreground">
                   {isAudioGenerated ? (
                     <span>
                       音频（<span className="text-info">已生成，请预览</span>）
