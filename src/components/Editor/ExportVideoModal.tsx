@@ -4,23 +4,79 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Video } from "lucide-react";
+import { ChevronLeft, Video, CheckCircle, XCircle } from "lucide-react";
 import { SubtitleModal } from "./SubtitleModal";
 import { useFolders } from "@/hooks/useFolders";
 import { toast } from "@/hooks/use-toast";
+import { useProjects } from "@/hooks/useProjects";
 
 interface ExportVideoModalProps {
   isOpen: boolean;
   onClose: () => void;
+  projectId: string;
+  exportPath: string;
+  quantity: number;
 }
 
-export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => {
+interface ExportResultModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  successCount: number;
+  failureCount: number;
+  exportPath: string;
+}
+
+// 结果显示对话框
+const ExportResultModal = ({ isOpen, onClose, successCount, failureCount, exportPath }: ExportResultModalProps) => {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>合成完成</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">
+              视频已经放在成片库的 <span className="font-semibold text-foreground">"{exportPath}"</span> 文件夹中
+            </p>
+            <div className="flex justify-center gap-8 mt-6">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="text-success" size={24} />
+                <div className="text-left">
+                  <div className="text-2xl font-bold text-success">{successCount}</div>
+                  <div className="text-sm text-muted-foreground">成功</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <XCircle className="text-destructive" size={24} />
+                <div className="text-left">
+                  <div className="text-2xl font-bold text-destructive">{failureCount}</div>
+                  <div className="text-sm text-muted-foreground">失败</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button onClick={onClose} className="bg-blue-600 hover:bg-blue-700">
+            确定
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export const ExportVideoModal = ({ isOpen, onClose, projectId }: ExportVideoModalProps) => {
   const navigate = useNavigate();
   const { folders: allFolders } = useFolders();
+  const { updateProject } = useProjects();
   const [step, setStep] = useState<'main' | 'settings' | 'folderSelect'>('main');
   const [exportPath, setExportPath] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [newFolderName, setNewFolderName] = useState("");
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [exportResult, setExportResult] = useState({ successCount: 0, failureCount: 0, path: "" });
   
   // 获取视频文件夹下的所有子文件夹
   const videoFolders = useMemo(() => {
@@ -82,16 +138,42 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
     }
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
+    const quantityNum = parseInt(quantity);
+    
+    // 更新项目状态为处理中
+    if (projectId) {
+      await updateProject(projectId, { status: 'processing' });
+    }
+    
     // Show toast notification
     toast({
       title: "正在为你生成，请耐心等待",
-      description: `正在生成 ${quantity} 个视频，已提交到后台处理`,
+      description: `正在生成 ${quantityNum} 个视频，已提交到后台处理`,
     });
     
     // Close modal and navigate to project library
     onClose();
     navigate('/');
+    
+    // 3秒后更新状态为已完成，并显示结果
+    setTimeout(async () => {
+      if (projectId) {
+        await updateProject(projectId, { status: 'completed' });
+        
+        // 模拟合成结果（demo演示，假设90%成功率）
+        const successCount = Math.floor(quantityNum * 0.9);
+        const failureCount = quantityNum - successCount;
+        
+        setExportResult({
+          successCount,
+          failureCount,
+          path: exportPath
+        });
+        
+        setShowResultModal(true);
+      }
+    }, 3000);
   };
 
   const openGlobalModal = (type: 'subtitle') => {
@@ -111,6 +193,15 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
 
   return (
     <>
+      {/* 结果显示对话框 */}
+      <ExportResultModal
+        isOpen={showResultModal}
+        onClose={() => setShowResultModal(false)}
+        successCount={exportResult.successCount}
+        failureCount={exportResult.failureCount}
+        exportPath={exportResult.path}
+      />
+      
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-md">
           <DialogHeader>

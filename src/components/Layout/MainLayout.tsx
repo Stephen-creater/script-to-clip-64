@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Outlet, useLocation, Link } from "react-router-dom";
+import { Outlet, useLocation, Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -36,6 +36,9 @@ const MainLayout = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { projects } = useProjects();
   const { toast } = useToast();
+  
+  // 从URL路径中提取项目ID
+  const projectId = location.pathname.match(/\/editor\/(\d+)/)?.[1];
 
   // Set default project name based on creation type
   useEffect(() => {
@@ -256,7 +259,10 @@ const MainLayout = () => {
       {/* Export Video Modal */}
       <ExportVideoModal 
         isOpen={exportModalOpen} 
-        onClose={() => setExportModalOpen(false)} 
+        onClose={() => setExportModalOpen(false)}
+        projectId={projectId || ''}
+        exportPath=""
+        quantity={1}
       />
     </div>
   );
