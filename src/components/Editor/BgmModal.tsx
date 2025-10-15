@@ -27,10 +27,10 @@ const audioFolderStructure: FolderStructure[] = [
   {
     id: 'audio',
     name: '音乐素材',
-    category: 'audio',
+    category: '音频素材',
     children: [
-      { id: 'audio-bgm', name: 'BGM', category: 'audio', subcategory: 'BGM' },
-      { id: 'audio-sound', name: '音效素材', category: 'audio', subcategory: '音效' },
+      { id: 'audio-bgm', name: 'BGM', category: '音频素材', subcategory: 'BGM' },
+      { id: 'audio-sound', name: '音效素材', category: '音频素材', subcategory: '音效素材' },
     ]
   }
 ];
