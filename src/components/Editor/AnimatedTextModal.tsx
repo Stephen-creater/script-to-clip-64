@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, Plus } from "lucide-react";
+import { Music, Plus, Move, Maximize2 } from "lucide-react";
 import { TemplateCreationModal } from "./TemplateCreationModal";
 import { AudioSelectionModal } from "./AudioSelectionModal";
 
@@ -19,26 +19,67 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
   const [formData, setFormData] = useState({
     content: "",
     template: "",
-    distanceFromTop: "20",
     soundEffect: "",
-    volume: "50"
+    volume: "50",
+    x: 50, // 位置 x (%)
+    y: 50, // 位置 y (%)
+    fontSize: 48, // 字体大小
   });
 
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const previewRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = () => {
     const updatedData = {
       content: formData.content,
       template: formData.template,
-      distanceFromTop: formData.distanceFromTop,
       soundEffect: formData.soundEffect,
-      volume: formData.volume
+      volume: formData.volume,
+      x: formData.x,
+      y: formData.y,
+      fontSize: formData.fontSize
     };
     
     onSubmit?.(segmentId, updatedData);
     onClose();
   };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!previewRef.current) return;
+    setIsDragging(true);
+    const rect = previewRef.current.getBoundingClientRect();
+    setDragStart({
+      x: e.clientX - (rect.width * formData.x / 100),
+      y: e.clientY - (rect.height * formData.y / 100)
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !previewRef.current) return;
+    const rect = previewRef.current.getBoundingClientRect();
+    const newX = ((e.clientX - dragStart.x) / rect.width) * 100;
+    const newY = ((e.clientY - dragStart.y) / rect.height) * 100;
+    
+    setFormData(prev => ({
+      ...prev,
+      x: Math.max(0, Math.min(100, newX)),
+      y: Math.max(0, Math.min(100, newY))
+    }));
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mouseup', handleMouseUp as any);
+      return () => document.removeEventListener('mouseup', handleMouseUp as any);
+    }
+  }, [isDragging]);
 
   const handleCreateTemplate = (templateData: any) => {
     // Here you would typically save the template data to state or backend
@@ -54,96 +95,144 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[900px]">
           <DialogHeader>
             <DialogTitle>花字样式</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="content">花字内容</Label>
-              <Input
-                id="content"
-                placeholder="请输入花字内容"
-                value={formData.content}
-                onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="template">花字模板</Label>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsTemplateModalOpen(true)}
-                  className="h-8 gap-2"
-                >
-                  <Plus size={14} />
-                  新建花字模板
-                </Button>
-              </div>
-              <Select value={formData.template} onValueChange={(value) => setFormData(prev => ({ ...prev, template: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="请选择" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="template1">花字模板1</SelectItem>
-                  <SelectItem value="template2">花字模板2</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="distance">距离顶部距离</Label>
-              <div className="flex items-center gap-2">
+          <div className="grid grid-cols-2 gap-6 py-4">
+            {/* 左侧配置 */}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="content">花字内容</Label>
                 <Input
-                  id="distance"
-                  value={formData.distanceFromTop}
-                  onChange={(e) => setFormData(prev => ({ ...prev, distanceFromTop: e.target.value }))}
-                  className="flex-1"
+                  id="content"
+                  placeholder="请输入花字内容"
+                  value={formData.content}
+                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
                 />
-                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="template">花字模板</Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsTemplateModalOpen(true)}
+                    className="h-8 gap-2"
+                  >
+                    <Plus size={14} />
+                    新建花字模板
+                  </Button>
+                </div>
+                <Select value={formData.template} onValueChange={(value) => setFormData(prev => ({ ...prev, template: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="请选择" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="template1">花字模板1</SelectItem>
+                    <SelectItem value="template2">花字模板2</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="fontSize">字体大小</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="fontSize"
+                    type="number"
+                    min="12"
+                    max="120"
+                    value={formData.fontSize}
+                    onChange={(e) => setFormData(prev => ({ ...prev, fontSize: parseInt(e.target.value) || 48 }))}
+                    className="flex-1"
+                  />
+                  <span className="text-sm text-muted-foreground">px</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="soundEffect">音效选择</Label>
+                <div className="space-y-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => setIsAudioModalOpen(true)}
+                  >
+                    {formData.soundEffect || "请选择音效文件夹"}
+                  </Button>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="volume">音量</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="volume"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={formData.volume}
+                        onChange={(e) => setFormData(prev => ({ ...prev, volume: e.target.value }))}
+                        className="flex-1"
+                      />
+                      <span className="text-sm text-muted-foreground">%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-2 p-3 bg-muted rounded-lg">
+                    <Music size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-muted-foreground">
+                      <p className="font-medium mb-1">音效说明：</p>
+                      <p>• 音效出现时间与花字出现时间同步</p>
+                      <p>• 音效播放时长为音效文件本身的时长</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
+            {/* 右侧预览 */}
             <div className="space-y-2">
-              <Label htmlFor="soundEffect">音效选择</Label>
-              <div className="space-y-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => setIsAudioModalOpen(true)}
-                >
-                  {formData.soundEffect || "请选择音效文件夹"}
-                </Button>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="volume">音量</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="volume"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.volume}
-                      onChange={(e) => setFormData(prev => ({ ...prev, volume: e.target.value }))}
-                      className="flex-1"
-                    />
-                    <span className="text-sm text-muted-foreground">%</span>
-                  </div>
+              <Label>预览</Label>
+              <div 
+                ref={previewRef}
+                className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden border-2 border-border cursor-crosshair"
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              >
+                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">
+                  拖拽花字调整位置
                 </div>
                 
-                <div className="flex items-start gap-2 p-3 bg-muted rounded-lg">
-                  <Music size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-muted-foreground">
-                    <p className="font-medium mb-1">音效说明：</p>
-                    <p>• 音效出现时间与花字出现时间同步</p>
-                    <p>• 音效播放时长为音效文件本身的时长</p>
+                {formData.content && (
+                  <div
+                    className="absolute cursor-move select-none"
+                    style={{
+                      left: `${formData.x}%`,
+                      top: `${formData.y}%`,
+                      transform: 'translate(-50%, -50%)',
+                      fontSize: `${formData.fontSize}px`,
+                      fontWeight: 'bold',
+                      color: '#FFD700',
+                      textShadow: '2px 2px 4px rgba(0,0,0,0.5), -1px -1px 2px rgba(255,255,255,0.3)',
+                      WebkitTextStroke: '1px rgba(0,0,0,0.3)',
+                      zIndex: 10
+                    }}
+                    onMouseDown={handleMouseDown}
+                  >
+                    <div className="flex items-center gap-1">
+                      <Move size={16} className="opacity-50" />
+                      {formData.content}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                💡 提示：点击并拖拽花字文本可调整位置，通过左侧"字体大小"调整大小
+              </p>
             </div>
           </div>
 
