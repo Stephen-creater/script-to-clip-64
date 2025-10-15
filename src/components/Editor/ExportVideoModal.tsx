@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ChevronLeft, Download, Upload, Video, CheckCircle2, XCircle } from "lucide-react";
 import { SubtitleModal } from "./SubtitleModal";
+import { useFolders } from "@/hooks/useFolders";
 
 interface ExportVideoModalProps {
   isOpen: boolean;
@@ -15,8 +16,9 @@ interface ExportVideoModalProps {
 }
 
 export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => {
+  const { folders: allFolders } = useFolders();
   const [step, setStep] = useState<'main' | 'settings' | 'folderSelect'>('main');
-  const [exportPath, setExportPath] = useState("0918");
+  const [exportPath, setExportPath] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [isComposing, setIsComposing] = useState(false);
   const [composingProgress, setComposingProgress] = useState(0);
@@ -25,12 +27,26 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
   
   const [newFolderName, setNewFolderName] = useState("");
   
-  // Mock folder data - in real app this would come from API
-  const [folders] = useState([
-    { id: 1, name: "0918", videoCount: 12 },
-    { id: 2, name: "中秋节活动", videoCount: 8 },
-    { id: 3, name: "国庆推广", videoCount: 5 }
-  ]);
+  // 获取视频文件夹下的所有子文件夹
+  const videoFolders = useMemo(() => {
+    const videoLibraryFolder = allFolders.find(f => f.name === '视频文件夹');
+    if (!videoLibraryFolder) return [];
+    
+    return allFolders
+      .filter(f => f.parent_id === videoLibraryFolder.id)
+      .map(f => ({
+        id: f.id,
+        name: f.name,
+        videoCount: 0 // TODO: 从实际数据计算视频数量
+      }));
+  }, [allFolders]);
+
+  // 设置默认导出路径为第一个文件夹
+  useEffect(() => {
+    if (videoFolders.length > 0 && !exportPath) {
+      setExportPath(videoFolders[0].name);
+    }
+  }, [videoFolders, exportPath]);
 
   // Global style settings
   const [globalSettings, setGlobalSettings] = useState({
@@ -187,14 +203,20 @@ export const ExportVideoModal = ({ isOpen, onClose }: ExportVideoModalProps) => 
               <div className="space-y-3">
                 <Label className="text-sm font-medium">现有文件夹</Label>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {folders.map((folder) => (
-                    <div key={folder.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent cursor-pointer" onClick={() => handleSelectFolder(folder.name)}>
-                      <div>
-                        <p className="font-medium">{folder.name}</p>
-                        <p className="text-xs text-muted-foreground">{folder.videoCount} 个视频</p>
+                  {videoFolders.length > 0 ? (
+                    videoFolders.map((folder) => (
+                      <div key={folder.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent cursor-pointer" onClick={() => handleSelectFolder(folder.name)}>
+                        <div>
+                          <p className="font-medium">{folder.name}</p>
+                          <p className="text-xs text-muted-foreground">{folder.videoCount} 个视频</p>
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-muted-foreground text-center py-4">
+                      暂无视频文件夹
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
