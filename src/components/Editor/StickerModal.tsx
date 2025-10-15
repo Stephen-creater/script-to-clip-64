@@ -2,11 +2,10 @@ import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Plus, Folder, Music, Image } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Search, Folder, Music, Image, ChevronRight } from "lucide-react";
 import { useMaterials } from "@/hooks/useMaterials";
 import { useFolders } from "@/hooks/useFolders";
 import { AudioSelectionModal } from "./AudioSelectionModal";
@@ -21,51 +20,46 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStickers, setSelectedStickers] = useState<string[]>([]);
   const [sharedSoundEffect, setSharedSoundEffect] = useState<{folder: string, file: string, volume: string}>({folder: '', file: '', volume: '50'});
-  const [selectedRootFolder, setSelectedRootFolder] = useState(""); // 选择的根文件夹
-  const [selectedSubfolder, setSelectedSubfolder] = useState(""); // 选择的子文件夹
+  const [selectedFolderId, setSelectedFolderId] = useState<string>("");
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
   
-  const { materials, getMaterialUrl, getMaterialsByCategory } = useMaterials();
+  const { materials, getMaterialUrl } = useMaterials();
   const { folders } = useFolders();
 
-  // 仅图片素材（贴纸）
-  const imageMaterials = useMemo(() => {
-    return materials.filter(material => material.file_type === 'image');
-  }, [materials]);
-
-  // 获取根文件夹列表
-  const rootFolders = useMemo(() => {
-    return folders.filter((f) => !f.parent_id).map(root => {
-      const children = folders.filter((f) => f.parent_id === root.id);
+  // 构建文件夹层级结构，筛选视频和图片素材
+  const folderHierarchy = useMemo(() => {
+    const videoImageFolders = folders.filter(f => 
+      !f.parent_id && (f.name === '视频素材' || f.name === '图片素材')
+    );
+    
+    return videoImageFolders.map(root => {
+      const children = folders
+        .filter(f => f.parent_id === root.id)
+        .map(child => ({
+          ...child,
+          materialCount: materials.filter(m => 
+            m.category === root.name && 
+            m.subcategory === child.name &&
+            (m.file_type === 'video' || m.file_type === 'image')
+          ).length
+        }));
+      
       return {
         ...root,
-        children,
-        hasChildren: children.length > 0
+        children
       };
     });
-  }, [folders]);
+  }, [folders, materials]);
 
-  // 获取当前选中根文件夹的子文件夹
-  const currentSubfolders = useMemo(() => {
-    if (!selectedRootFolder) return [];
-    const root = rootFolders.find(f => f.id === selectedRootFolder);
-    return root?.children || [];
-  }, [selectedRootFolder, rootFolders]);
-
-  // 初始化选择图片素材根文件夹
+  // 初始化选择第一个子文件夹
   useEffect(() => {
-    if (!selectedRootFolder && rootFolders.length > 0) {
-      const imageRoot = rootFolders.find(f => f.name === '图片素材');
-      if (imageRoot) {
-        setSelectedRootFolder(imageRoot.id);
+    if (!selectedFolderId && folderHierarchy.length > 0) {
+      const firstRoot = folderHierarchy[0];
+      if (firstRoot.children && firstRoot.children.length > 0) {
+        setSelectedFolderId(firstRoot.children[0].id);
       }
     }
-  }, [rootFolders, selectedRootFolder]);
-
-  // 当根文件夹改变时，清空子文件夹选择
-  useEffect(() => {
-    setSelectedSubfolder("");
-  }, [selectedRootFolder]);
+  }, [folderHierarchy, selectedFolderId]);
 
   const handleStickerSelect = (stickerId: string) => {
     setSelectedStickers(prev => {
@@ -95,27 +89,30 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
     onClose();
   };
 
-  // Get filtered materials based on selected category and search query
-  const getFilteredMaterials = () => {
-    // 只有选择了具体的子文件夹才显示素材
-    if (!selectedSubfolder) return [];
+  // 获取筛选后的素材
+  const filteredMaterials = useMemo(() => {
+    if (!selectedFolderId) return [];
 
-    const subfolder = currentSubfolders.find(f => f.id === selectedSubfolder);
-    if (!subfolder) return [];
-
-    const rootFolder = rootFolders.find(f => f.id === selectedRootFolder);
-    if (!rootFolder) return [];
-
-    let filtered: typeof imageMaterials = [];
-
-    // 根据根文件夹类型筛选素材
-    if (rootFolder.name === '图片素材') {
-      filtered = getMaterialsByCategory('图片素材', subfolder.name);
-    } else if (rootFolder.name === '视频素材') {
-      filtered = materials.filter(m => m.category === '视频素材' && m.subcategory === subfolder.name);
-    } else if (rootFolder.name === '音频素材') {
-      filtered = materials.filter(m => m.category === '音频素材' && m.subcategory === subfolder.name);
+    // 找到选中的文件夹
+    let selectedFolder = null;
+    let parentFolder = null;
+    for (const root of folderHierarchy) {
+      const found = root.children?.find(c => c.id === selectedFolderId);
+      if (found) {
+        selectedFolder = found;
+        parentFolder = root;
+        break;
+      }
     }
+
+    if (!selectedFolder || !parentFolder) return [];
+
+    // 筛选该分类下的素材（视频或图片）
+    let filtered = materials.filter(m => 
+      m.category === parentFolder.name && 
+      m.subcategory === selectedFolder.name &&
+      (m.file_type === 'video' || m.file_type === 'image')
+    );
 
     // 应用搜索过滤
     if (searchQuery) {
@@ -126,49 +123,58 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
     }
 
     return filtered;
-  };
+  }, [selectedFolderId, folderHierarchy, materials, searchQuery]);
 
-  const filteredMaterials = getFilteredMaterials();
-
-  const StickerGrid = ({ stickers }: { stickers: typeof imageMaterials }) => (
-    <div className="grid grid-cols-5 gap-4">
+  const StickerGrid = ({ stickers }: { stickers: typeof materials }) => (
+    <div className="grid grid-cols-4 gap-3">
       {stickers.map(sticker => (
         <div
           key={sticker.id}
-          className={`relative cursor-pointer border-2 rounded-lg p-2 transition-colors ${
+          className={`relative cursor-pointer border-2 rounded-lg p-2 transition-all ${
             selectedStickers.includes(sticker.id) 
-              ? 'border-primary bg-primary/10' 
-              : 'border-border hover:border-primary/50'
+              ? 'border-primary bg-primary/10 shadow-sm' 
+              : 'border-border hover:border-primary/50 hover:shadow-sm'
           }`}
           onClick={() => handleStickerSelect(sticker.id)}
         >
           <div className="aspect-square bg-muted rounded flex items-center justify-center mb-2">
-            <img 
-              src={getMaterialUrl(sticker)} 
-              alt={sticker.name}
-              className="w-full h-full object-cover rounded"
-            />
+            {sticker.file_type === 'video' ? (
+              <video 
+                src={getMaterialUrl(sticker)} 
+                className="w-full h-full object-cover rounded"
+                muted
+              />
+            ) : (
+              <img 
+                src={getMaterialUrl(sticker)} 
+                alt={sticker.name}
+                className="w-full h-full object-cover rounded"
+              />
+            )}
           </div>
           <p className="text-xs text-center truncate">{sticker.name}</p>
+          <Badge variant="secondary" className="absolute top-1 right-1 text-[10px] px-1 py-0">
+            {sticker.file_type === 'video' ? '视频' : '图片'}
+          </Badge>
         </div>
       ))}
     </div>
   );
 
   // If no folders available, show empty state
-  if (rootFolders.length === 0) {
+  if (folderHierarchy.length === 0) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>选择贴纸</DialogTitle>
+            <DialogTitle>选择视频贴纸</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <Image size={48} className="mb-4" />
-            <p>暂无贴纸素材</p>
-            <p className="text-sm">请上传您的第一张贴纸素材</p>
+            <p>暂无视频/图片素材</p>
+            <p className="text-sm">请先上传视频或图片素材</p>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onClose}>关闭</Button>
           </div>
         </DialogContent>
@@ -178,106 +184,88 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[900px] h-[80vh] flex flex-col">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                导出尺寸: 1080*1920
-              </span>
-            </div>
-          </div>
+      <DialogContent className="max-w-4xl max-h-[85vh] p-0 gap-0">
+        <DialogHeader className="px-6 py-4 border-b">
+          <DialogTitle>选择视频贴纸</DialogTitle>
+          <p className="text-sm text-muted-foreground mt-1">导出尺寸: 1080*1920</p>
         </DialogHeader>
         
-        <div className="flex-1 min-h-0">
-          <ScrollArea className="h-full pr-4">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Select value={selectedRootFolder} onValueChange={setSelectedRootFolder}>
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue placeholder="选择文件夹类型" />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-popover">
-                      {rootFolders.map((folder) => (
-                        <SelectItem key={folder.id} value={folder.id}>
-                          <div className="flex items-center gap-2">
-                            <Folder size={16} />
-                            <span>{folder.name}</span>
-                            {folder.hasChildren && <span className="text-xs text-muted-foreground">▶</span>}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  {currentSubfolders.length > 0 && (
-                    <Select value={selectedSubfolder} onValueChange={setSelectedSubfolder}>
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue placeholder="选择具体分类" />
-                      </SelectTrigger>
-                      <SelectContent className="z-50 bg-popover">
-                        {currentSubfolders.map((subfolder) => {
-                          const count = selectedRootFolder === rootFolders.find(f => f.name === '图片素材')?.id 
-                            ? getMaterialsByCategory('图片素材', subfolder.name).length
-                            : materials.filter(m => m.category === rootFolders.find(f => f.id === selectedRootFolder)?.name && m.subcategory === subfolder.name).length;
-                          
-                          return (
-                            <SelectItem key={subfolder.id} value={subfolder.id}>
-                              <div className="flex items-center gap-2">
-                                <Folder size={16} />
-                                <span>{subfolder.name} ({count})</span>
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-                <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Enter搜索"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 w-[200px]"
-                  />
-                </div>
+        <div className="flex overflow-hidden" style={{ height: 'calc(85vh - 140px)' }}>
+          {/* 左侧文件夹列表 */}
+          <div className="w-64 border-r bg-muted/30">
+            <ScrollArea className="h-full">
+              <div className="p-4 space-y-1">
+                {folderHierarchy.map(root => (
+                  <div key={root.id} className="space-y-1">
+                    <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground">
+                      <Folder size={16} />
+                      <span>{root.name}</span>
+                    </div>
+                    {root.children?.map(child => (
+                      <div
+                        key={child.id}
+                        onClick={() => setSelectedFolderId(child.id)}
+                        className={`flex items-center justify-between gap-2 px-3 py-2 rounded-md cursor-pointer transition-all text-sm ${
+                          selectedFolderId === child.id
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'hover:bg-secondary/80'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <ChevronRight size={14} className="flex-shrink-0" />
+                          <span className="truncate">{child.name}</span>
+                        </div>
+                        <Badge variant="secondary" className="text-xs">
+                          {child.materialCount}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ))}
               </div>
+            </ScrollArea>
+          </div>
 
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  {selectedSubfolder ? (
-                    filteredMaterials.length > 0 ? (
+          {/* 右侧内容区域 */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* 搜索栏 */}
+            <div className="px-6 py-3 border-b">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Enter搜索"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* 素材网格和预览 */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6">
+                <div className="flex gap-6">
+                  <div className="flex-1">
+                    {filteredMaterials.length > 0 ? (
                       <StickerGrid stickers={filteredMaterials} />
                     ) : (
-                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                        <Image size={48} className="mb-4" />
-                        <p>暂无素材</p>
+                      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                        <Image size={48} className="mb-4 opacity-50" />
+                        <p className="font-medium">暂无素材</p>
                         <p className="text-sm">此分类下暂无素材文件</p>
                       </div>
-                    )
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                      <Folder size={48} className="mb-4" />
-                      <p>请选择具体分类</p>
-                      <p className="text-sm">请从上方下拉框中选择具体的素材分类</p>
-                    </div>
-                  )}
-                </div>
-                {selectedStickers.length > 0 && (
-                  <div className="w-48 border-l border-border pl-4">
-                    <h4 className="text-sm font-medium mb-3">预览</h4>
-                    <div className="relative bg-black rounded-lg" style={{ aspectRatio: '9/16', height: '200px' }}>
-                      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg">
-                        {selectedStickers.map((stickerId, index) => {
-                          const sticker = imageMaterials.find(s => s.id === stickerId);
-                          if (!sticker) return null;
-                          return (
+                    )}
+                  </div>
+                  
+                  {selectedStickers.length > 0 && (
+                    <div className="w-56">
+                      <h4 className="text-sm font-medium mb-3">预览</h4>
+                      <div className="relative bg-black rounded-lg overflow-hidden" style={{ aspectRatio: '9/16' }}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700">
+                          {selectedStickers.map((stickerId, index) => (
                             <div 
                               key={stickerId}
-                              className="absolute bg-white/20 border border-white/30 rounded px-2 py-1 text-xs text-white"
+                              className="absolute bg-white/20 border border-white/30 rounded px-2 py-1 text-xs text-white backdrop-blur-sm"
                               style={{
                                 top: `${20 + index * 15}%`,
                                 right: `${10 + index * 5}%`,
@@ -286,85 +274,90 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
                             >
                               贴纸{index + 1}
                             </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div className="mt-2 text-xs text-muted-foreground">
-                      已选择 {selectedStickers.length} 个贴纸
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {selectedStickers.length > 0 && (
-                <div className="space-y-4 border-t border-border pt-4">
-                  <h4 className="text-sm font-medium">贴纸音效配置</h4>
-                  <div className="space-y-3 p-4 border border-border rounded-lg">
-                    <Label className="text-sm font-medium">贴纸音效</Label>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="soundEffect">音效选择</Label>
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="flex-1 justify-start"
-                          onClick={() => setIsAudioModalOpen(true)}
-                        >
-                          <Music className="mr-2 h-4 w-4" />
-                          {sharedSoundEffect.file || sharedSoundEffect.folder || "选择音频素材"}
-                        </Button>
-                      </div>
-                      {sharedSoundEffect.folder && (
-                        <div className="text-xs text-muted-foreground">
-                          文件夹: {sharedSoundEffect.folder}
-                          {sharedSoundEffect.file && ` / 文件: ${sharedSoundEffect.file}`}
+                          ))}
                         </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="volume">音量</Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          id="volume"
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={sharedSoundEffect.volume}
-                          onChange={(e) => updateSharedSoundEffect('volume', e.target.value)}
-                          className="flex-1"
-                        />
-                        <span className="text-sm text-muted-foreground">%</span>
+                      </div>
+                      <div className="mt-3 text-xs text-muted-foreground text-center">
+                        已选择 {selectedStickers.length} 个贴纸
                       </div>
                     </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 音效配置区域 */}
+        {selectedStickers.length > 0 && (
+          <div className="px-6 py-4 border-t bg-muted/20">
+            <ScrollArea className="max-h-64">
+
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">贴纸音效配置</h4>
+                <div className="space-y-3 p-4 border rounded-lg bg-background">
+                  <div className="space-y-2">
+                    <Label htmlFor="soundEffect">音效选择</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1 justify-start"
+                        onClick={() => setIsAudioModalOpen(true)}
+                      >
+                        <Music className="mr-2 h-4 w-4" />
+                        {sharedSoundEffect.file || sharedSoundEffect.folder || "选择音频素材"}
+                      </Button>
+                    </div>
+                    {sharedSoundEffect.folder && (
+                      <div className="text-xs text-muted-foreground">
+                        文件夹: {sharedSoundEffect.folder}
+                        {sharedSoundEffect.file && ` / 文件: ${sharedSoundEffect.file}`}
+                      </div>
+                    )}
                   </div>
-                  
-                  <div className="flex items-start gap-2 p-3 bg-muted rounded-lg">
-                    <Music size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
-                    <div className="text-sm text-muted-foreground">
-                      <p className="font-medium mb-1">音效说明：</p>
-                      <p>• 所有贴纸共享同一音效配置</p>
-                      <p>• 音效出现时间与贴纸出现时间同步</p>
-                      <p>• 音效播放时长为音效文件本身的时长</p>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="volume">音量</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="volume"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={sharedSoundEffect.volume}
+                        onChange={(e) => updateSharedSoundEffect('volume', e.target.value)}
+                        className="flex-1"
+                      />
+                      <span className="text-sm text-muted-foreground">%</span>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-          </ScrollArea>
-        </div>
+                
+                <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+                  <Music size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-muted-foreground">
+                    <p className="font-medium mb-1">音效说明：</p>
+                    <p>• 所有贴纸共享同一音效配置</p>
+                    <p>• 音效出现时间与贴纸出现时间同步</p>
+                    <p>• 音效播放时长为音效文件本身的时长</p>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </div>
+        )}
 
-        <div className="flex justify-between items-center pt-4 border-t border-border">
+        {/* 底部按钮 */}
+        <div className="flex justify-between items-center px-6 py-4 border-t">
           <div className="text-sm text-muted-foreground">
             支持多选贴纸，可重叠显示
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <Button variant="outline" onClick={onClose}>
               取消
             </Button>
-            <Button onClick={handleSubmit} className="bg-accent text-accent-foreground">
+            <Button onClick={handleSubmit}>
               确定
             </Button>
           </div>
