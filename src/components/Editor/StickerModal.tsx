@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Plus, Folder, Music, Image } from "lucide-react";
 import { useMaterials } from "@/hooks/useMaterials";
 import { useFolders } from "@/hooks/useFolders";
+import { VideoImageSelectionModal } from "./VideoImageSelectionModal";
 
 interface StickerModalProps {
   isOpen: boolean;
@@ -19,9 +20,10 @@ interface StickerModalProps {
 export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStickers, setSelectedStickers] = useState<string[]>([]);
-  const [sharedSoundEffect, setSharedSoundEffect] = useState<{folder: string, volume: string}>({folder: '', volume: '50'});
+  const [sharedSoundEffect, setSharedSoundEffect] = useState<{folder: string, file: string, volume: string}>({folder: '', file: '', volume: '50'});
   const [selectedRootFolder, setSelectedRootFolder] = useState(""); // 选择的根文件夹
   const [selectedSubfolder, setSelectedSubfolder] = useState(""); // 选择的子文件夹
+  const [isVideoImageModalOpen, setIsVideoImageModalOpen] = useState(false);
   
   const { materials, getMaterialUrl, getMaterialsByCategory } = useMaterials();
   const { folders } = useFolders();
@@ -73,11 +75,18 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
     });
   };
 
-  const updateSharedSoundEffect = (field: 'folder' | 'volume', value: string) => {
+  const updateSharedSoundEffect = (field: 'folder' | 'file' | 'volume', value: string) => {
     setSharedSoundEffect(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleVideoImageSelect = (folderId: string, folderName: string, fileId?: string, fileName?: string) => {
+    updateSharedSoundEffect('folder', folderName);
+    if (fileName) {
+      updateSharedSoundEffect('file', fileName);
+    }
   };
 
   const handleSubmit = () => {
@@ -296,40 +305,23 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
                     
                     <div className="space-y-2">
                       <Label htmlFor="soundEffect">音效选择</Label>
-                      <Select 
-                        value={sharedSoundEffect.folder} 
-                        onValueChange={(value) => updateSharedSoundEffect('folder', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="请选择音效文件夹" />
-                        </SelectTrigger>
-                         <SelectContent>
-                           <SelectItem value="funny">
-                             <div className="flex items-center gap-2">
-                               <Folder size={16} />
-                               <span>搞笑音效</span>
-                             </div>
-                           </SelectItem>
-                           <SelectItem value="transition">
-                             <div className="flex items-center gap-2">
-                               <Folder size={16} />
-                               <span>转场音效</span>
-                             </div>
-                           </SelectItem>
-                           <SelectItem value="environment">
-                             <div className="flex items-center gap-2">
-                               <Folder size={16} />
-                               <span>环境音效</span>
-                             </div>
-                           </SelectItem>
-                           <SelectItem value="special">
-                             <div className="flex items-center gap-2">
-                               <Folder size={16} />
-                               <span>特效音效</span>
-                             </div>
-                           </SelectItem>
-                         </SelectContent>
-                      </Select>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1 justify-start"
+                          onClick={() => setIsVideoImageModalOpen(true)}
+                        >
+                          <Folder className="mr-2 h-4 w-4" />
+                          {sharedSoundEffect.file || sharedSoundEffect.folder || "选择视频/图片素材"}
+                        </Button>
+                      </div>
+                      {sharedSoundEffect.folder && (
+                        <div className="text-xs text-muted-foreground">
+                          文件夹: {sharedSoundEffect.folder}
+                          {sharedSoundEffect.file && ` / 文件: ${sharedSoundEffect.file}`}
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -377,6 +369,12 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
             </Button>
           </div>
         </div>
+
+        <VideoImageSelectionModal
+          isOpen={isVideoImageModalOpen}
+          onClose={() => setIsVideoImageModalOpen(false)}
+          onSelect={handleVideoImageSelect}
+        />
       </DialogContent>
     </Dialog>
   );
