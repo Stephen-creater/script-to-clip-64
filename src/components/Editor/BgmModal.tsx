@@ -51,7 +51,7 @@ export const BgmModal = ({ isOpen, onClose, onSelect, selectedBgm }: BgmModalPro
       setExpandedFolders(new Set(['audio']));
       
       if (selectedBgm && selectedBgm.type === 'library') {
-        const matchedAudio = materials.find(m => m.name === selectedBgm.name && m.category === 'audio');
+        const matchedAudio = materials.find(m => m.name === selectedBgm.name && m.category === '音频素材');
         if (matchedAudio) {
           setConfirmedAudio(matchedAudio.id);
           setVolume(selectedBgm.volume || 50);
@@ -68,9 +68,9 @@ export const BgmModal = ({ isOpen, onClose, onSelect, selectedBgm }: BgmModalPro
     if (!selectedFolder) return [];
     
     if (selectedFolder.subcategory) {
-      return getMaterialsByCategory('audio', selectedFolder.subcategory);
+      return getMaterialsByCategory(selectedFolder.category, selectedFolder.subcategory);
     } else {
-      return getMaterialsByCategory('audio');
+      return getMaterialsByCategory(selectedFolder.category);
     }
   }, [selectedFolder, getMaterialsByCategory]);
 
