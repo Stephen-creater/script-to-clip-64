@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Video, CheckCircle, XCircle } from "lucide-react";
+import { ChevronLeft, Video, CheckCircle, XCircle, X } from "lucide-react";
 import { SubtitleModal } from "./SubtitleModal";
 import { useFolders } from "@/hooks/useFolders";
 import { toast } from "@/hooks/use-toast";
@@ -24,59 +24,79 @@ interface ExportResultModalProps {
   successCount: number;
   failureCount: number;
   exportPath: string;
+  projectName: string;
 }
 
-// 结果显示对话框
-const ExportResultModal = ({ isOpen, onClose, successCount, failureCount, exportPath }: ExportResultModalProps) => {
+// 结果显示对话框 - 右下角通知
+const ExportResultModal = ({ isOpen, onClose, successCount, failureCount, exportPath, projectName }: ExportResultModalProps) => {
+  const navigate = useNavigate();
+  
+  const handleGoToVideoLibrary = () => {
+    navigate('/video-library');
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>合成完成</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="text-center">
-            <p className="text-muted-foreground mb-4">
-              视频已经放在成片库的 <span className="font-semibold text-foreground">"{exportPath}"</span> 文件夹中
-            </p>
-            <div className="flex justify-center gap-8 mt-6">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="text-success" size={24} />
-                <div className="text-left">
-                  <div className="text-2xl font-bold text-success">{successCount}</div>
-                  <div className="text-sm text-muted-foreground">成功</div>
-                </div>
+    <div className="fixed bottom-6 right-6 w-96 bg-background border border-border rounded-lg shadow-lg z-50 animate-in slide-in-from-bottom-4">
+      <div className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          <h3 className="text-lg font-semibold">合成完成</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-6 w-6 p-0 hover:bg-accent"
+          >
+            <X size={16} />
+          </Button>
+        </div>
+        
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            视频<span className="font-semibold text-foreground">"{projectName}"</span>已经放在成片库的<span className="font-semibold text-foreground">"{exportPath}"</span>文件夹中
+          </p>
+          
+          <div className="flex gap-6">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="text-green-500" size={20} />
+              <div>
+                <div className="text-xl font-bold text-green-500">{successCount}</div>
+                <div className="text-xs text-muted-foreground">成功</div>
               </div>
-              <div className="flex items-center gap-2">
-                <XCircle className="text-destructive" size={24} />
-                <div className="text-left">
-                  <div className="text-2xl font-bold text-destructive">{failureCount}</div>
-                  <div className="text-sm text-muted-foreground">失败</div>
-                </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <XCircle className="text-red-500" size={20} />
+              <div>
+                <div className="text-xl font-bold text-red-500">{failureCount}</div>
+                <div className="text-xs text-muted-foreground">失败</div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button onClick={onClose} className="bg-blue-600 hover:bg-blue-700">
-            确定
+
+          <Button 
+            onClick={handleGoToVideoLibrary}
+            className="w-full bg-blue-600 hover:bg-blue-700"
+          >
+            前往成片库
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 
 export const ExportVideoModal = ({ isOpen, onClose, projectId }: ExportVideoModalProps) => {
   const navigate = useNavigate();
   const { folders: allFolders } = useFolders();
-  const { updateProject } = useProjects();
+  const { updateProject, projects } = useProjects();
   const [step, setStep] = useState<'main' | 'settings' | 'folderSelect'>('main');
   const [exportPath, setExportPath] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [newFolderName, setNewFolderName] = useState("");
   const [showResultModal, setShowResultModal] = useState(false);
-  const [exportResult, setExportResult] = useState({ successCount: 0, failureCount: 0, path: "" });
+  const [exportResult, setExportResult] = useState({ successCount: 0, failureCount: 0, path: "", projectName: "" });
   
   // 获取视频文件夹下的所有子文件夹
   const videoFolders = useMemo(() => {
@@ -141,6 +161,10 @@ export const ExportVideoModal = ({ isOpen, onClose, projectId }: ExportVideoModa
   const handleExport = async () => {
     const quantityNum = parseInt(quantity);
     
+    // 获取项目名称
+    const project = projects.find(p => p.id === projectId);
+    const projectName = project?.name || "未命名项目";
+    
     // 更新项目状态为处理中
     if (projectId) {
       await updateProject(projectId, { status: 'processing' });
@@ -168,7 +192,8 @@ export const ExportVideoModal = ({ isOpen, onClose, projectId }: ExportVideoModa
         setExportResult({
           successCount,
           failureCount,
-          path: exportPath
+          path: exportPath,
+          projectName
         });
         
         setShowResultModal(true);
@@ -193,13 +218,14 @@ export const ExportVideoModal = ({ isOpen, onClose, projectId }: ExportVideoModa
 
   return (
     <>
-      {/* 结果显示对话框 */}
+      {/* 结果显示通知 */}
       <ExportResultModal
         isOpen={showResultModal}
         onClose={() => setShowResultModal(false)}
         successCount={exportResult.successCount}
         failureCount={exportResult.failureCount}
         exportPath={exportResult.path}
+        projectName={exportResult.projectName}
       />
       
       <Dialog open={isOpen} onOpenChange={onClose}>
