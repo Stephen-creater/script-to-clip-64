@@ -238,7 +238,7 @@ const ProjectLibrary = () => {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <Card 
-                className="cursor-pointer hover:shadow-tech transition-all border-2 hover:border-primary"
+                className="cursor-pointer transition-all duration-300 ease-out border-2 hover:border-primary hover:-translate-y-1 hover:shadow-tech"
                 onClick={() => handleCreateProject('blank')}
               >
                 <CardHeader className="text-center">
@@ -253,7 +253,7 @@ const ProjectLibrary = () => {
               </Card>
 
               <Card 
-                className="cursor-pointer hover:shadow-tech transition-all border-2 hover:border-primary"
+                className="cursor-pointer transition-all duration-300 ease-out border-2 hover:border-primary hover:-translate-y-1 hover:shadow-tech"
                 onClick={() => handleCreateProject('template')}
               >
                 <CardHeader className="text-center">
@@ -311,7 +311,10 @@ const ProjectLibrary = () => {
           {/* Projects Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProjects.map((project) => (
-          <Card key={project.id} className="hover:shadow-card transition-all group flex flex-col">
+          <Card 
+            key={project.id} 
+            className="transition-all duration-300 ease-out group flex flex-col border-2 hover:border-primary/50 hover:-translate-y-2 hover:shadow-tech cursor-pointer"
+          >
             <CardHeader className="p-0">
               <div className="relative">
                 <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
@@ -437,7 +440,7 @@ const ProjectLibrary = () => {
             {templates.map((template) => (
               <Card 
                 key={template.id}
-                className="cursor-pointer hover:shadow-tech transition-all border-2 hover:border-primary"
+                className="cursor-pointer transition-all duration-300 ease-out border-2 hover:border-primary hover:-translate-y-1 hover:shadow-tech"
                 onClick={() => handleSelectTemplate(template.id)}
               >
                 <CardContent className="p-4">
