@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { FolderOpen, ChevronRight, ChevronDown, X, FileVideo, Folder } from "lucide-react";
+import { FolderOpen, ChevronRight, ChevronDown, FileVideo, Folder } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFolders } from "@/hooks/useFolders";
 
@@ -238,11 +238,8 @@ export const MaterialSelectionModal = ({ isOpen, onClose, onSelect }: MaterialSe
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg max-h-[70vh] flex flex-col">
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <DialogHeader>
           <DialogTitle>请选择分组</DialogTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X size={16} />
-          </Button>
         </DialogHeader>
         
         <div className="flex-1 space-y-4">
