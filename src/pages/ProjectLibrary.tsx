@@ -337,43 +337,47 @@ const ProjectLibrary = () => {
             </CardHeader>
             
             <CardContent className="p-4 flex-1">
-              <div className="mb-2">
-                {editingProject === project.id ? (
-                  <Input
-                    value={tempProjectName}
-                    onChange={(e) => setTempProjectName(e.target.value)}
-                    onBlur={() => handleSaveRename(project.id)}
-                    onKeyDown={(e) => handleKeyDown(e, project.id)}
-                    className="text-heading-3 h-auto p-1 border-primary"
-                    autoFocus
-                    maxLength={100}
-                  />
-                ) : (
-                  <CardTitle 
-                    className="text-heading-3 truncate cursor-pointer hover:text-primary transition-colors"
-                    onClick={() => handleStartRename(project.id, project.name)}
-                    title="点击编辑项目名称"
-                  >
-                    {project.name}
-                  </CardTitle>
-                )}
+              {/* 标题和状态标签 */}
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="flex-1 min-w-0">
+                  {editingProject === project.id ? (
+                    <Input
+                      value={tempProjectName}
+                      onChange={(e) => setTempProjectName(e.target.value)}
+                      onBlur={() => handleSaveRename(project.id)}
+                      onKeyDown={(e) => handleKeyDown(e, project.id)}
+                      className="text-heading-3 h-auto p-1 border-primary"
+                      autoFocus
+                      maxLength={100}
+                    />
+                  ) : (
+                    <CardTitle 
+                      className="text-heading-3 truncate cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => handleStartRename(project.id, project.name)}
+                      title="点击编辑项目名称"
+                    >
+                      {project.name}
+                    </CardTitle>
+                  )}
+                </div>
+                <div className="flex-shrink-0">
+                  {getStatusBadge(project.status)}
+                </div>
               </div>
               
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-body-small text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Clock size={14} />
-                    <span>{formatDuration(project.duration)}</span>
-                  </div>
-                  <span>{project.segments_count} 分段</span>
+              {/* 时长和分段数 */}
+              <div className="flex items-center justify-between text-body-small text-muted-foreground mb-2">
+                <div className="flex items-center gap-1">
+                  <Clock size={14} />
+                  <span>{formatDuration(project.duration)}</span>
                 </div>
-                
-                <div className="flex items-center gap-1 text-body-small text-muted-foreground">
-                  <Calendar size={14} />
-                  <span>{formatDate(project.updated_at)}</span>
-                </div>
-                
-                {getStatusBadge(project.status)}
+                <span className="text-muted-foreground">{project.segments_count} 分段</span>
+              </div>
+              
+              {/* 更新日期 */}
+              <div className="flex items-center gap-1 text-body-small text-muted-foreground">
+                <Calendar size={14} />
+                <span>{formatDate(project.updated_at)}</span>
               </div>
             </CardContent>
 
