@@ -375,11 +375,11 @@ const ProjectLibrary = () => {
             </CardContent>
 
             <CardFooter className="p-4 pt-0 mt-auto">
-              <div className="flex gap-1 w-full">
+              <div className="flex gap-2 w-full">
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1 text-caption"
+              className="flex-1 text-caption px-2"
               onClick={() => handleCopyProject(project.id)}
             >
               <Copy size={12} className="mr-1" />
@@ -388,7 +388,7 @@ const ProjectLibrary = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1 text-caption"
+              className="flex-1 text-caption px-2"
               onClick={() => handleSaveAsTemplate(project.id)}
             >
               <Star size={12} className="mr-1" />
@@ -397,7 +397,7 @@ const ProjectLibrary = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1 text-caption text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              className="flex-1 text-caption px-2 text-destructive hover:bg-destructive hover:text-destructive-foreground"
               onClick={() => handleDeleteProject(project.id)}
             >
               <Trash2 size={12} className="mr-1" />
