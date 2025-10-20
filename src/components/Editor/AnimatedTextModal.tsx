@@ -216,11 +216,12 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
               <div className="flex justify-center">
                 <div 
                   ref={previewRef}
-                  className="relative bg-muted rounded-lg overflow-hidden border-2 border-border cursor-crosshair"
+                  className="relative rounded-lg overflow-hidden border-2 border-border cursor-crosshair"
                   style={{
                     width: '100%',
                     maxWidth: '300px',
-                    aspectRatio: '9/16'
+                    aspectRatio: '9/16',
+                    background: 'repeating-linear-gradient(45deg, hsl(var(--muted)) 0px, hsl(var(--muted)) 10px, hsl(var(--muted) / 0.7) 10px, hsl(var(--muted) / 0.7) 20px)'
                   }}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}

@@ -160,8 +160,13 @@ const Editor = () => {
       {/* Video Preview - Only show when previewOpen is true */}
       {previewOpen && (
         <div className="w-1/3 bg-preview-bg border-l border-border p-6 flex-shrink-0 overflow-auto">
-          <div className="relative bg-black rounded-lg flex items-center justify-center overflow-hidden mx-auto" style={{ aspectRatio: '9/16', maxHeight: '70vh', width: 'auto' }}>
-            <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center">
+          <div className="relative rounded-lg flex items-center justify-center overflow-hidden mx-auto" style={{ 
+            aspectRatio: '9/16', 
+            maxHeight: '70vh', 
+            width: 'auto',
+            background: 'repeating-linear-gradient(45deg, hsl(var(--muted)) 0px, hsl(var(--muted)) 10px, hsl(var(--muted) / 0.7) 10px, hsl(var(--muted) / 0.7) 20px)'
+          }}>
+            <div className="w-full h-full flex items-center justify-center">
               <div className="text-white/40 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
                   {isPlaying ? (

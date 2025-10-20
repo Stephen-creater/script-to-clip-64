@@ -393,14 +393,17 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
                       <h4 className="text-sm font-medium mb-3">预览 (9:16)</h4>
                       <div 
                         ref={previewRef}
-                        className="relative bg-black rounded-lg overflow-hidden w-full cursor-crosshair" 
-                        style={{ aspectRatio: '9/16' }}
+                        className="relative rounded-lg overflow-hidden w-full cursor-crosshair" 
+                        style={{ 
+                          aspectRatio: '9/16',
+                          background: 'repeating-linear-gradient(45deg, hsl(var(--muted)) 0px, hsl(var(--muted)) 10px, hsl(var(--muted) / 0.7) 10px, hsl(var(--muted) / 0.7) 20px)'
+                        }}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
                         onMouseLeave={handleMouseUp}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-700">
-                          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/30 text-xs">
+                        <div className="absolute inset-0">
+                          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/50 text-xs">
                             拖拽/缩放
                           </div>
                           {selectedStickers.map((sticker, index) => {

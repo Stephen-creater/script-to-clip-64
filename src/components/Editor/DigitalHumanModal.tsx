@@ -187,8 +187,12 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
                       </div>
                       <div 
                         ref={previewRef}
-                        className="relative bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden cursor-move select-none" 
-                        style={{ aspectRatio: '9/16', height: '320px' }}
+                        className="relative rounded-lg overflow-hidden cursor-move select-none" 
+                        style={{ 
+                          aspectRatio: '9/16', 
+                          height: '320px',
+                          background: 'repeating-linear-gradient(45deg, hsl(var(--muted)) 0px, hsl(var(--muted)) 10px, hsl(var(--muted) / 0.7) 10px, hsl(var(--muted) / 0.7) 20px)'
+                        }}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
                         onMouseLeave={handleMouseUp}
