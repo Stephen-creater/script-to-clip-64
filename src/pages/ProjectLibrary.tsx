@@ -313,7 +313,7 @@ const ProjectLibrary = () => {
             {filteredProjects.map((project) => (
           <Card 
             key={project.id} 
-            className="transition-all duration-300 ease-out group flex flex-col border-2 hover:border-primary/50 hover:-translate-y-2 hover:shadow-tech cursor-pointer"
+            className="group flex flex-col cursor-pointer"
           >
             <CardHeader className="p-0">
               <div className="relative">
