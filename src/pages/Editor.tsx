@@ -164,7 +164,9 @@ const Editor = () => {
             aspectRatio: '9/16', 
             maxHeight: '70vh', 
             width: 'auto',
-            background: 'repeating-linear-gradient(45deg, hsl(var(--muted)) 0px, hsl(var(--muted)) 10px, hsl(var(--muted) / 0.7) 10px, hsl(var(--muted) / 0.7) 20px)'
+            backgroundImage: 'linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)',
+            backgroundSize: '20px 20px',
+            backgroundColor: 'hsl(var(--muted) / 0.3)'
           }}>
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-white/40 text-center">

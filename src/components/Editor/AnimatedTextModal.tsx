@@ -221,7 +221,9 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
                     width: '100%',
                     maxWidth: '300px',
                     aspectRatio: '9/16',
-                    background: 'repeating-linear-gradient(45deg, hsl(var(--muted)) 0px, hsl(var(--muted)) 10px, hsl(var(--muted) / 0.7) 10px, hsl(var(--muted) / 0.7) 20px)'
+                    backgroundImage: 'linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)',
+                    backgroundSize: '20px 20px',
+                    backgroundColor: 'hsl(var(--muted) / 0.3)'
                   }}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}

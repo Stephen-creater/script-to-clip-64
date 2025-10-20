@@ -396,7 +396,9 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
                         className="relative rounded-lg overflow-hidden w-full cursor-crosshair" 
                         style={{ 
                           aspectRatio: '9/16',
-                          background: 'repeating-linear-gradient(45deg, hsl(var(--muted)) 0px, hsl(var(--muted)) 10px, hsl(var(--muted) / 0.7) 10px, hsl(var(--muted) / 0.7) 20px)'
+                          backgroundImage: 'linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)',
+                          backgroundSize: '20px 20px',
+                          backgroundColor: 'hsl(var(--muted) / 0.3)'
                         }}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
@@ -421,11 +423,11 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
                               >
                                 {/* 贴纸内容 */}
                                 <div
-                                  className="cursor-move relative bg-white/20 border border-white/30 rounded px-3 py-2 text-xs text-white backdrop-blur-sm"
+                                  className="cursor-move relative bg-primary/90 border-2 border-primary rounded px-3 py-2 text-xs text-primary-foreground shadow-lg"
                                   onMouseDown={(e) => handleStickerMouseDown(e, index)}
                                 >
                                   <div className="flex items-center gap-1">
-                                    <Move size={10} className="opacity-50" />
+                                    <Move size={10} />
                                     <span>贴纸{index + 1}</span>
                                   </div>
                                 </div>
