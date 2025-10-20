@@ -8,7 +8,73 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Tech-focused color scheme */
+    /* Light theme - White background as default */
+    --background: 0 0% 100%;
+    --foreground: 240 6% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 6% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 6% 15%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 240 6% 15%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Semantic state colors */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.5rem;
+
+    /* Video editing specific colors */
+    --editor-grid: 220 14% 96%;
+    --editor-hover: 220 14% 93%;
+    --editor-selected: 217 91% 60%;
+    --preview-bg: 220 13% 98%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(225 84% 65%));
+    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 100%), hsl(220 14% 96%));
+    
+    /* Shadows */
+    --shadow-tech: 0 10px 30px -10px hsl(217 91% 60% / 0.2);
+    --shadow-card: 0 2px 8px hsl(240 6% 15% / 0.08);
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 6% 15%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 240 6% 15%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .dark {
+    /* Dark theme - Black background */
     --background: 240 4% 4%;
     --foreground: 220 20% 95%;
 
@@ -47,19 +113,14 @@ All colors MUST be HSL.
     --input: 240 6% 16%;
     --ring: 217 76% 55%;
 
-    --radius: 0.5rem;
-
-    /* Video editing specific colors */
     --editor-grid: 240 6% 12%;
     --editor-hover: 240 6% 18%;
     --editor-selected: 217 76% 55%;
     --preview-bg: 240 2% 2%;
     
-    /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(217 76% 55%), hsl(225 84% 65%));
     --gradient-secondary: linear-gradient(135deg, hsl(240 6% 8%), hsl(240 6% 16%));
     
-    /* Shadows */
     --shadow-tech: 0 10px 30px -10px hsl(217 76% 55% / 0.3);
     --shadow-card: 0 4px 12px hsl(240 4% 4% / 0.5);
 
@@ -71,66 +132,6 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 220 16% 80%;
     --sidebar-border: 240 6% 16%;
     --sidebar-ring: 217 76% 55%;
-  }
-
-  .light {
-    --background: 220 20% 98%;
-    --foreground: 240 6% 15%;
-
-    --card: 220 20% 100%;
-    --card-foreground: 240 6% 15%;
-
-    --popover: 220 20% 100%;
-    --popover-foreground: 240 6% 15%;
-
-    --primary: 217 76% 45%;
-    --primary-foreground: 220 20% 98%;
-
-    --secondary: 220 16% 92%;
-    --secondary-foreground: 240 6% 15%;
-
-    --muted: 220 16% 92%;
-    --muted-foreground: 240 6% 40%;
-
-    --accent: 217 76% 45%;
-    --accent-foreground: 220 20% 98%;
-
-    --destructive: 0 75% 50%;
-    --destructive-foreground: 220 20% 98%;
-
-    /* Semantic state colors */
-    --success: 142 76% 36%;
-    --success-foreground: 220 20% 98%;
-
-    --warning: 38 92% 45%;
-    --warning-foreground: 220 20% 98%;
-
-    --info: 199 89% 42%;
-    --info-foreground: 220 20% 98%;
-
-    --border: 220 16% 88%;
-    --input: 220 16% 88%;
-    --ring: 217 76% 45%;
-
-    --editor-grid: 220 16% 95%;
-    --editor-hover: 220 16% 90%;
-    --editor-selected: 217 76% 45%;
-    --preview-bg: 220 20% 96%;
-    
-    --gradient-primary: linear-gradient(135deg, hsl(217 76% 45%), hsl(225 84% 55%));
-    --gradient-secondary: linear-gradient(135deg, hsl(220 20% 100%), hsl(220 16% 92%));
-    
-    --shadow-tech: 0 10px 30px -10px hsl(217 76% 45% / 0.3);
-    --shadow-card: 0 4px 12px hsl(240 6% 15% / 0.1);
-
-    --sidebar-background: 220 20% 96%;
-    --sidebar-foreground: 240 6% 15%;
-    --sidebar-primary: 217 76% 45%;
-    --sidebar-primary-foreground: 220 20% 98%;
-    --sidebar-accent: 220 16% 92%;
-    --sidebar-accent-foreground: 240 6% 15%;
-    --sidebar-border: 220 16% 88%;
-    --sidebar-ring: 217 76% 45%;
   }
 }
 
