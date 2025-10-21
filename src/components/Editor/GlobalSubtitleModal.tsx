@@ -144,8 +144,8 @@ export const GlobalSubtitleModal = ({ isOpen, onClose, onComplete }: GlobalSubti
                       onClick={() => setFormData(prev => ({ ...prev, template: template.id }))}
                       className={`flex items-center justify-center w-12 h-12 rounded-lg transition-all ${
                         formData.template === template.id
-                          ? 'bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2'
-                          : 'bg-secondary hover:bg-secondary/80'
+                          ? 'ring-2 ring-primary ring-offset-2 bg-zinc-900'
+                          : 'bg-zinc-900 hover:bg-zinc-800'
                       }`}
                       title={template.name}
                     >
@@ -190,48 +190,50 @@ export const GlobalSubtitleModal = ({ isOpen, onClose, onComplete }: GlobalSubti
                   </div>
                 </div>
                 
-                {/* 示例字幕文本 */}
-                <div
-                  className="absolute select-none text-center group"
-                  style={{
-                    left: `${formData.x}%`,
-                    top: `${formData.y}%`,
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 10,
-                  }}
-                >
-                  {/* 字幕文本 */}
+                {/* 示例字幕文本 - 只在非"无"模板时显示 */}
+                {formData.template !== 'none' && (
                   <div
-                    className="cursor-move px-4 relative"
+                    className="absolute select-none text-center group"
                     style={{
-                      fontSize: `${formData.fontSize}px`,
-                      fontWeight: 'bold',
-                      color: '#FFFFFF',
-                      textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                      WebkitTextStroke: '0.5px rgba(0,0,0,0.5)',
+                      left: `${formData.x}%`,
+                      top: `${formData.y}%`,
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 10,
                     }}
-                    onMouseDown={handleMouseDown}
                   >
-                    <div className="flex items-center justify-center gap-1">
-                      <Move size={12} className="opacity-50" />
-                      <span>这是第一个分段的字幕示例</span>
+                    {/* 字幕文本 */}
+                    <div
+                      className="cursor-move px-4 relative"
+                      style={{
+                        fontSize: `${formData.fontSize}px`,
+                        fontWeight: 'bold',
+                        color: '#FFFFFF',
+                        textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                        WebkitTextStroke: '0.5px rgba(0,0,0,0.5)',
+                      }}
+                      onMouseDown={handleMouseDown}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <Move size={12} className="opacity-50" />
+                        <span>这是第一个分段的字幕示例</span>
+                      </div>
                     </div>
+                    
+                    {/* 缩放控制点 */}
+                    <div className="absolute -top-2 -left-2 w-4 h-4 bg-primary rounded-full border-2 border-background cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                      onMouseDown={handleResizeMouseDown}
+                    />
+                    <div className="absolute -top-2 -right-2 w-4 h-4 bg-primary rounded-full border-2 border-background cursor-nesw-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                      onMouseDown={handleResizeMouseDown}
+                    />
+                    <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-primary rounded-full border-2 border-background cursor-nesw-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                      onMouseDown={handleResizeMouseDown}
+                    />
+                    <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-primary rounded-full border-2 border-background cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                      onMouseDown={handleResizeMouseDown}
+                    />
                   </div>
-                  
-                  {/* 缩放控制点 */}
-                  <div className="absolute -top-2 -left-2 w-4 h-4 bg-primary rounded-full border-2 border-background cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
-                    onMouseDown={handleResizeMouseDown}
-                  />
-                  <div className="absolute -top-2 -right-2 w-4 h-4 bg-primary rounded-full border-2 border-background cursor-nesw-resize opacity-0 group-hover:opacity-100 transition-opacity"
-                    onMouseDown={handleResizeMouseDown}
-                  />
-                  <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-primary rounded-full border-2 border-background cursor-nesw-resize opacity-0 group-hover:opacity-100 transition-opacity"
-                    onMouseDown={handleResizeMouseDown}
-                  />
-                  <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-primary rounded-full border-2 border-background cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
-                    onMouseDown={handleResizeMouseDown}
-                  />
-                </div>
+                )}
               </div>
             </div>
             <p className="text-xs text-muted-foreground mt-2 text-center">
