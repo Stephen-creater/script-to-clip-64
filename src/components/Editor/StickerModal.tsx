@@ -289,6 +289,11 @@ export const StickerModal = ({ isOpen, onClose, segmentId }: StickerModalProps) 
         <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
           <DialogTitle>选择视频贴纸</DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">导出尺寸: 1080*1920</p>
+          <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-md">
+            <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
+              ⚠️ 视频贴纸仅在最终导出时生效，编辑期无法预览
+            </p>
+          </div>
         </DialogHeader>
         
         <div className="flex flex-1 overflow-hidden min-h-0">
