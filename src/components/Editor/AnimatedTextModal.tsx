@@ -256,7 +256,7 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
                       <p className="font-medium mb-1">音效说明：</p>
                       <p>• 音效出现时间与花字出现时间同步</p>
                       <p>• 音效播放时长为音效文件本身的时长</p>
-                      <p>• 延迟时间用于同步音频读到特定词时，花字和音效一起出现（延迟 {formData.delay}秒）</p>
+                      <p>• 延迟时间：花字和音效延迟多少秒时同时出现</p>
                     </div>
                   </div>
                 </div>
