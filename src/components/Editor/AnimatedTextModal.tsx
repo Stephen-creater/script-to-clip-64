@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, Plus, Move, Maximize2 } from "lucide-react";
-import { TemplateCreationModal } from "./TemplateCreationModal";
+import { Music, Move } from "lucide-react";
 import { AudioSelectionModal } from "./AudioSelectionModal";
+import { cn } from "@/lib/utils";
 
 interface AnimatedTextModalProps {
   isOpen: boolean;
@@ -21,12 +21,12 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
     template: "",
     soundEffect: "",
     volume: "50",
+    delay: "0", // 延迟时间（秒）
     x: 50, // 位置 x (%)
     y: 50, // 位置 y (%)
     fontSize: 48, // 字体大小
   });
 
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -40,6 +40,7 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
       template: formData.template,
       soundEffect: formData.soundEffect,
       volume: formData.volume,
+      delay: formData.delay,
       x: formData.x,
       y: formData.y,
       fontSize: formData.fontSize
@@ -48,6 +49,33 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
     onSubmit?.(segmentId, updatedData);
     onClose();
   };
+
+  // 花字模板预设
+  const textTemplates = [
+    { id: "none", name: "无模板", style: { color: "#ffffff", textShadow: "none", WebkitTextStroke: "none" } },
+    { id: "gold", name: "金色", style: { color: "#FFD700", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "silver", name: "银色", style: { color: "#C0C0C0", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "orange", name: "橙色", style: { color: "#FFA500", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "red", name: "红色", style: { color: "#FF4444", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "white", name: "白色", style: { color: "#FFFFFF", textShadow: "2px 2px 4px rgba(0,0,0,0.8)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "pink", name: "粉色", style: { color: "#FFB6C1", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "blue", name: "蓝色", style: { color: "#87CEEB", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "yellow-green", name: "黄绿", style: { color: "#9ACD32", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "cyan", name: "青色", style: { color: "#00CED1", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "coral", name: "珊瑚", style: { color: "#FF7F50", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "brown", name: "棕色", style: { color: "#A0826D", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(255,255,255,0.3)" } },
+    { id: "beige", name: "米色", style: { color: "#E8D4B0", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "salmon", name: "鲑鱼", style: { color: "#FA8072", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "cream", name: "奶油", style: { color: "#FFFACD", textShadow: "2px 2px 4px rgba(0,0,0,0.6)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "light-pink", name: "浅粉", style: { color: "#FFB6E1", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "black", name: "黑色", style: { color: "#000000", textShadow: "2px 2px 4px rgba(255,255,255,0.5)", WebkitTextStroke: "1px rgba(255,255,255,0.3)" } },
+    { id: "white-blue", name: "白蓝", style: { color: "#E0F4FF", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "white-pink", name: "白粉", style: { color: "#FFE4F0", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "khaki", name: "卡其", style: { color: "#C3B091", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "mustard", name: "芥末", style: { color: "#FFDB58", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "rose", name: "玫瑰", style: { color: "#C68484", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+    { id: "green", name: "绿色", style: { color: "#7FFF00", textShadow: "2px 2px 4px rgba(0,0,0,0.5)", WebkitTextStroke: "1px rgba(0,0,0,0.3)" } },
+  ];
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!previewRef.current) return;
@@ -114,15 +142,14 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
     }
   }, [isDragging, isResizing]);
 
-  const handleCreateTemplate = (templateData: any) => {
-    // Here you would typically save the template data to state or backend
-    console.log("创建新模板:", templateData);
-    // For now, we'll just log it
-  };
-
   const handleAudioSelect = (fileId: string, fileName: string, folderId?: string) => {
     setFormData(prev => ({ ...prev, soundEffect: fileName }));
     console.log("选择音效:", { fileId, fileName, folderId });
+  };
+
+  const getSelectedTemplateStyle = () => {
+    const selected = textTemplates.find(t => t.id === formData.template);
+    return selected?.style || textTemplates[1].style; // 默认金色
   };
 
   return (
@@ -147,27 +174,33 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="template">花字模板</Label>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsTemplateModalOpen(true)}
-                    className="h-8 gap-2"
-                  >
-                    <Plus size={14} />
-                    新建花字模板
-                  </Button>
+                <Label>预设样式</Label>
+                <div className="grid grid-cols-6 gap-2 p-3 bg-muted/50 rounded-lg max-h-[200px] overflow-y-auto">
+                  {textTemplates.map((template) => (
+                    <button
+                      key={template.id}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, template: template.id }))}
+                      className={cn(
+                        "aspect-square rounded-lg flex items-center justify-center text-2xl font-bold transition-all",
+                        "hover:scale-105 hover:shadow-md",
+                        formData.template === template.id 
+                          ? "ring-2 ring-primary shadow-lg scale-105" 
+                          : "bg-card hover:bg-card/80"
+                      )}
+                      style={template.id === "none" ? {
+                        backgroundColor: "hsl(var(--card))",
+                        border: "2px dashed hsl(var(--border))"
+                      } : {
+                        backgroundColor: template.id === "black" ? "#1a1a1a" : "#2a2a2a",
+                        ...template.style
+                      }}
+                      title={template.name}
+                    >
+                      {template.id === "none" ? "🚫" : "T"}
+                    </button>
+                  ))}
                 </div>
-                <Select value={formData.template} onValueChange={(value) => setFormData(prev => ({ ...prev, template: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="请选择" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="template1">花字模板1</SelectItem>
-                    <SelectItem value="template2">花字模板2</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className="space-y-2">
@@ -182,19 +215,38 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
                     {formData.soundEffect || "请选择音效文件夹"}
                   </Button>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="volume">音量</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="volume"
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={formData.volume}
-                        onChange={(e) => setFormData(prev => ({ ...prev, volume: e.target.value }))}
-                        className="flex-1"
-                      />
-                      <span className="text-sm text-muted-foreground">%</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="volume">音量</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="volume"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={formData.volume}
+                          onChange={(e) => setFormData(prev => ({ ...prev, volume: e.target.value }))}
+                          className="flex-1"
+                        />
+                        <span className="text-sm text-muted-foreground">%</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="delay">延迟时间</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="delay"
+                          type="number"
+                          min="0"
+                          max="10"
+                          step="0.1"
+                          value={formData.delay}
+                          onChange={(e) => setFormData(prev => ({ ...prev, delay: e.target.value }))}
+                          className="flex-1"
+                        />
+                        <span className="text-sm text-muted-foreground">秒</span>
+                      </div>
                     </div>
                   </div>
                   
@@ -204,6 +256,7 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
                       <p className="font-medium mb-1">音效说明：</p>
                       <p>• 音效出现时间与花字出现时间同步</p>
                       <p>• 音效播放时长为音效文件本身的时长</p>
+                      <p>• 延迟时间用于同步音频读到特定词时，花字和音效一起出现（延迟 {formData.delay}秒）</p>
                     </div>
                   </div>
                 </div>
@@ -253,9 +306,7 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
                         style={{
                           fontSize: `${formData.fontSize}px`,
                           fontWeight: 'bold',
-                          color: '#FFD700',
-                          textShadow: '2px 2px 4px rgba(0,0,0,0.5), -1px -1px 2px rgba(255,255,255,0.3)',
-                          WebkitTextStroke: '1px rgba(0,0,0,0.3)',
+                          ...getSelectedTemplateStyle(),
                         }}
                         onMouseDown={handleMouseDown}
                       >
@@ -298,12 +349,6 @@ export const AnimatedTextModal = ({ isOpen, onClose, segmentId, onSubmit }: Anim
           </div>
         </DialogContent>
       </Dialog>
-
-      <TemplateCreationModal
-        isOpen={isTemplateModalOpen}
-        onClose={() => setIsTemplateModalOpen(false)}
-        onCreateTemplate={handleCreateTemplate}
-      />
 
       <AudioSelectionModal
         isOpen={isAudioModalOpen}
