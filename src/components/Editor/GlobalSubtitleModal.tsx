@@ -2,9 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Plus, Move } from "lucide-react";
-import { SubtitleTemplateCreationModal } from "./SubtitleTemplateCreationModal";
+import { Move, Ban } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface GlobalSubtitleModalProps {
   isOpen: boolean;
@@ -14,13 +13,11 @@ interface GlobalSubtitleModalProps {
 
 export const GlobalSubtitleModal = ({ isOpen, onClose, onComplete }: GlobalSubtitleModalProps) => {
   const [formData, setFormData] = useState({
-    template: "",
+    template: "none",
     x: 50, // 位置 x (%)
     y: 87, // 位置 y (%)
     fontSize: 24, // 字体大小
   });
-  
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -104,11 +101,28 @@ export const GlobalSubtitleModal = ({ isOpen, onClose, onComplete }: GlobalSubti
     }
   }, [isDragging, isResizing]);
 
-  const handleCreateTemplate = (templateData: any) => {
-    console.log("New subtitle template created:", templateData);
-    // Here you would typically save the template and update available templates
-    setFormData(prev => ({ ...prev, template: templateData.name }));
-  };
+  // 预设字幕样式
+  const subtitleTemplates = [
+    { id: 'none', name: '无', icon: <Ban className="w-6 h-6" /> },
+    { id: 'template1', name: '样式1', color: '#FF6B6B', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#FF6B6B', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template2', name: '样式2', color: '#4ECDC4', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#4ECDC4', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template3', name: '样式3', color: '#FFE66D', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#FFE66D', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template4', name: '样式4', color: '#FF6B9D', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#FF6B9D', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template5', name: '样式5', color: '#FFFFFF', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#FFFFFF', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template6', name: '样式6', color: '#95E1D3', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#95E1D3', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template7', name: '样式7', color: '#F38181', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#F38181', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template8', name: '样式8', color: '#A8E6CF', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#A8E6CF', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template9', name: '样式9', color: '#FFD3B6', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#FFD3B6', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template10', name: '样式10', color: '#FFAAA5', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#FFAAA5', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template11', name: '样式11', color: '#FF8B94', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#FF8B94', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template12', name: '样式12', color: '#FFC6FF', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#FFC6FF', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template13', name: '样式13', color: '#BDB2FF', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#BDB2FF', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template14', name: '样式14', color: '#A0C4FF', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#A0C4FF', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template15', name: '样式15', color: '#9BF6FF', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#9BF6FF', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template16', name: '样式16', color: '#CAFFBF', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#CAFFBF', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template17', name: '样式17', color: '#FDFFB6', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#FDFFB6', textShadow: '1px 1px 2px #000' }}>T</span> },
+    { id: 'template18', name: '样式18', color: '#FFC8DD', stroke: '#000', icon: <span className="text-xl font-bold" style={{ color: '#FFC8DD', textShadow: '1px 1px 2px #000' }}>T</span> },
+  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -121,27 +135,25 @@ export const GlobalSubtitleModal = ({ isOpen, onClose, onComplete }: GlobalSubti
           {/* 左侧配置 */}
           <div className="space-y-6">
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="globalSubtitleTemplate">字幕模板</Label>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsTemplateModalOpen(true)}
-                  className="h-8 gap-2"
-                >
-                  <Plus size={14} />
-                  新增字幕模板
-                </Button>
-              </div>
-              <Select value={formData.template} onValueChange={(value) => setFormData(prev => ({ ...prev, template: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="请选择" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="字幕模板1">字幕模板1</SelectItem>
-                  <SelectItem value="字幕模板2">字幕模板2</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>预设样式</Label>
+              <ScrollArea className="h-[400px] rounded-md border p-4">
+                <div className="grid grid-cols-6 gap-2">
+                  {subtitleTemplates.map((template) => (
+                    <button
+                      key={template.id}
+                      onClick={() => setFormData(prev => ({ ...prev, template: template.id }))}
+                      className={`flex items-center justify-center w-12 h-12 rounded-lg transition-all ${
+                        formData.template === template.id
+                          ? 'bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2'
+                          : 'bg-secondary hover:bg-secondary/80'
+                      }`}
+                      title={template.name}
+                    >
+                      {template.icon}
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
 
             <div className="p-3 bg-muted rounded-lg">
@@ -237,12 +249,6 @@ export const GlobalSubtitleModal = ({ isOpen, onClose, onComplete }: GlobalSubti
           </Button>
         </div>
       </DialogContent>
-      
-      <SubtitleTemplateCreationModal
-        isOpen={isTemplateModalOpen}
-        onClose={() => setIsTemplateModalOpen(false)}
-        onCreateTemplate={handleCreateTemplate}
-      />
     </Dialog>
   );
 };
