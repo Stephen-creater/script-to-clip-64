@@ -93,9 +93,6 @@ const MainLayout = () => {
     if (!configuration.isGlobalSubtitleConfigured) {
       missingConfigs.push("字幕全局设置");
     }
-    if (!configuration.isBgmConfigured) {
-      missingConfigs.push("BGM配乐");
-    }
     
     if (missingConfigs.length > 0) {
       toast({
