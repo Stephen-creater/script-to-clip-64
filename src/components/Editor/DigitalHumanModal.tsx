@@ -288,8 +288,8 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
 
                 {selectedHuman && (
                   <div className="w-80 border-l border-border pl-4 space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
                         <h4 className="text-sm font-medium">预览区域</h4>
                         {generatedHuman && !isGenerating && (
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -301,34 +301,6 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
                         )}
                       </div>
                       
-                      {!generatedHuman && !isGenerating && (
-                        <div className="mb-4">
-                          <Button 
-                            onClick={() => handleGenerate(false)} 
-                            className="w-full"
-                            size="lg"
-                          >
-                            <Sparkles className="mr-2" size={16} />
-                            生成数字人
-                          </Button>
-                          <p className="text-xs text-muted-foreground mt-2 text-center">
-                            ⏱️ 生成需要约60秒
-                          </p>
-                        </div>
-                      )}
-                      
-                      {generatedHuman && !isGenerating && (
-                        <div className="mb-4">
-                          <Button 
-                            onClick={() => handleGenerate(true)} 
-                            variant="outline"
-                            className="w-full"
-                          >
-                            <RefreshCw className="mr-2" size={16} />
-                            重新生成
-                          </Button>
-                        </div>
-                      )}
                       <div 
                         ref={previewRef}
                         className="relative rounded-lg overflow-hidden select-none" 
@@ -347,7 +319,7 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
                           <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                             <div className="text-center space-y-2">
                               <User size={48} className="mx-auto opacity-50" />
-                              <p className="text-sm">点击上方按钮生成数字人</p>
+                              <p className="text-sm">点击下方按钮生成数字人</p>
                             </div>
                           </div>
                         )}
@@ -404,6 +376,34 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
                           </div>
                         )}
                       </div>
+
+                      {/* 生成按钮移到预览下方 */}
+                      {!generatedHuman && !isGenerating && (
+                        <div>
+                          <Button 
+                            onClick={() => handleGenerate(false)} 
+                            className="w-full"
+                            size="lg"
+                          >
+                            <Sparkles className="mr-2" size={16} />
+                            生成数字人
+                          </Button>
+                          <p className="text-xs text-muted-foreground mt-2 text-center">
+                            ⏱️ 生成需要约60秒
+                          </p>
+                        </div>
+                      )}
+                      
+                      {generatedHuman && !isGenerating && (
+                        <Button 
+                          onClick={() => handleGenerate(true)} 
+                          variant="outline"
+                          className="w-full"
+                        >
+                          <RefreshCw className="mr-2" size={16} />
+                          重新生成
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
