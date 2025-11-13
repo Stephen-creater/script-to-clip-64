@@ -1,11 +1,13 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, User, Move, ZoomIn } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Search, User, Move, ZoomIn, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface DigitalHumanModalProps {
   isOpen: boolean;
@@ -31,6 +33,9 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
   const [selectedType, setSelectedType] = useState<string>("all");
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedHuman, setGeneratedHuman] = useState<string>("");
+  const [progress, setProgress] = useState(0);
   const previewRef = useRef<HTMLDivElement>(null);
   const humanRef = useRef<HTMLDivElement>(null);
 
@@ -95,15 +100,84 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
     setIsResizing(false);
   };
 
+  // 模拟生成数字人的API调用
+  const handleGenerate = async (isRegenerate = false) => {
+    if (!selectedHuman) {
+      toast({
+        title: "请先选择数字人模板",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    setProgress(0);
+
+    toast({
+      title: isRegenerate ? "重新生成中..." : "开始生成数字人...",
+      description: "预计需要约60秒，请耐心等待",
+    });
+
+    // 模拟进度更新
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 95) {
+          clearInterval(progressInterval);
+          return 95;
+        }
+        return prev + 1;
+      });
+    }, 600); // 60秒约100%，所以每0.6秒增加1%
+
+    // 模拟API调用
+    try {
+      await new Promise(resolve => setTimeout(resolve, 60000)); // 60秒延迟
+      
+      clearInterval(progressInterval);
+      setProgress(100);
+      setGeneratedHuman(selectedHuman);
+      setIsGenerating(false);
+
+      toast({
+        title: "生成成功！",
+        description: "数字人已生成，您可以调整位置和大小",
+      });
+    } catch (error) {
+      clearInterval(progressInterval);
+      setIsGenerating(false);
+      setProgress(0);
+      toast({
+        title: "生成失败",
+        description: "请稍后重试",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSubmit = () => {
-    if (!selectedHuman) return;
+    if (!generatedHuman) {
+      toast({
+        title: "请先生成数字人",
+        variant: "destructive",
+      });
+      return;
+    }
     console.log("Selected digital human:", {
-      humanId: selectedHuman,
+      humanId: generatedHuman,
       position,
       scale: scale / 100
     });
     onClose();
   };
+
+  // 当关闭弹窗时重置状态
+  useEffect(() => {
+    if (!isOpen) {
+      setIsGenerating(false);
+      setProgress(0);
+      setGeneratedHuman("");
+    }
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -113,6 +187,24 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
           <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
             <span>导出尺寸: 1080*1920</span>
           </div>
+          {isGenerating && (
+            <div className="mt-3 p-4 bg-blue-500/10 border border-blue-500/30 rounded-md space-y-3">
+              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                <Loader2 className="animate-spin" size={16} />
+                <span className="text-sm font-medium">正在生成数字人...</span>
+              </div>
+              <div className="space-y-2">
+                <Progress value={progress} className="h-2" />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>预计剩余时间: {Math.ceil((100 - progress) * 0.6)}秒</span>
+                  <span>{progress}%</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                💡 生成过程较长，您可以先去处理其他事项，生成完成后会有提示
+              </p>
+            </div>
+          )}
         </DialogHeader>
         
         <div className="flex-1 min-h-0">
@@ -177,17 +269,48 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
                   <div className="w-80 border-l border-border pl-4 space-y-4">
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-medium">预览</h4>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Move size={14} />
-                          <span>拖动调整</span>
-                          <ZoomIn size={14} className="ml-2" />
-                          <span>边角缩放</span>
-                        </div>
+                        <h4 className="text-sm font-medium">预览区域</h4>
+                        {generatedHuman && !isGenerating && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Move size={14} />
+                            <span>拖动调整</span>
+                            <ZoomIn size={14} className="ml-2" />
+                            <span>边角缩放</span>
+                          </div>
+                        )}
                       </div>
+                      
+                      {!generatedHuman && !isGenerating && (
+                        <div className="mb-4">
+                          <Button 
+                            onClick={() => handleGenerate(false)} 
+                            className="w-full"
+                            size="lg"
+                          >
+                            <Sparkles className="mr-2" size={16} />
+                            生成数字人
+                          </Button>
+                          <p className="text-xs text-muted-foreground mt-2 text-center">
+                            ⏱️ 生成需要约60秒
+                          </p>
+                        </div>
+                      )}
+                      
+                      {generatedHuman && !isGenerating && (
+                        <div className="mb-4">
+                          <Button 
+                            onClick={() => handleGenerate(true)} 
+                            variant="outline"
+                            className="w-full"
+                          >
+                            <RefreshCw className="mr-2" size={16} />
+                            重新生成
+                          </Button>
+                        </div>
+                      )}
                       <div 
                         ref={previewRef}
-                        className="relative rounded-lg overflow-hidden cursor-move select-none" 
+                        className="relative rounded-lg overflow-hidden select-none" 
                         style={{ 
                           aspectRatio: '9/16', 
                           height: '320px',
@@ -195,47 +318,70 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
                           backgroundSize: '20px 20px',
                           backgroundColor: 'hsl(var(--muted) / 0.3)'
                         }}
-                        onMouseMove={handleMouseMove}
-                        onMouseUp={handleMouseUp}
-                        onMouseLeave={handleMouseUp}
+                        onMouseMove={generatedHuman && !isGenerating ? handleMouseMove : undefined}
+                        onMouseUp={generatedHuman && !isGenerating ? handleMouseUp : undefined}
+                        onMouseLeave={generatedHuman && !isGenerating ? handleMouseUp : undefined}
                       >
-                        <div 
-                          ref={humanRef}
-                          className="absolute bg-white/20 border-2 border-primary rounded-lg flex items-center justify-center transition-none"
-                          style={{
-                            left: `${position.x}%`,
-                            top: `${position.y}%`,
-                            width: `${40 * scale / 100}%`,
-                            height: `${40 * scale / 100}%`,
-                            transform: `translate(-50%, -50%)`,
-                            cursor: isDragging ? 'grabbing' : 'grab'
-                          }}
-                          onMouseDown={handleMouseDown}
-                        >
-                          <User size={32} className="text-primary pointer-events-none" />
-                          
-                          {/* 四个角的缩放手柄 */}
-                          <div 
-                            className="resize-handle absolute -top-1 -left-1 w-3 h-3 bg-primary rounded-full cursor-nwse-resize hover:scale-125 transition-transform"
-                            onMouseDown={handleMouseDown}
-                          />
-                          <div 
-                            className="resize-handle absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full cursor-nesw-resize hover:scale-125 transition-transform"
-                            onMouseDown={handleMouseDown}
-                          />
-                          <div 
-                            className="resize-handle absolute -bottom-1 -left-1 w-3 h-3 bg-primary rounded-full cursor-nesw-resize hover:scale-125 transition-transform"
-                            onMouseDown={handleMouseDown}
-                          />
-                          <div 
-                            className="resize-handle absolute -bottom-1 -right-1 w-3 h-3 bg-primary rounded-full cursor-nwse-resize hover:scale-125 transition-transform"
-                            onMouseDown={handleMouseDown}
-                          />
-                        </div>
+                        {!generatedHuman && !isGenerating && (
+                          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                            <div className="text-center space-y-2">
+                              <User size={48} className="mx-auto opacity-50" />
+                              <p className="text-sm">点击上方按钮生成数字人</p>
+                            </div>
+                          </div>
+                        )}
                         
-                        <div className="absolute bottom-2 left-2 right-2 text-center text-xs text-white/60 bg-black/30 rounded px-2 py-1">
-                          位置: {Math.round(position.x)}%, {Math.round(position.y)}% | 大小: {Math.round(scale)}%
-                        </div>
+                        {isGenerating && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+                            <div className="text-center space-y-3">
+                              <Loader2 size={48} className="mx-auto animate-spin text-primary" />
+                              <p className="text-sm font-medium">AI正在创作中...</p>
+                              <p className="text-xs text-muted-foreground">请稍候片刻</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {generatedHuman && !isGenerating && (
+                          <div 
+                            ref={humanRef}
+                            className="absolute bg-white/20 border-2 border-primary rounded-lg flex items-center justify-center transition-none cursor-move"
+                            style={{
+                              left: `${position.x}%`,
+                              top: `${position.y}%`,
+                              width: `${40 * scale / 100}%`,
+                              height: `${40 * scale / 100}%`,
+                              transform: `translate(-50%, -50%)`,
+                              cursor: isDragging ? 'grabbing' : 'grab'
+                            }}
+                            onMouseDown={handleMouseDown}
+                          >
+                            <User size={32} className="text-primary pointer-events-none" />
+                            
+                            {/* 四个角的缩放手柄 */}
+                            <div 
+                              className="resize-handle absolute -top-1 -left-1 w-3 h-3 bg-primary rounded-full cursor-nwse-resize hover:scale-125 transition-transform"
+                              onMouseDown={handleMouseDown}
+                            />
+                            <div 
+                              className="resize-handle absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full cursor-nesw-resize hover:scale-125 transition-transform"
+                              onMouseDown={handleMouseDown}
+                            />
+                            <div 
+                              className="resize-handle absolute -bottom-1 -left-1 w-3 h-3 bg-primary rounded-full cursor-nesw-resize hover:scale-125 transition-transform"
+                              onMouseDown={handleMouseDown}
+                            />
+                            <div 
+                              className="resize-handle absolute -bottom-1 -right-1 w-3 h-3 bg-primary rounded-full cursor-nwse-resize hover:scale-125 transition-transform"
+                              onMouseDown={handleMouseDown}
+                            />
+                          </div>
+                        )}
+                        
+                        {generatedHuman && !isGenerating && (
+                          <div className="absolute bottom-2 left-2 right-2 text-center text-xs text-white/60 bg-black/30 rounded px-2 py-1">
+                            位置: {Math.round(position.x)}%, {Math.round(position.y)}% | 大小: {Math.round(scale)}%
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -248,15 +394,18 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
         <DialogFooter className="border-t border-border pt-4">
           <div className="flex justify-between items-center w-full">
             <div className="text-sm text-muted-foreground">
-              {selectedHuman ? "可以调整数字人的位置和大小" : "请先选择一个数字人"}
+              {!selectedHuman && "请先选择一个数字人模板"}
+              {selectedHuman && !generatedHuman && !isGenerating && "选择模板后点击生成数字人"}
+              {isGenerating && "生成中，请耐心等待..."}
+              {generatedHuman && !isGenerating && "可以调整数字人的位置和大小"}
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={onClose}>
+              <Button variant="outline" onClick={onClose} disabled={isGenerating}>
                 取消
               </Button>
               <Button 
                 onClick={handleSubmit} 
-                disabled={!selectedHuman}
+                disabled={!generatedHuman || isGenerating}
                 className="bg-accent text-accent-foreground"
               >
                 确定
