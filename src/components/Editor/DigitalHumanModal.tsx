@@ -122,20 +122,20 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
       description: "预计需要约60秒，请耐心等待",
     });
 
-    // 模拟进度更新
+    // 模拟进度更新 - 实际5秒完成，但显示60秒
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 95) {
           clearInterval(progressInterval);
           return 95;
         }
-        return prev + 1;
+        return prev + 2; // 每次增加2%，5秒完成
       });
-    }, 600); // 60秒约100%，所以每0.6秒增加1%
+    }, 100); // 每0.1秒更新一次
 
-    // 模拟API调用
+    // 模拟API调用 - 实际5秒
     try {
-      await new Promise(resolve => setTimeout(resolve, 60000)); // 60秒延迟
+      await new Promise(resolve => setTimeout(resolve, 5000)); // 5秒延迟（测试用）
       
       // 确保先清除interval
       clearInterval(progressInterval);
