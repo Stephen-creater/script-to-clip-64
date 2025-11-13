@@ -13,6 +13,7 @@ interface DigitalHumanModalProps {
   isOpen: boolean;
   onClose: () => void;
   segmentId: string;
+  onSubmit?: (segmentId: string, data: any) => void;
 }
 
 // 预设数字人模板
@@ -25,7 +26,7 @@ const DIGITAL_HUMAN_TEMPLATES = [
   { id: "6", name: "卡通形象2", thumbnail: "/assets/stickers/test2.png", type: "cartoon" },
 ];
 
-export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanModalProps) => {
+export const DigitalHumanModal = ({ isOpen, onClose, segmentId, onSubmit }: DigitalHumanModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedHuman, setSelectedHuman] = useState<string>("");
   const [position, setPosition] = useState({ x: 50, y: 80 });
@@ -174,6 +175,20 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
       });
       return;
     }
+    
+    // 获取选中的数字人模板信息
+    const selectedTemplate = DIGITAL_HUMAN_TEMPLATES.find(h => h.id === generatedHuman);
+    
+    // 调用onSubmit回调更新分段状态
+    if (onSubmit) {
+      onSubmit(segmentId, {
+        humanId: generatedHuman,
+        humanName: selectedTemplate?.name || "已配置",
+        position,
+        scale: scale / 100
+      });
+    }
+    
     console.log("Selected digital human:", {
       humanId: generatedHuman,
       position,

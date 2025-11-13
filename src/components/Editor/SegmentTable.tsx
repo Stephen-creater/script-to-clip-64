@@ -296,6 +296,19 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
     );
   };
 
+  const updateSegmentDigitalHuman = (segmentId: string, data: any) => {
+    setSegments(prevSegments => 
+      prevSegments.map(segment => 
+        segment.id === segmentId 
+          ? { 
+              ...segment, 
+              digitalHuman: data.humanName || "已配置"
+            }
+          : segment
+      )
+    );
+  };
+
   return (
     <div className="flex-1 bg-background p-6 flex flex-col h-full">
       {/* Action Buttons */}
@@ -519,6 +532,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
           isOpen={true}
           onClose={closeModal}
           segmentId={activeModal.segmentId!}
+          onSubmit={updateSegmentDigitalHuman}
         />
       )}
       
