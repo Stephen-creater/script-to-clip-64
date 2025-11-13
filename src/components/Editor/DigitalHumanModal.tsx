@@ -112,6 +112,10 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
 
     setIsGenerating(true);
     setProgress(0);
+    // 如果是重新生成，清空之前的结果
+    if (isRegenerate) {
+      setGeneratedHuman("");
+    }
 
     toast({
       title: isRegenerate ? "重新生成中..." : "开始生成数字人...",
@@ -133,15 +137,23 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
     try {
       await new Promise(resolve => setTimeout(resolve, 60000)); // 60秒延迟
       
+      // 确保先清除interval
       clearInterval(progressInterval);
+      
+      // 然后按顺序更新状态
       setProgress(100);
-      setGeneratedHuman(selectedHuman);
-      setIsGenerating(false);
-
-      toast({
-        title: "生成成功！",
-        description: "数字人已生成，您可以调整位置和大小",
-      });
+      
+      // 使用setTimeout确保状态更新的顺序
+      setTimeout(() => {
+        setGeneratedHuman(selectedHuman);
+        setIsGenerating(false);
+        
+        toast({
+          title: "生成成功！",
+          description: "数字人已生成，您可以调整位置和大小",
+        });
+      }, 100);
+      
     } catch (error) {
       clearInterval(progressInterval);
       setIsGenerating(false);
@@ -170,14 +182,23 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
     onClose();
   };
 
-  // 当关闭弹窗时重置状态
+  // 当弹窗打开且有已生成的数字人时，自动选中对应的模板
+  useEffect(() => {
+    if (isOpen && generatedHuman && !selectedHuman) {
+      setSelectedHuman(generatedHuman);
+    }
+  }, [isOpen, generatedHuman, selectedHuman]);
+
+  // 当关闭弹窗时只重置生成中的状态，保留已生成的结果
   useEffect(() => {
     if (!isOpen) {
-      setIsGenerating(false);
-      setProgress(0);
-      setGeneratedHuman("");
+      // 只重置正在进行的生成，保留已完成的结果
+      if (!generatedHuman) {
+        setIsGenerating(false);
+        setProgress(0);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, generatedHuman]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
