@@ -118,7 +118,7 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
     }
 
     toast({
-      title: isRegenerate ? "重新生成中..." : "开始生成数字人...",
+      title: `${isRegenerate ? "重新" : "开始"}生成分段 ${segmentId} 的数字人...`,
       description: "预计需要约60秒，请耐心等待",
     });
 
@@ -149,7 +149,7 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
         setIsGenerating(false);
         
         toast({
-          title: "生成成功！",
+          title: `分段 ${segmentId} 生成成功！`,
           description: "数字人已生成，您可以调整位置和大小",
         });
       }, 100);
@@ -159,7 +159,7 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
       setIsGenerating(false);
       setProgress(0);
       toast({
-        title: "生成失败",
+        title: `分段 ${segmentId} 生成失败`,
         description: "请稍后重试",
         variant: "destructive",
       });
@@ -204,7 +204,7 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[900px] h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>配置数字人</DialogTitle>
+          <DialogTitle>配置数字人 - 分段 {segmentId}</DialogTitle>
           <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
             <span>导出尺寸: 1080*1920</span>
           </div>
@@ -212,7 +212,7 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId }: DigitalHumanMo
             <div className="mt-3 p-4 bg-blue-500/10 border border-blue-500/30 rounded-md space-y-3">
               <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
                 <Loader2 className="animate-spin" size={16} />
-                <span className="text-sm font-medium">正在生成数字人...</span>
+                <span className="text-sm font-medium">正在生成分段 {segmentId} 的数字人...</span>
               </div>
               <div className="space-y-2">
                 <Progress value={progress} className="h-2" />
