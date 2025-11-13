@@ -430,25 +430,34 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                        </Button>
                      </td>
                      <td className="min-w-[320px] p-4 border-r border-border/50">
-                       <div className="space-y-2">
+                       <div className="relative group">
                          <Textarea
                            value={segment.scriptVariants && segment.scriptVariants.length > 0 
                              ? `已配置${segment.scriptVariants.length}个变体` 
                              : segment.script}
                            onChange={(e) => updateSegmentScript(segment.id, e.target.value)}
-                           className="min-h-[60px] text-sm resize-none border-0 bg-transparent p-1 focus:border-border focus:bg-background/50"
+                           className="min-h-[80px] text-sm resize-none border-0 bg-transparent p-1 pr-10 focus:border-border focus:bg-background/50"
                            placeholder="请输入文案内容"
                            disabled={segment.scriptVariants && segment.scriptVariants.length > 0}
                          />
                          <Button
-                           variant="outline"
-                           size="sm"
-                           className="w-full"
+                           variant="ghost"
+                           size="icon"
+                           className={cn(
+                             "absolute top-1 right-1 h-7 w-7 opacity-60 hover:opacity-100 transition-opacity",
+                             segment.scriptVariants && segment.scriptVariants.length > 0 && "text-primary"
+                           )}
                            onClick={() => openModal('scriptVariant', segment.id)}
-                         >
-                           {segment.scriptVariants && segment.scriptVariants.length > 0 
+                           title={segment.scriptVariants && segment.scriptVariants.length > 0 
                              ? `管理变体 (${segment.scriptVariants.length})` 
                              : "配置文案变体"}
+                         >
+                           <Wand2 className="h-4 w-4" />
+                           {segment.scriptVariants && segment.scriptVariants.length > 0 && (
+                             <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center font-medium">
+                               {segment.scriptVariants.length}
+                             </span>
+                           )}
                          </Button>
                        </div>
                      </td>
