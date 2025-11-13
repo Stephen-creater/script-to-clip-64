@@ -24,6 +24,12 @@ import { BgmModal } from "./BgmModal";
 import { AudioGenerationModal } from "./AudioGenerationModal";
 import { MaterialSelectionModal } from "./MaterialSelectionModal";
 import { VoiceSelectionModal } from "./VoiceSelectionModal";
+import { ScriptVariantModal } from "./ScriptVariantModal";
+
+interface ScriptVariant {
+  id: string;
+  content: string;
+}
 
 interface Segment {
   id: string;
@@ -31,6 +37,7 @@ interface Segment {
   type: string;
   video: string;
   script: string;
+  scriptVariants?: ScriptVariant[];
   animatedText: string;
   sticker: string;
   digitalHuman: string;
@@ -108,7 +115,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
-    type: 'animatedText' | 'sticker' | 'digitalHuman' | 'globalSubtitle' | 'bgm' | 'audioGeneration' | 'materialSelection' | 'voiceSelection' | null;
+    type: 'animatedText' | 'sticker' | 'digitalHuman' | 'globalSubtitle' | 'bgm' | 'audioGeneration' | 'materialSelection' | 'voiceSelection' | 'scriptVariant' | null;
     segmentId: string | null;
   }>({ type: null, segmentId: null });
   
@@ -239,7 +246,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
     setSelectedSegments([]);
   };
 
-  const openModal = (type: 'animatedText' | 'sticker' | 'digitalHuman' | 'globalSubtitle' | 'bgm' | 'materialSelection', segmentId?: string) => {
+  const openModal = (type: 'animatedText' | 'sticker' | 'digitalHuman' | 'globalSubtitle' | 'bgm' | 'materialSelection' | 'scriptVariant', segmentId?: string) => {
     setActiveModal({ type, segmentId: segmentId || null });
   };
 
@@ -303,6 +310,20 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
           ? { 
               ...segment, 
               digitalHuman: data.humanName || "已配置"
+            }
+          : segment
+      )
+    );
+  };
+
+  const updateSegmentScriptVariants = (segmentId: string, variants: ScriptVariant[]) => {
+    setSegments(prevSegments => 
+      prevSegments.map(segment => 
+        segment.id === segmentId 
+          ? { 
+              ...segment, 
+              scriptVariants: variants,
+              script: variants.length > 0 ? `已配置${variants.length}个变体` : segment.script
             }
           : segment
       )
@@ -408,14 +429,29 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                          {segment.video || "选择素材"}
                        </Button>
                      </td>
-                    <td className="min-w-[320px] p-4 border-r border-border/50">
-                      <Textarea
-                        value={segment.script}
-                        onChange={(e) => updateSegmentScript(segment.id, e.target.value)}
-                        className="min-h-[80px] text-sm resize-none border-0 bg-transparent p-1 focus:border-border focus:bg-background/50"
-                        placeholder="请输入文案内容"
-                      />
-                    </td>
+                     <td className="min-w-[320px] p-4 border-r border-border/50">
+                       <div className="space-y-2">
+                         <Textarea
+                           value={segment.scriptVariants && segment.scriptVariants.length > 0 
+                             ? `已配置${segment.scriptVariants.length}个变体` 
+                             : segment.script}
+                           onChange={(e) => updateSegmentScript(segment.id, e.target.value)}
+                           className="min-h-[60px] text-sm resize-none border-0 bg-transparent p-1 focus:border-border focus:bg-background/50"
+                           placeholder="请输入文案内容"
+                           disabled={segment.scriptVariants && segment.scriptVariants.length > 0}
+                         />
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           className="w-full"
+                           onClick={() => openModal('scriptVariant', segment.id)}
+                         >
+                           {segment.scriptVariants && segment.scriptVariants.length > 0 
+                             ? `管理变体 (${segment.scriptVariants.length})` 
+                             : "配置文案变体"}
+                         </Button>
+                       </div>
+                     </td>
                     <td className="min-w-[100px] p-4 border-r border-border/50">
                       <Button 
                         variant="outline" 
@@ -602,6 +638,17 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
             }
             closeModal();
           }}
+        />
+      )}
+
+      {activeModal.type === 'scriptVariant' && activeModal.segmentId && (
+        <ScriptVariantModal
+          isOpen={true}
+          onClose={closeModal}
+          segmentId={activeModal.segmentId}
+          segmentName={segments.find(s => s.id === activeModal.segmentId)?.name || ""}
+          initialVariants={segments.find(s => s.id === activeModal.segmentId)?.scriptVariants}
+          onSubmit={updateSegmentScriptVariants}
         />
       )}
     </div>
