@@ -307,7 +307,7 @@ export const DigitalHumanModal = ({
 
         <div className="flex-1 flex gap-6 overflow-hidden">
           {/* Left: Template Selection */}
-          <div className="flex-1 flex flex-col gap-3">
+          <div className="w-[45%] flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <div className="flex-1 space-y-2">
                 <Label>搜索数字人</Label>
@@ -422,6 +422,117 @@ export const DigitalHumanModal = ({
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right: Preview */}
+          <div className="flex-1 flex flex-col gap-3">
+            <Label>预览效果</Label>
+            <div 
+              ref={previewRef}
+              className="relative flex-1 bg-muted rounded-lg overflow-hidden"
+              style={{ aspectRatio: '9/16' }}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              {/* 1080*1920 Preview Frame */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-sm text-muted-foreground">1080 × 1920</div>
+              </div>
+
+              {/* Digital Humans Preview */}
+              {generatedHumans.map((human, index) => (
+                <div
+                  key={human.id}
+                  ref={index === 0 ? humanRef : null}
+                  className={cn(
+                    "absolute cursor-move transition-opacity",
+                    !isControlling && "cursor-not-allowed"
+                  )}
+                  style={{
+                    left: `${human.position.x}%`,
+                    top: `${human.position.y}%`,
+                    transform: `translate(-50%, -50%) scale(${human.scale})`,
+                  }}
+                  onMouseDown={handleMouseDown}
+                >
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">
+                      <User size={40} className="text-primary" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold shadow-lg">
+                      {index + 1}
+                    </div>
+                    {isControlling && index === 0 && (
+                      <div className="resize-handle absolute -bottom-2 -right-2 h-6 w-6 rounded-full bg-background border-2 border-primary cursor-nwse-resize flex items-center justify-center">
+                        <ZoomIn size={12} className="text-primary" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {/* Instructions */}
+              {generatedHumans.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-muted-foreground space-y-2">
+                    <User size={48} className="mx-auto opacity-30" />
+                    <div className="text-sm">选择数字人后点击生成</div>
+                  </div>
+                </div>
+              )}
+
+              {isControlling && generatedHumans.length > 0 && (
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-background/90 backdrop-blur-sm px-4 py-2 rounded-full text-xs text-muted-foreground flex items-center gap-2 shadow-lg">
+                  <Move size={14} />
+                  <span>拖拽调整位置，点击右下角调整大小</span>
+                </div>
+              )}
+            </div>
+
+            {/* Position and Scale Controls */}
+            {generatedHumans.length > 0 && isControlling && (
+              <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
+                <div className="space-y-2">
+                  <Label className="text-xs">位置调整</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">X: {position.x}%</div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="90"
+                        value={position.x}
+                        onChange={(e) => setPosition(prev => ({ ...prev, x: Number(e.target.value) }))}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">Y: {position.y}%</div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="90"
+                        value={position.y}
+                        onChange={(e) => setPosition(prev => ({ ...prev, y: Number(e.target.value) }))}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">缩放: {scale}%</Label>
+                  <input
+                    type="range"
+                    min="50"
+                    max="150"
+                    value={scale}
+                    onChange={(e) => setScale(Number(e.target.value))}
+                    className="w-full"
+                  />
                 </div>
               </div>
             )}
