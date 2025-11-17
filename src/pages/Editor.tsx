@@ -20,8 +20,7 @@ interface Segment {
   script: string;
   animatedText: string;
   sticker: string;
-  digitalHumans: DigitalHuman[];
-  enableDigitalHumans?: boolean; // 跟随分段是否启用数字人显示
+  enableDigitalHumans?: boolean; // 是否显示数字人
   audio: string;
 }
 
@@ -36,12 +35,17 @@ const Editor = () => {
   }>();
   const [isPlaying, setIsPlaying] = useState(false);
   const [segments, setSegments] = useState<Segment[]>([]);
+  const [globalDigitalHumans, setGlobalDigitalHumans] = useState<DigitalHuman[]>([]); // 全局数字人配置
   const [currentTime, setCurrentTime] = useState(0);
   const [totalDuration, setTotalDuration] = useState(45.6); // Total video duration in seconds
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSegmentsChange = (newSegments: Segment[]) => {
     setSegments(newSegments);
+  };
+
+  const handleGlobalDigitalHumansChange = (digitalHumans: DigitalHuman[]) => {
+    setGlobalDigitalHumans(digitalHumans);
   };
 
   const handleConfigurationChange = (config: {
@@ -162,6 +166,8 @@ const Editor = () => {
         <SegmentTable 
           onSegmentsChange={handleSegmentsChange}
           onConfigurationChange={handleConfigurationChange}
+          globalDigitalHumans={globalDigitalHumans}
+          onGlobalDigitalHumansChange={handleGlobalDigitalHumansChange}
         />
       </div>
 
