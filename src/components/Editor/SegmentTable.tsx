@@ -554,18 +554,23 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                         {controllingSegmentId && controllingSegmentId !== segment.id ? (
                           // 跟随分段：显示启用/禁用状态
                           segment.enableDigitalHumans && segment.digitalHumans.length > 0 ? (
-                            <div className="flex gap-1">
-                              {segment.digitalHumans.map((_, index) => (
-                                <div 
-                                  key={index}
-                                  className="h-5 w-5 rounded-full bg-primary-foreground text-primary text-[10px] flex items-center justify-center font-bold shadow-sm"
-                                >
-                                  {index + 1}
-                                </div>
-                              ))}
+                            <div className="flex items-center gap-2">
+                              <span className="text-primary-foreground">已启用</span>
+                              <div className="flex gap-1">
+                                {segment.digitalHumans.map((_, index) => (
+                                  <div 
+                                    key={index}
+                                    className="h-5 w-5 rounded-full bg-primary-foreground text-primary text-[10px] flex items-center justify-center font-bold shadow-sm"
+                                  >
+                                    {index + 1}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           ) : (
-                            <span>{segment.enableDigitalHumans ? "已启用" : "点击启用"}</span>
+                            <span className={segment.enableDigitalHumans ? "text-primary-foreground" : ""}>
+                              {segment.enableDigitalHumans ? "已启用" : "点击启用"}
+                            </span>
                           )
                         ) : (
                           // 主控分段：显示配置状态
