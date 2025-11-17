@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
 
+interface DigitalHuman {
+  id: string;
+  name: string;
+  position: { x: number; y: number };
+  scale: number;
+}
+
 interface Segment {
   id: string;
   name: string;
@@ -13,7 +20,7 @@ interface Segment {
   script: string;
   animatedText: string;
   sticker: string;
-  digitalHuman: string;
+  digitalHumans: DigitalHuman[];
   audio: string;
 }
 

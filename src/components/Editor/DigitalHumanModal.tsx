@@ -6,14 +6,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { Search, User, Move, ZoomIn, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { Search, User, Move, ZoomIn, Loader2, RefreshCw, Sparkles, Lock, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+
+interface DigitalHuman {
+  id: string;
+  name: string;
+  position: { x: number; y: number };
+  scale: number;
+}
 
 interface DigitalHumanModalProps {
   isOpen: boolean;
   onClose: () => void;
   segmentId: string;
-  onSubmit?: (segmentId: string, data: any) => void;
+  onSubmit?: (segmentId: string, digitalHumans: DigitalHuman[]) => void;
+  currentDigitalHumans?: DigitalHuman[];
+  isControlling?: boolean;
+  controllingSegmentName?: string | null;
 }
 
 // 预设数字人模板
@@ -26,29 +37,45 @@ const DIGITAL_HUMAN_TEMPLATES = [
   { id: "6", name: "卡通形象2", thumbnail: "/assets/stickers/test2.png", type: "cartoon" },
 ];
 
-export const DigitalHumanModal = ({ isOpen, onClose, segmentId, onSubmit }: DigitalHumanModalProps) => {
+const MAX_DIGITAL_HUMANS = 3;
+
+export const DigitalHumanModal = ({ 
+  isOpen, 
+  onClose, 
+  segmentId, 
+  onSubmit,
+  currentDigitalHumans = [],
+  isControlling = true,
+  controllingSegmentName = null
+}: DigitalHumanModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedHuman, setSelectedHuman] = useState<string>("");
+  const [selectedHumans, setSelectedHumans] = useState<string[]>([]);
+  const [generatedHumans, setGeneratedHumans] = useState<DigitalHuman[]>([]);
   const [position, setPosition] = useState({ x: 50, y: 80 });
   const [scale, setScale] = useState(100);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedHuman, setGeneratedHuman] = useState<string>("");
   const [progress, setProgress] = useState(0);
   const previewRef = useRef<HTMLDivElement>(null);
   const humanRef = useRef<HTMLDivElement>(null);
 
+  // 初始化已配置的数字人
+  useEffect(() => {
+    if (isOpen && currentDigitalHumans.length > 0) {
+      setGeneratedHumans(currentDigitalHumans);
+      setSelectedHumans(currentDigitalHumans.map(h => h.id));
+    }
+  }, [isOpen, currentDigitalHumans]);
+
   const filteredHumans = useMemo(() => {
     let filtered = DIGITAL_HUMAN_TEMPLATES;
 
-    // 按类型筛选
     if (selectedType !== "all") {
       filtered = filtered.filter(h => h.type === selectedType);
     }
 
-    // 按搜索关键词筛选
     if (searchQuery) {
       filtered = filtered.filter(h => 
         h.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -59,7 +86,7 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId, onSubmit }: Digi
   }, [selectedType, searchQuery]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (!previewRef.current || !selectedHuman) return;
+    if (!previewRef.current || selectedHumans.length === 0 || !isControlling) return;
     
     const target = e.target as HTMLElement;
     if (target.classList.contains('resize-handle')) {
@@ -101,9 +128,41 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId, onSubmit }: Digi
     setIsResizing(false);
   };
 
-  // 模拟生成数字人的API调用
+  const handleHumanSelect = (humanId: string) => {
+    if (!isControlling) {
+      toast({
+        title: "无法修改",
+        description: `此分段的数字人配置由${controllingSegmentName}统一管理`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedHumans.includes(humanId)) {
+      setSelectedHumans(selectedHumans.filter(id => id !== humanId));
+    } else {
+      if (selectedHumans.length >= MAX_DIGITAL_HUMANS) {
+        toast({
+          title: `最多只能选择${MAX_DIGITAL_HUMANS}个数字人`,
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedHumans([...selectedHumans, humanId]);
+    }
+  };
+
   const handleGenerate = async (isRegenerate = false) => {
-    if (!selectedHuman) {
+    if (!isControlling) {
+      toast({
+        title: "无法生成",
+        description: `此分段的数字人配置由${controllingSegmentName}统一管理`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedHumans.length === 0) {
       toast({
         title: "请先选择数字人模板",
         variant: "destructive",
@@ -113,9 +172,8 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId, onSubmit }: Digi
 
     setIsGenerating(true);
     setProgress(0);
-    // 如果是重新生成，清空之前的结果
     if (isRegenerate) {
-      setGeneratedHuman("");
+      setGeneratedHumans([]);
     }
 
     toast({
@@ -123,35 +181,36 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId, onSubmit }: Digi
       description: "预计需要约60秒，请耐心等待",
     });
 
-    // 模拟进度更新 - 实际5秒完成，但显示60秒
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 95) {
           clearInterval(progressInterval);
           return 95;
         }
-        return prev + 2; // 每次增加2%，5秒完成
+        return prev + 2;
       });
-    }, 100); // 每0.1秒更新一次
+    }, 100);
 
-    // 模拟API调用 - 实际5秒
     try {
-      await new Promise(resolve => setTimeout(resolve, 5000)); // 5秒延迟（测试用）
+      await new Promise(resolve => setTimeout(resolve, 5000));
       
-      // 确保先清除interval
       clearInterval(progressInterval);
-      
-      // 然后按顺序更新状态
       setProgress(100);
       
-      // 使用setTimeout确保状态更新的顺序
       setTimeout(() => {
-        setGeneratedHuman(selectedHuman);
+        const newGeneratedHumans = selectedHumans.map(humanId => ({
+          id: humanId,
+          name: DIGITAL_HUMAN_TEMPLATES.find(h => h.id === humanId)?.name || "未知",
+          position,
+          scale: scale / 100
+        }));
+        
+        setGeneratedHumans(newGeneratedHumans);
         setIsGenerating(false);
         
         toast({
           title: `分段 ${segmentId} 生成成功！`,
-          description: "数字人已生成，您可以调整位置和大小",
+          description: `已生成${selectedHumans.length}个数字人`,
         });
       }, 100);
       
@@ -168,7 +227,16 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId, onSubmit }: Digi
   };
 
   const handleSubmit = () => {
-    if (!generatedHuman) {
+    if (!isControlling) {
+      toast({
+        title: "无法保存",
+        description: `此分段的数字人配置由${controllingSegmentName}统一管理`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (generatedHumans.length === 0) {
       toast({
         title: "请先生成数字人",
         variant: "destructive",
@@ -176,277 +244,282 @@ export const DigitalHumanModal = ({ isOpen, onClose, segmentId, onSubmit }: Digi
       return;
     }
     
-    // 获取选中的数字人模板信息
-    const selectedTemplate = DIGITAL_HUMAN_TEMPLATES.find(h => h.id === generatedHuman);
-    
-    // 调用onSubmit回调更新分段状态
     if (onSubmit) {
-      onSubmit(segmentId, {
-        humanId: generatedHuman,
-        humanName: selectedTemplate?.name || "已配置",
-        position,
-        scale: scale / 100
-      });
+      onSubmit(segmentId, generatedHumans);
     }
     
-    console.log("Selected digital human:", {
-      humanId: generatedHuman,
-      position,
-      scale: scale / 100
-    });
+    console.log("Selected digital humans:", generatedHumans);
     onClose();
   };
 
-  // 当弹窗打开且有已生成的数字人时，自动选中对应的模板
-  useEffect(() => {
-    if (isOpen && generatedHuman && !selectedHuman) {
-      setSelectedHuman(generatedHuman);
+  const handleRemoveHuman = (humanId: string) => {
+    if (!isControlling) {
+      toast({
+        title: "无法删除",
+        description: `此分段的数字人配置由${controllingSegmentName}统一管理`,
+        variant: "destructive",
+      });
+      return;
     }
-  }, [isOpen, generatedHuman, selectedHuman]);
+    setSelectedHumans(selectedHumans.filter(id => id !== humanId));
+    setGeneratedHumans(generatedHumans.filter(h => h.id !== humanId));
+  };
 
-  // 当关闭弹窗时只重置生成中的状态，保留已生成的结果
   useEffect(() => {
     if (!isOpen) {
-      // 只重置正在进行的生成，保留已完成的结果
-      if (!generatedHuman) {
+      if (generatedHumans.length === 0) {
         setIsGenerating(false);
         setProgress(0);
+        setSelectedHumans([]);
       }
     }
-  }, [isOpen, generatedHuman]);
+  }, [isOpen, generatedHumans.length]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[900px] h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>配置数字人 - 分段 {segmentId}</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            <span>配置数字人 - 分段 {segmentId}</span>
+            {!isControlling && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground font-normal">
+                <Lock size={14} />
+                <span>由{controllingSegmentName}统一管理</span>
+              </div>
+            )}
+          </DialogTitle>
           <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
             <span>导出尺寸: 1080*1920</span>
+            <span>已选择: {selectedHumans.length}/{MAX_DIGITAL_HUMANS}</span>
           </div>
           {isGenerating && (
-            <div className="mt-3 p-4 bg-blue-500/10 border border-blue-500/30 rounded-md space-y-3">
-              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                <Loader2 className="animate-spin" size={16} />
-                <span className="text-sm font-medium">正在生成分段 {segmentId} 的数字人...</span>
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>正在生成数字人... {progress}%</span>
               </div>
-              <div className="space-y-2">
-                <Progress value={progress} className="h-2" />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>预计剩余时间: {Math.ceil((100 - progress) * 0.6)}秒</span>
-                  <span>{progress}%</span>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                💡 生成过程较长，您可以先去处理其他事项，生成完成后会有提示
-              </p>
+              <Progress value={progress} className="h-2" />
             </div>
           )}
         </DialogHeader>
-        
-        <div className="flex-1 min-h-0">
-          <ScrollArea className="h-full pr-4">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Select value={selectedType} onValueChange={setSelectedType}>
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue placeholder="选择类型" />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-popover">
-                      <SelectItem value="all">全部类型</SelectItem>
-                      <SelectItem value="professional">商务专业</SelectItem>
-                      <SelectItem value="casual">年轻活力</SelectItem>
-                      <SelectItem value="cartoon">卡通形象</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Enter搜索"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 w-[200px]"
-                  />
+
+        <div className="flex-1 flex gap-4 overflow-hidden">
+          <div className="w-[40%] flex flex-col gap-3">
+            <div className="space-y-2">
+              <Label>搜索数字人</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                <Input
+                  placeholder="搜索数字人名称..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                  disabled={!isControlling}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>筛选类型</Label>
+              <Select value={selectedType} onValueChange={setSelectedType} disabled={!isControlling}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部类型</SelectItem>
+                  <SelectItem value="professional">商务专业</SelectItem>
+                  <SelectItem value="casual">休闲自然</SelectItem>
+                  <SelectItem value="cartoon">卡通形象</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <ScrollArea className="flex-1">
+              <div className="grid grid-cols-2 gap-2 pr-2">
+                {filteredHumans.map((human) => {
+                  const isSelected = selectedHumans.includes(human.id);
+                  const selectionIndex = selectedHumans.indexOf(human.id);
+                  
+                  return (
+                    <button
+                      key={human.id}
+                      onClick={() => handleHumanSelect(human.id)}
+                      disabled={!isControlling}
+                      className={cn(
+                        "relative p-3 rounded-lg border-2 transition-all",
+                        "hover:border-primary/50 hover:shadow-md",
+                        "disabled:opacity-50 disabled:cursor-not-allowed",
+                        isSelected 
+                          ? "border-primary bg-primary/10" 
+                          : "border-border"
+                      )}
+                    >
+                      <div className="aspect-[3/4] bg-muted rounded-md mb-2 overflow-hidden">
+                        <img 
+                          src={human.thumbnail} 
+                          alt={human.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="text-sm font-medium text-center">{human.name}</div>
+                      {isSelected && (
+                        <div className="absolute top-1 right-1 h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
+                          {selectionIndex + 1}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+
+            {selectedHumans.length > 0 && isControlling && (
+              <div className="pt-2 border-t border-border">
+                <div className="text-sm font-medium mb-2">已选择的数字人:</div>
+                <div className="flex flex-wrap gap-2">
+                  {selectedHumans.map((humanId, index) => {
+                    const human = DIGITAL_HUMAN_TEMPLATES.find(h => h.id === humanId);
+                    return (
+                      <div 
+                        key={humanId}
+                        className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary/10 text-sm"
+                      >
+                        <span className="font-bold text-primary">{index + 1}.</span>
+                        <span>{human?.name}</span>
+                        <button
+                          onClick={() => handleRemoveHuman(humanId)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
+            )}
+          </div>
 
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <div className="grid grid-cols-4 gap-4">
-                    {filteredHumans.map(human => (
-                      <div
-                        key={human.id}
-                        className={`relative cursor-pointer border-2 rounded-lg p-3 transition-colors ${
-                          selectedHuman === human.id
-                            ? 'border-primary bg-primary/10' 
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                        onClick={() => setSelectedHuman(human.id)}
-                      >
-                        <div className="aspect-square bg-muted rounded flex items-center justify-center mb-2">
-                          <User size={48} className="text-muted-foreground" />
-                        </div>
-                        <p className="text-xs text-center truncate font-medium">{human.name}</p>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {filteredHumans.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                      <User size={48} className="mb-4" />
-                      <p>未找到匹配的数字人</p>
-                      <p className="text-sm">请尝试其他搜索条件</p>
-                    </div>
-                  )}
-                </div>
-
-                {selectedHuman && (
-                  <div className="w-80 border-l border-border pl-4 space-y-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-medium">预览区域</h4>
-                        {generatedHuman && !isGenerating && (
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Move size={14} />
-                            <span>拖动调整</span>
-                            <ZoomIn size={14} className="ml-2" />
-                            <span>边角缩放</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div 
-                        ref={previewRef}
-                        className="relative rounded-lg overflow-hidden select-none" 
-                        style={{ 
-                          aspectRatio: '9/16', 
-                          height: '320px',
-                          backgroundImage: 'linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)',
-                          backgroundSize: '20px 20px',
-                          backgroundColor: 'hsl(var(--muted) / 0.3)'
-                        }}
-                        onMouseMove={generatedHuman && !isGenerating ? handleMouseMove : undefined}
-                        onMouseUp={generatedHuman && !isGenerating ? handleMouseUp : undefined}
-                        onMouseLeave={generatedHuman && !isGenerating ? handleMouseUp : undefined}
-                      >
-                        {!generatedHuman && !isGenerating && (
-                          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                            <div className="text-center space-y-2">
-                              <User size={48} className="mx-auto opacity-50" />
-                              <p className="text-sm">点击下方按钮生成数字人</p>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {isGenerating && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
-                            <div className="text-center space-y-3">
-                              <Loader2 size={48} className="mx-auto animate-spin text-primary" />
-                              <p className="text-sm font-medium">AI正在创作中...</p>
-                              <p className="text-xs text-muted-foreground">请稍候片刻</p>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {generatedHuman && !isGenerating && (
+          <div className="flex-1 flex flex-col gap-3">
+            <div className="space-y-2">
+              <Label>预览 (1080*1920)</Label>
+              <div 
+                ref={previewRef}
+                className="aspect-[9/16] bg-muted rounded-lg relative overflow-hidden border-2 border-border cursor-move"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              >
+                {generatedHumans.length > 0 ? (
+                  <div
+                    ref={humanRef}
+                    className="absolute"
+                    style={{
+                      left: `${position.x}%`,
+                      top: `${position.y}%`,
+                      transform: `translate(-50%, -50%) scale(${scale / 100})`,
+                      transition: isDragging || isResizing ? 'none' : 'transform 0.2s',
+                      cursor: isDragging ? 'grabbing' : 'grab'
+                    }}
+                  >
+                    <div className="relative">
+                      <User size={80} className="text-primary" />
+                      <div className="absolute -top-2 -right-2 flex gap-1">
+                        {generatedHumans.map((_, index) => (
                           <div 
-                            ref={humanRef}
-                            className="absolute bg-white/20 border-2 border-primary rounded-lg flex items-center justify-center transition-none cursor-move"
-                            style={{
-                              left: `${position.x}%`,
-                              top: `${position.y}%`,
-                              width: `${40 * scale / 100}%`,
-                              height: `${40 * scale / 100}%`,
-                              transform: `translate(-50%, -50%)`,
-                              cursor: isDragging ? 'grabbing' : 'grab'
-                            }}
-                            onMouseDown={handleMouseDown}
+                            key={index}
+                            className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold"
                           >
-                            <User size={32} className="text-primary pointer-events-none" />
-                            
-                            {/* 四个角的缩放手柄 */}
-                            <div 
-                              className="resize-handle absolute -top-1 -left-1 w-3 h-3 bg-primary rounded-full cursor-nwse-resize hover:scale-125 transition-transform"
-                              onMouseDown={handleMouseDown}
-                            />
-                            <div 
-                              className="resize-handle absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full cursor-nesw-resize hover:scale-125 transition-transform"
-                              onMouseDown={handleMouseDown}
-                            />
-                            <div 
-                              className="resize-handle absolute -bottom-1 -left-1 w-3 h-3 bg-primary rounded-full cursor-nesw-resize hover:scale-125 transition-transform"
-                              onMouseDown={handleMouseDown}
-                            />
-                            <div 
-                              className="resize-handle absolute -bottom-1 -right-1 w-3 h-3 bg-primary rounded-full cursor-nwse-resize hover:scale-125 transition-transform"
-                              onMouseDown={handleMouseDown}
-                            />
+                            {index + 1}
                           </div>
-                        )}
-                        
-                        {generatedHuman && !isGenerating && (
-                          <div className="absolute bottom-2 left-2 right-2 text-center text-xs text-white/60 bg-black/30 rounded px-2 py-1">
-                            位置: {Math.round(position.x)}%, {Math.round(position.y)}% | 大小: {Math.round(scale)}%
-                          </div>
-                        )}
+                        ))}
                       </div>
-
-                      {/* 生成按钮移到预览下方 */}
-                      {!generatedHuman && !isGenerating && (
-                        <div>
-                          <Button 
-                            onClick={() => handleGenerate(false)} 
-                            className="w-full"
-                            size="lg"
-                          >
-                            <Sparkles className="mr-2" size={16} />
-                            生成数字人
-                          </Button>
-                          <p className="text-xs text-muted-foreground mt-2 text-center">
-                            ⏱️ 生成需要约60秒
-                          </p>
-                        </div>
+                      {isControlling && (
+                        <div className="absolute -bottom-2 -right-2 resize-handle h-4 w-4 bg-primary rounded-full cursor-nwse-resize" />
                       )}
-                      
-                      {generatedHuman && !isGenerating && (
-                        <Button 
-                          onClick={() => handleGenerate(true)} 
-                          variant="outline"
-                          className="w-full"
-                        >
-                          <RefreshCw className="mr-2" size={16} />
-                          重新生成
-                        </Button>
-                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <User size={48} className="mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">选择并生成数字人后可预览</p>
                     </div>
                   </div>
                 )}
               </div>
             </div>
-          </ScrollArea>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs flex items-center gap-1">
+                  <Move size={12} />
+                  位置调整
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {isControlling ? "拖拽数字人调整位置" : "只读模式"}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs flex items-center gap-1">
+                  <ZoomIn size={12} />
+                  大小: {scale}%
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {isControlling ? "拖拽右下角调整大小" : "只读模式"}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <DialogFooter className="border-t border-border pt-4">
-          <div className="flex justify-between items-center w-full">
-            <div className="text-sm text-muted-foreground">
-              {!selectedHuman && "请先选择一个数字人模板"}
-              {selectedHuman && !generatedHuman && !isGenerating && "选择模板后点击生成数字人"}
-              {isGenerating && "生成中，请耐心等待..."}
-              {generatedHuman && !isGenerating && "可以调整数字人的位置和大小"}
-            </div>
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={onClose} disabled={isGenerating}>
-                取消
-              </Button>
-              <Button 
-                onClick={handleSubmit} 
-                disabled={!generatedHuman || isGenerating}
-                className="bg-accent text-accent-foreground"
-              >
+        <DialogFooter className="flex items-center justify-between">
+          <div className="flex gap-2">
+            {isControlling && (
+              <>
+                {generatedHumans.length === 0 ? (
+                  <Button
+                    onClick={() => handleGenerate(false)}
+                    disabled={isGenerating || selectedHumans.length === 0}
+                    className="gap-2"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        生成中...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        生成数字人
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleGenerate(true)}
+                    disabled={isGenerating}
+                    className="gap-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    重新生成
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+          
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>
+              {isControlling ? "取消" : "关闭"}
+            </Button>
+            {isControlling && (
+              <Button onClick={handleSubmit} disabled={generatedHumans.length === 0}>
                 确定
               </Button>
-            </div>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>
