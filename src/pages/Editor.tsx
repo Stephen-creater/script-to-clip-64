@@ -21,6 +21,7 @@ interface Segment {
   animatedText: string;
   sticker: string;
   digitalHumans: DigitalHuman[];
+  enableDigitalHumans?: boolean; // 跟随分段是否启用数字人显示
   audio: string;
 }
 
