@@ -13,7 +13,8 @@ import {
   Settings2,
   FileText,
   Volume2,
-  Music
+  Music,
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatedTextModal } from "./AnimatedTextModal";
@@ -512,39 +513,28 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                       </Button>
                     </td>
                     <td className="min-w-[140px] p-4 border-r border-border/50">
-                      <div className="relative group">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className={cn(
-                            "w-full justify-start",
-                            segment.digitalHumans.length > 0 && "pr-8"
-                          )}
-                          onClick={() => openModal('digitalHuman', segment.id)}
-                        >
-                          <Settings2 size={14} className="mr-2" />
-                          {segment.digitalHumans.length === 0 
-                            ? "未设置" 
-                            : `已配置${segment.digitalHumans.length}个`}
-                        </Button>
-                        {segment.digitalHumans.length > 0 && (
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-0.5">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full justify-start gap-2"
+                        onClick={() => openModal('digitalHuman', segment.id)}
+                      >
+                        <User size={14} />
+                        {segment.digitalHumans.length === 0 ? (
+                          <span>未设置</span>
+                        ) : (
+                          <div className="flex gap-1">
                             {segment.digitalHumans.map((_, index) => (
                               <div 
                                 key={index}
-                                className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium"
+                                className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold shadow-sm"
                               >
                                 {index + 1}
                               </div>
                             ))}
                           </div>
                         )}
-                        {controllingSegmentId && controllingSegmentId !== segment.id && (
-                          <div className="absolute -bottom-5 left-0 text-[10px] text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                            由分段{segments.find(s => s.id === controllingSegmentId)?.name.replace('分段', '')}统一管理
-                          </div>
-                        )}
-                      </div>
+                      </Button>
                     </td>
                      <td className="min-w-[120px] p-4">
                        {segment.audioTimestamp ? (
