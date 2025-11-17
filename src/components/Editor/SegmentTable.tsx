@@ -31,6 +31,13 @@ interface ScriptVariant {
   content: string;
 }
 
+interface DigitalHuman {
+  id: string;
+  name: string;
+  position: { x: number; y: number };
+  scale: number;
+}
+
 interface Segment {
   id: string;
   name: string;
@@ -40,7 +47,7 @@ interface Segment {
   scriptVariants?: ScriptVariant[];
   animatedText: string;
   sticker: string;
-  digitalHuman: string;
+  digitalHumans: DigitalHuman[];
   audio: string;
   audioTimestamp?: string;
 }
@@ -64,7 +71,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "1",
       animatedText: "未设置",
       sticker: "未设置",
-      digitalHuman: "未设置",
+      digitalHumans: [],
       audio: ""
     },
     {
@@ -75,7 +82,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "2",
       animatedText: "未设置",
       sticker: "未设置",
-      digitalHuman: "未设置",
+      digitalHumans: [],
       audio: ""
     },
     {
@@ -86,7 +93,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "3",
       animatedText: "未设置",
       sticker: "未设置",
-      digitalHuman: "未设置",
+      digitalHumans: [],
       audio: ""
     },
     {
@@ -97,7 +104,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "4",
       animatedText: "未设置",
       sticker: "未设置",
-      digitalHuman: "未设置",
+      digitalHumans: [],
       audio: ""
     },
     {
@@ -108,10 +115,13 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "5",
       animatedText: "未设置",
       sticker: "未设置",
-      digitalHuman: "未设置",
+      digitalHumans: [],
       audio: ""
     }
   ]);
+
+  // 记录主控分段的ID（第一个配置数字人的分段）
+  const [controllingSegmentId, setControllingSegmentId] = useState<string | null>(null);
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
@@ -211,7 +221,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
         script: "",
         animatedText: "未设置",
         sticker: "未设置",
-        digitalHuman: "未设置",
+        digitalHumans: controllingSegmentId ? segments.find(s => s.id === controllingSegmentId)?.digitalHumans || [] : [],
         audio: ""
     };
     const newSegments = renumberSegments([...segments, newSegment]);
@@ -230,7 +240,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
         script: line.trim(),
         animatedText: "未设置",
         sticker: "未设置",
-        digitalHuman: "未设置",
+        digitalHumans: controllingSegmentId ? segments.find(s => s.id === controllingSegmentId)?.digitalHumans || [] : [],
         audio: ""
       }));
       const allSegments = renumberSegments([...segments, ...newSegments]);
@@ -303,17 +313,35 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
     );
   };
 
-  const updateSegmentDigitalHuman = (segmentId: string, data: any) => {
-    setSegments(prevSegments => 
-      prevSegments.map(segment => 
-        segment.id === segmentId 
-          ? { 
-              ...segment, 
-              digitalHuman: data.humanName || "已配置"
-            }
-          : segment
-      )
-    );
+  const updateSegmentDigitalHuman = (segmentId: string, digitalHumans: DigitalHuman[]) => {
+    // 如果这是第一次配置数字人，设置为主控分段
+    if (!controllingSegmentId && digitalHumans.length > 0) {
+      setControllingSegmentId(segmentId);
+    }
+    
+    // 如果是主控分段的修改，同步到所有分段
+    if (segmentId === controllingSegmentId) {
+      // 如果主控分段清空了所有数字人，则清除主控分段标识
+      if (digitalHumans.length === 0) {
+        setControllingSegmentId(null);
+      }
+      
+      setSegments(prevSegments => 
+        prevSegments.map(segment => ({
+          ...segment,
+          digitalHumans: digitalHumans
+        }))
+      );
+    } else {
+      // 非主控分段不应该被允许修改，但作为保护措施
+      setSegments(prevSegments => 
+        prevSegments.map(segment => 
+          segment.id === segmentId 
+            ? { ...segment, digitalHumans }
+            : segment
+        )
+      );
+    }
   };
 
   const updateSegmentScriptVariants = (segmentId: string, variants: ScriptVariant[]) => {
@@ -483,16 +511,40 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                         {segment.sticker}
                       </Button>
                     </td>
-                    <td className="min-w-[100px] p-4 border-r border-border/50">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full justify-start"
-                        onClick={() => openModal('digitalHuman', segment.id)}
-                      >
-                        <Settings2 size={14} className="mr-2" />
-                        {segment.digitalHuman}
-                      </Button>
+                    <td className="min-w-[140px] p-4 border-r border-border/50">
+                      <div className="relative group">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className={cn(
+                            "w-full justify-start",
+                            segment.digitalHumans.length > 0 && "pr-8"
+                          )}
+                          onClick={() => openModal('digitalHuman', segment.id)}
+                        >
+                          <Settings2 size={14} className="mr-2" />
+                          {segment.digitalHumans.length === 0 
+                            ? "未设置" 
+                            : `已配置${segment.digitalHumans.length}个`}
+                        </Button>
+                        {segment.digitalHumans.length > 0 && (
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-0.5">
+                            {segment.digitalHumans.map((_, index) => (
+                              <div 
+                                key={index}
+                                className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium"
+                              >
+                                {index + 1}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {controllingSegmentId && controllingSegmentId !== segment.id && (
+                          <div className="absolute -bottom-5 left-0 text-[10px] text-muted-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                            由分段{segments.find(s => s.id === controllingSegmentId)?.name.replace('分段', '')}统一管理
+                          </div>
+                        )}
+                      </div>
                     </td>
                      <td className="min-w-[120px] p-4">
                        {segment.audioTimestamp ? (
@@ -578,6 +630,9 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
           onClose={closeModal}
           segmentId={activeModal.segmentId!}
           onSubmit={updateSegmentDigitalHuman}
+          currentDigitalHumans={segments.find(s => s.id === activeModal.segmentId)?.digitalHumans || []}
+          isControlling={activeModal.segmentId === controllingSegmentId || controllingSegmentId === null}
+          controllingSegmentName={controllingSegmentId ? segments.find(s => s.id === controllingSegmentId)?.name : null}
         />
       )}
       
