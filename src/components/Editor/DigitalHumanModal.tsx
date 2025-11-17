@@ -29,12 +29,14 @@ interface DigitalHumanModalProps {
 
 // 预设数字人模板
 const DIGITAL_HUMAN_TEMPLATES = [
-  { id: "1", name: "商务男性", thumbnail: "/assets/stickers/test1.png", type: "professional" },
-  { id: "2", name: "知性女性", thumbnail: "/assets/stickers/test2.png", type: "professional" },
-  { id: "3", name: "年轻男性", thumbnail: "/assets/stickers/test1.png", type: "casual" },
-  { id: "4", name: "年轻女性", thumbnail: "/assets/stickers/test2.png", type: "casual" },
-  { id: "5", name: "卡通形象1", thumbnail: "/assets/stickers/test1.png", type: "cartoon" },
-  { id: "6", name: "卡通形象2", thumbnail: "/assets/stickers/test2.png", type: "cartoon" },
+  { id: "1", name: "商务男性", type: "professional", gender: "male" },
+  { id: "2", name: "知性女性", type: "professional", gender: "female" },
+  { id: "3", name: "年轻男性", type: "casual", gender: "male" },
+  { id: "4", name: "年轻女性", type: "casual", gender: "female" },
+  { id: "5", name: "活力男生", type: "casual", gender: "male" },
+  { id: "6", name: "清新女生", type: "casual", gender: "female" },
+  { id: "7", name: "卡通男孩", type: "cartoon", gender: "male" },
+  { id: "8", name: "卡通女孩", type: "cartoon", gender: "female" },
 ];
 
 const MAX_DIGITAL_HUMANS = 3;
@@ -303,39 +305,42 @@ export const DigitalHumanModal = ({
           )}
         </DialogHeader>
 
-        <div className="flex-1 flex gap-4 overflow-hidden">
-          <div className="w-[40%] flex flex-col gap-3">
-            <div className="space-y-2">
-              <Label>搜索数字人</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-                <Input
-                  placeholder="搜索数字人名称..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                  disabled={!isControlling}
-                />
+        <div className="flex-1 flex gap-6 overflow-hidden">
+          {/* Left: Template Selection */}
+          <div className="flex-1 flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 space-y-2">
+                <Label>搜索数字人</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+                  <Input
+                    placeholder="搜索数字人名称..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                    disabled={!isControlling}
+                  />
+                </div>
+              </div>
+
+              <div className="w-[180px] space-y-2">
+                <Label>筛选类型</Label>
+                <Select value={selectedType} onValueChange={setSelectedType} disabled={!isControlling}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">全部类型</SelectItem>
+                    <SelectItem value="professional">商务专业</SelectItem>
+                    <SelectItem value="casual">休闲自然</SelectItem>
+                    <SelectItem value="cartoon">卡通形象</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>筛选类型</Label>
-              <Select value={selectedType} onValueChange={setSelectedType} disabled={!isControlling}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">全部类型</SelectItem>
-                  <SelectItem value="professional">商务专业</SelectItem>
-                  <SelectItem value="casual">休闲自然</SelectItem>
-                  <SelectItem value="cartoon">卡通形象</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             <ScrollArea className="flex-1">
-              <div className="grid grid-cols-2 gap-2 pr-2">
+              <div className="grid grid-cols-4 gap-3 pr-2">
                 {filteredHumans.map((human) => {
                   const isSelected = selectedHumans.includes(human.id);
                   const selectionIndex = selectedHumans.indexOf(human.id);
@@ -346,24 +351,27 @@ export const DigitalHumanModal = ({
                       onClick={() => handleHumanSelect(human.id)}
                       disabled={!isControlling}
                       className={cn(
-                        "relative p-3 rounded-lg border-2 transition-all",
-                        "hover:border-primary/50 hover:shadow-md",
-                        "disabled:opacity-50 disabled:cursor-not-allowed",
+                        "relative p-4 rounded-lg border-2 transition-all",
+                        "hover:border-primary/50 hover:shadow-lg hover:scale-105",
+                        "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
+                        "flex flex-col items-center gap-3",
                         isSelected 
-                          ? "border-primary bg-primary/10" 
+                          ? "border-primary bg-primary/10 shadow-md" 
                           : "border-border"
                       )}
                     >
-                      <div className="aspect-[3/4] bg-muted rounded-md mb-2 overflow-hidden">
-                        <img 
-                          src={human.thumbnail} 
-                          alt={human.name}
-                          className="w-full h-full object-cover"
-                        />
+                      <div className={cn(
+                        "w-16 h-16 rounded-full flex items-center justify-center transition-all",
+                        isSelected ? "bg-primary/20" : "bg-muted"
+                      )}>
+                        <User size={32} className={cn(
+                          "transition-colors",
+                          isSelected ? "text-primary" : "text-muted-foreground"
+                        )} />
                       </div>
                       <div className="text-sm font-medium text-center">{human.name}</div>
                       {isSelected && (
-                        <div className="absolute top-1 right-1 h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
+                        <div className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold shadow-lg">
                           {selectionIndex + 1}
                         </div>
                       )}
@@ -373,104 +381,50 @@ export const DigitalHumanModal = ({
               </div>
             </ScrollArea>
 
-            {selectedHumans.length > 0 && isControlling && (
-              <div className="pt-2 border-t border-border">
-                <div className="text-sm font-medium mb-2">已选择的数字人:</div>
+            {selectedHumans.length > 0 && (
+              <div className="pt-3 border-t border-border">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium">已选择 {selectedHumans.length}/{MAX_DIGITAL_HUMANS}</div>
+                  {isControlling && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedHumans([]);
+                        setGeneratedHumans([]);
+                      }}
+                      className="h-7 text-xs"
+                    >
+                      清空
+                    </Button>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {selectedHumans.map((humanId, index) => {
                     const human = DIGITAL_HUMAN_TEMPLATES.find(h => h.id === humanId);
                     return (
                       <div 
                         key={humanId}
-                        className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary/10 text-sm"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-sm border border-primary/20"
                       >
-                        <span className="font-bold text-primary">{index + 1}.</span>
-                        <span>{human?.name}</span>
-                        <button
-                          onClick={() => handleRemoveHuman(humanId)}
-                          className="ml-1 hover:text-destructive"
-                        >
-                          <X size={14} />
-                        </button>
+                        <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+                          {index + 1}
+                        </span>
+                        <span className="font-medium">{human?.name}</span>
+                        {isControlling && (
+                          <button
+                            onClick={() => handleRemoveHuman(humanId)}
+                            className="ml-1 hover:text-destructive transition-colors"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
                       </div>
                     );
                   })}
                 </div>
               </div>
             )}
-          </div>
-
-          <div className="flex-1 flex flex-col gap-3">
-            <div className="space-y-2">
-              <Label>预览 (1080*1920)</Label>
-              <div 
-                ref={previewRef}
-                className="aspect-[9/16] bg-muted rounded-lg relative overflow-hidden border-2 border-border cursor-move"
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-              >
-                {generatedHumans.length > 0 ? (
-                  <div
-                    ref={humanRef}
-                    className="absolute"
-                    style={{
-                      left: `${position.x}%`,
-                      top: `${position.y}%`,
-                      transform: `translate(-50%, -50%) scale(${scale / 100})`,
-                      transition: isDragging || isResizing ? 'none' : 'transform 0.2s',
-                      cursor: isDragging ? 'grabbing' : 'grab'
-                    }}
-                  >
-                    <div className="relative">
-                      <User size={80} className="text-primary" />
-                      <div className="absolute -top-2 -right-2 flex gap-1">
-                        {generatedHumans.map((_, index) => (
-                          <div 
-                            key={index}
-                            className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold"
-                          >
-                            {index + 1}
-                          </div>
-                        ))}
-                      </div>
-                      {isControlling && (
-                        <div className="absolute -bottom-2 -right-2 resize-handle h-4 w-4 bg-primary rounded-full cursor-nwse-resize" />
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                    <div className="text-center">
-                      <User size={48} className="mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">选择并生成数字人后可预览</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs flex items-center gap-1">
-                  <Move size={12} />
-                  位置调整
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {isControlling ? "拖拽数字人调整位置" : "只读模式"}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs flex items-center gap-1">
-                  <ZoomIn size={12} />
-                  大小: {scale}%
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {isControlling ? "拖拽右下角调整大小" : "只读模式"}
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 
