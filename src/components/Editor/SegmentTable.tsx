@@ -48,8 +48,7 @@ interface Segment {
   scriptVariants?: ScriptVariant[];
   animatedText: string;
   sticker: string;
-  digitalHumans: DigitalHuman[];
-  enableDigitalHumans?: boolean; // 跟随分段是否启用数字人显示
+  enableDigitalHumans?: boolean; // 是否显示数字人
   audio: string;
   audioTimestamp?: string;
 }
@@ -61,9 +60,16 @@ interface SegmentTableProps {
     isGlobalSubtitleConfigured: boolean;
     isBgmConfigured: boolean;
   }) => void;
+  globalDigitalHumans: DigitalHuman[];
+  onGlobalDigitalHumansChange: (digitalHumans: DigitalHuman[]) => void;
 }
 
-const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableProps) => {
+const SegmentTable = ({ 
+  onSegmentsChange, 
+  onConfigurationChange,
+  globalDigitalHumans,
+  onGlobalDigitalHumansChange 
+}: SegmentTableProps) => {
   const [segments, setSegments] = useState<Segment[]>([
     {
       id: "1",
@@ -73,7 +79,6 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "1",
       animatedText: "未设置",
       sticker: "未设置",
-      digitalHumans: [],
       audio: ""
     },
     {
@@ -84,7 +89,6 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "2",
       animatedText: "未设置",
       sticker: "未设置",
-      digitalHumans: [],
       audio: ""
     },
     {
@@ -95,7 +99,6 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "3",
       animatedText: "未设置",
       sticker: "未设置",
-      digitalHumans: [],
       audio: ""
     },
     {
@@ -106,7 +109,6 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "4",
       animatedText: "未设置",
       sticker: "未设置",
-      digitalHumans: [],
       audio: ""
     },
     {
@@ -117,13 +119,9 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
       script: "5",
       animatedText: "未设置",
       sticker: "未设置",
-      digitalHumans: [],
       audio: ""
     }
   ]);
-
-  // 记录主控分段的ID（第一个配置数字人的分段）
-  const [controllingSegmentId, setControllingSegmentId] = useState<string | null>(null);
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
@@ -216,16 +214,15 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
 
   const handleAddNewSegment = () => {
     const newSegment: Segment = {
-      id: Date.now().toString(), // Use timestamp for unique ID
+      id: Date.now().toString(),
       name: `分段${segments.length + 1}`,
       type: "口播",
-        video: "",
-        script: "",
-        animatedText: "未设置",
-        sticker: "未设置",
-        digitalHumans: controllingSegmentId ? segments.find(s => s.id === controllingSegmentId)?.digitalHumans || [] : [],
-        enableDigitalHumans: false, // 新分段默认不启用数字人
-        audio: ""
+      video: "",
+      script: "",
+      animatedText: "未设置",
+      sticker: "未设置",
+      enableDigitalHumans: false,
+      audio: ""
     };
     const newSegments = renumberSegments([...segments, newSegment]);
     setSegments(newSegments);
@@ -236,15 +233,14 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
     if (scriptText) {
       const lines = scriptText.split('\n').filter(line => line.trim());
       const newSegments = lines.map((line, index) => ({
-        id: (Date.now() + index).toString(), // Use timestamp + index for unique IDs
+        id: (Date.now() + index).toString(),
         name: `分段${segments.length + index + 1}`,
         type: "口播",
         video: "",
         script: line.trim(),
         animatedText: "未设置",
         sticker: "未设置",
-        digitalHumans: controllingSegmentId ? segments.find(s => s.id === controllingSegmentId)?.digitalHumans || [] : [],
-        enableDigitalHumans: false, // 新分段默认不启用数字人
+        enableDigitalHumans: false,
         audio: ""
       }));
       const allSegments = renumberSegments([...segments, ...newSegments]);
@@ -265,25 +261,19 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
   };
 
   const handleDigitalHumanClick = (segmentId: string) => {
-    const segment = segments.find(s => s.id === segmentId);
-    if (!segment) return;
+    // 切换分段的数字人启用/禁用状态
+    setSegments(prevSegments =>
+      prevSegments.map(s =>
+        s.id === segmentId
+          ? { ...s, enableDigitalHumans: !s.enableDigitalHumans }
+          : s
+      )
+    );
+  };
 
-    // 检查是否是主控分段
-    const isControlling = !controllingSegmentId || controllingSegmentId === segmentId;
-
-    if (isControlling) {
-      // 主控分段：打开配置modal
-      openModal('digitalHuman', segmentId);
-    } else {
-      // 跟随分段：切换启用/禁用状态
-      setSegments(prevSegments =>
-        prevSegments.map(s =>
-          s.id === segmentId
-            ? { ...s, enableDigitalHumans: !s.enableDigitalHumans }
-            : s
-        )
-      );
-    }
+  const handleGlobalDigitalHumanConfig = () => {
+    // 打开全局数字人配置modal
+    openModal('digitalHuman');
   };
 
   const closeModal = () => {
@@ -339,37 +329,9 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
     );
   };
 
-  const updateSegmentDigitalHuman = (segmentId: string, digitalHumans: DigitalHuman[]) => {
-    // 如果这是第一次配置数字人，设置为主控分段
-    if (!controllingSegmentId && digitalHumans.length > 0) {
-      setControllingSegmentId(segmentId);
-    }
-    
-    // 如果是主控分段的修改，同步到所有分段
-    if (segmentId === controllingSegmentId) {
-      // 如果主控分段清空了所有数字人，则清除主控分段标识
-      if (digitalHumans.length === 0) {
-        setControllingSegmentId(null);
-      }
-      
-      setSegments(prevSegments => 
-        prevSegments.map(segment => ({
-          ...segment,
-          digitalHumans: digitalHumans,
-          // 保留跟随分段的启用状态，主控分段默认启用
-          enableDigitalHumans: segment.id === segmentId ? true : segment.enableDigitalHumans
-        }))
-      );
-    } else {
-      // 非主控分段不应该被允许修改，但作为保护措施
-      setSegments(prevSegments => 
-        prevSegments.map(segment => 
-          segment.id === segmentId 
-            ? { ...segment, digitalHumans }
-            : segment
-        )
-      );
-    }
+  const updateSegmentDigitalHuman = (digitalHumans: DigitalHuman[]) => {
+    // 全局数字人配置更新
+    onGlobalDigitalHumansChange(digitalHumans);
   };
 
   const updateSegmentScriptVariants = (segmentId: string, variants: ScriptVariant[]) => {
@@ -415,6 +377,36 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
 
       {/* Table with ScrollArea */}
       <div className="flex-1 bg-card rounded-lg border border-border overflow-hidden shadow-card">
+        {/* 全局配置区域 */}
+        <div className="bg-editor-grid border-b border-border px-4 py-3 flex items-center justify-between">
+          <div className="text-sm font-medium text-muted-foreground">
+            全局配置
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGlobalDigitalHumanConfig}
+              className="gap-2"
+            >
+              <User size={14} />
+              数字人配置
+              {globalDigitalHumans.length > 0 && (
+                <div className="flex gap-1 ml-1">
+                  {globalDigitalHumans.map((_, index) => (
+                    <div 
+                      key={index}
+                      className="h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold"
+                    >
+                      {index + 1}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Button>
+          </div>
+        </div>
+        
         <div className="bg-editor-grid border-b border-border">
           <table className="w-full">
             <thead>
@@ -431,7 +423,7 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                 <th className="min-w-[320px] px-4 py-4 text-left text-body-small font-semibold text-foreground">文案</th>
                 <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">花字</th>
                 <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">视频贴纸</th>
-                <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">数字人</th>
+                <th className="min-w-[140px] px-4 py-4 text-left text-body-small font-semibold text-foreground">数字人</th>
                 <th className="min-w-[120px] px-4 py-4 text-left text-body-small font-semibold text-foreground">
                   {isAudioGenerated ? (
                     <span>
@@ -539,58 +531,33 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
                         {segment.sticker}
                       </Button>
                     </td>
-                    <td className="min-w-[140px] p-4 border-r border-border/50">
-                      <Button 
-                        variant={
-                          controllingSegmentId && controllingSegmentId !== segment.id 
-                            ? (segment.enableDigitalHumans ? "default" : "outline")
-                            : "outline"
-                        }
-                        size="sm" 
-                        className="w-full justify-start gap-2"
-                        onClick={() => handleDigitalHumanClick(segment.id)}
-                      >
-                        <User size={14} />
-                        {controllingSegmentId && controllingSegmentId !== segment.id ? (
-                          // 跟随分段：显示启用/禁用状态
-                          segment.enableDigitalHumans && segment.digitalHumans.length > 0 ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-primary-foreground">已启用</span>
-                              <div className="flex gap-1">
-                                {segment.digitalHumans.map((_, index) => (
-                                  <div 
-                                    key={index}
-                                    className="h-5 w-5 rounded-full bg-primary-foreground text-primary text-[10px] flex items-center justify-center font-bold shadow-sm"
-                                  >
-                                    {index + 1}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ) : (
-                            <span className={segment.enableDigitalHumans ? "text-primary-foreground" : ""}>
-                              {segment.enableDigitalHumans ? "已启用" : "点击启用"}
-                            </span>
-                          )
-                        ) : (
-                          // 主控分段：显示配置状态
-                          segment.digitalHumans.length === 0 ? (
-                            <span>未设置</span>
-                          ) : (
-                            <div className="flex gap-1">
-                              {segment.digitalHumans.map((_, index) => (
-                                <div 
-                                  key={index}
-                                  className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold shadow-sm"
-                                >
-                                  {index + 1}
-                                </div>
-                              ))}
-                            </div>
-                          )
-                        )}
-                      </Button>
-                    </td>
+                     <td className="min-w-[140px] p-4 border-r border-border/50">
+                       <Button 
+                         variant={segment.enableDigitalHumans ? "default" : "outline"}
+                         size="sm" 
+                         className="w-full justify-start gap-2"
+                         onClick={() => handleDigitalHumanClick(segment.id)}
+                       >
+                         <User size={14} />
+                         {segment.enableDigitalHumans && globalDigitalHumans.length > 0 ? (
+                           <div className="flex items-center gap-2">
+                             <span>已启用</span>
+                             <div className="flex gap-1">
+                               {globalDigitalHumans.map((_, index) => (
+                                 <div 
+                                   key={index}
+                                   className="h-5 w-5 rounded-full bg-primary-foreground text-primary text-[10px] flex items-center justify-center font-bold shadow-sm"
+                                 >
+                                   {index + 1}
+                                 </div>
+                               ))}
+                             </div>
+                           </div>
+                         ) : (
+                           <span>{segment.enableDigitalHumans ? "已启用" : "点击启用"}</span>
+                         )}
+                       </Button>
+                     </td>
                      <td className="min-w-[120px] p-4">
                        {segment.audioTimestamp ? (
                          <div className="text-sm font-medium text-center py-2">
@@ -673,11 +640,11 @@ const SegmentTable = ({ onSegmentsChange, onConfigurationChange }: SegmentTableP
         <DigitalHumanModal
           isOpen={true}
           onClose={closeModal}
-          segmentId={activeModal.segmentId!}
-          onSubmit={updateSegmentDigitalHuman}
-          currentDigitalHumans={segments.find(s => s.id === activeModal.segmentId)?.digitalHumans || []}
-          isControlling={activeModal.segmentId === controllingSegmentId || controllingSegmentId === null}
-          controllingSegmentName={controllingSegmentId ? segments.find(s => s.id === controllingSegmentId)?.name : null}
+          segmentId="global"
+          onSubmit={(_, digitalHumans) => updateSegmentDigitalHuman(digitalHumans)}
+          currentDigitalHumans={globalDigitalHumans}
+          isControlling={true}
+          controllingSegmentName={null}
         />
       )}
       
