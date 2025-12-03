@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { Search, User, Move, ZoomIn, Loader2, RefreshCw, Sparkles, Lock, X } from "lucide-react";
+import { Search, User, Loader2, RefreshCw, Sparkles, Lock, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -53,15 +53,9 @@ export const DigitalHumanModal = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedHumans, setSelectedHumans] = useState<string[]>([]);
   const [generatedHumans, setGeneratedHumans] = useState<DigitalHuman[]>([]);
-  const [position, setPosition] = useState({ x: 50, y: 80 });
-  const [scale, setScale] = useState(100);
   const [selectedType, setSelectedType] = useState<string>("all");
-  const [isDragging, setIsDragging] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
-  const previewRef = useRef<HTMLDivElement>(null);
-  const humanRef = useRef<HTMLDivElement>(null);
 
   // 初始化已配置的数字人
   useEffect(() => {
@@ -87,48 +81,6 @@ export const DigitalHumanModal = ({
     return filtered;
   }, [selectedType, searchQuery]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!previewRef.current || selectedHumans.length === 0 || !isControlling) return;
-    
-    const target = e.target as HTMLElement;
-    if (target.classList.contains('resize-handle')) {
-      setIsResizing(true);
-    } else {
-      setIsDragging(true);
-    }
-    e.preventDefault();
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!previewRef.current || !humanRef.current) return;
-
-    if (isDragging) {
-      const rect = previewRef.current.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      
-      setPosition({
-        x: Math.max(10, Math.min(90, x)),
-        y: Math.max(10, Math.min(90, y))
-      });
-    } else if (isResizing) {
-      const rect = previewRef.current.getBoundingClientRect();
-      const humanRect = humanRef.current.getBoundingClientRect();
-      const centerX = humanRect.left + humanRect.width / 2;
-      const centerY = humanRect.top + humanRect.height / 2;
-      const distance = Math.sqrt(
-        Math.pow(e.clientX - centerX, 2) + Math.pow(e.clientY - centerY, 2)
-      );
-      const baseDistance = Math.min(rect.width, rect.height) * 0.2;
-      const newScale = Math.max(50, Math.min(150, (distance / baseDistance) * 100));
-      setScale(newScale);
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    setIsResizing(false);
-  };
 
   const handleHumanSelect = (humanId: string) => {
     if (!isControlling) {
@@ -179,8 +131,8 @@ export const DigitalHumanModal = ({
     }
 
     toast({
-      title: `${isRegenerate ? "重新" : "开始"}生成分段 ${segmentId} 的数字人...`,
-      description: "预计需要约60秒，请耐心等待",
+      title: `${isRegenerate ? "重新" : "开始"}生成数字人...`,
+      description: "预计需要约2分钟，请耐心等待",
     });
 
     const progressInterval = setInterval(() => {
@@ -203,8 +155,8 @@ export const DigitalHumanModal = ({
         const newGeneratedHumans = selectedHumans.map(humanId => ({
           id: humanId,
           name: DIGITAL_HUMAN_TEMPLATES.find(h => h.id === humanId)?.name || "未知",
-          position,
-          scale: scale / 100
+          position: { x: 50, y: 80 },
+          scale: 1
         }));
         
         setGeneratedHumans(newGeneratedHumans);
@@ -294,15 +246,6 @@ export const DigitalHumanModal = ({
             <span>导出尺寸: 1080*1920</span>
             <span>已选择: {selectedHumans.length}/{MAX_DIGITAL_HUMANS}</span>
           </div>
-          {isGenerating && (
-            <div className="mt-3 space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>正在生成数字人... {progress}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </div>
-          )}
         </DialogHeader>
 
         <div className="flex-1 flex gap-6 overflow-hidden">
@@ -428,15 +371,11 @@ export const DigitalHumanModal = ({
           </div>
 
           {/* Right: Preview */}
-          <div className="flex-1 flex flex-col gap-3">
+          <div className="flex-1 flex flex-col gap-3 relative">
             <Label>预览效果</Label>
             <div 
-              ref={previewRef}
               className="relative flex-1 bg-muted rounded-lg overflow-hidden"
               style={{ aspectRatio: '9/16' }}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
             >
               {/* 1080*1920 Preview Frame */}
               <div className="absolute inset-0 flex items-center justify-center">
@@ -447,17 +386,12 @@ export const DigitalHumanModal = ({
               {generatedHumans.map((human, index) => (
                 <div
                   key={human.id}
-                  ref={index === 0 ? humanRef : null}
-                  className={cn(
-                    "absolute cursor-move transition-opacity",
-                    !isControlling && "cursor-not-allowed"
-                  )}
+                  className="absolute"
                   style={{
                     left: `${human.position.x}%`,
                     top: `${human.position.y}%`,
                     transform: `translate(-50%, -50%) scale(${human.scale})`,
                   }}
-                  onMouseDown={handleMouseDown}
                 >
                   <div className="relative">
                     <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">
@@ -466,17 +400,12 @@ export const DigitalHumanModal = ({
                     <div className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold shadow-lg">
                       {index + 1}
                     </div>
-                    {isControlling && index === 0 && (
-                      <div className="resize-handle absolute -bottom-2 -right-2 h-6 w-6 rounded-full bg-background border-2 border-primary cursor-nwse-resize flex items-center justify-center">
-                        <ZoomIn size={12} className="text-primary" />
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
 
               {/* Instructions */}
-              {generatedHumans.length === 0 && (
+              {generatedHumans.length === 0 && !isGenerating && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center text-muted-foreground space-y-2">
                     <User size={48} className="mx-auto opacity-30" />
@@ -484,55 +413,19 @@ export const DigitalHumanModal = ({
                   </div>
                 </div>
               )}
-
-              {isControlling && generatedHumans.length > 0 && (
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-background/90 backdrop-blur-sm px-4 py-2 rounded-full text-xs text-muted-foreground flex items-center gap-2 shadow-lg">
-                  <Move size={14} />
-                  <span>拖拽调整位置，点击右下角调整大小</span>
-                </div>
-              )}
             </div>
 
-            {/* Position and Scale Controls */}
-            {generatedHumans.length > 0 && isControlling && (
-              <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
-                <div className="space-y-2">
-                  <Label className="text-xs">位置调整</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <div className="text-xs text-muted-foreground mb-1">X: {position.x}%</div>
-                      <input
-                        type="range"
-                        min="10"
-                        max="90"
-                        value={position.x}
-                        onChange={(e) => setPosition(prev => ({ ...prev, x: Number(e.target.value) }))}
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <div className="text-xs text-muted-foreground mb-1">Y: {position.y}%</div>
-                      <input
-                        type="range"
-                        min="10"
-                        max="90"
-                        value={position.y}
-                        onChange={(e) => setPosition(prev => ({ ...prev, y: Number(e.target.value) }))}
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
+            {/* Progress indicator - bottom right */}
+            {isGenerating && (
+              <div className="absolute bottom-4 right-4 bg-primary text-primary-foreground rounded-lg p-4 shadow-xl min-w-[240px]">
+                <div className="flex items-center gap-3 mb-3">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span className="font-semibold">正在生成数字人...</span>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">缩放: {scale}%</Label>
-                  <input
-                    type="range"
-                    min="50"
-                    max="150"
-                    value={scale}
-                    onChange={(e) => setScale(Number(e.target.value))}
-                    className="w-full"
-                  />
+                <Progress value={progress} className="h-3 bg-primary-foreground/20" />
+                <div className="flex justify-between mt-2 text-sm">
+                  <span>{progress}%</span>
+                  <span>预计约2分钟</span>
                 </div>
               </div>
             )}
