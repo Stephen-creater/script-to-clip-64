@@ -38,7 +38,10 @@ import {
   Folder,
   CheckCircle,
   Clock,
-  XCircle
+  XCircle,
+  Cpu,
+  User,
+  RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import FolderSidebar, { FolderItem } from "@/components/FolderManagement/FolderSidebar";
@@ -54,7 +57,7 @@ const Materials = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
-  const [reviewStatuses, setReviewStatuses] = useState<Record<string, 'pending' | 'approved' | 'rejected'>>({});
+  const [reviewStatuses, setReviewStatuses] = useState<Record<string, 'pending_machine' | 'pending_human' | 'pending_transcode' | 'approved' | 'rejected'>>({});
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [previewMaterial, setPreviewMaterial] = useState<Material | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,12 +74,14 @@ const Materials = () => {
   } = useMaterials();
 
   // Get review status for a material
-  const getReviewStatus = (materialId: string): 'pending' | 'approved' | 'rejected' => {
-    return reviewStatuses[materialId] || 'pending';
+  const getReviewStatus = (materialId: string): 'pending_machine' | 'pending_human' | 'pending_transcode' | 'approved' | 'rejected' => {
+    return reviewStatuses[materialId] || 'pending_machine';
   };
 
   // Count materials by review status
-  const pendingCount = materials.filter(m => getReviewStatus(m.id) === 'pending').length;
+  const pendingMachineCount = materials.filter(m => getReviewStatus(m.id) === 'pending_machine').length;
+  const pendingHumanCount = materials.filter(m => getReviewStatus(m.id) === 'pending_human').length;
+  const pendingTranscodeCount = materials.filter(m => getReviewStatus(m.id) === 'pending_transcode').length;
   const approvedCount = materials.filter(m => getReviewStatus(m.id) === 'approved').length;
   const rejectedCount = materials.filter(m => getReviewStatus(m.id) === 'rejected').length;
   
@@ -303,32 +308,32 @@ const Materials = () => {
     }
   };
 
-  // Mark material as approved
-  const handleMarkAsApproved = () => {
+  // Human review - pass (moves to pending_transcode)
+  const handleHumanReviewPass = () => {
     if (previewMaterial) {
       setReviewStatuses(prev => ({
         ...prev,
-        [previewMaterial.id]: 'approved'
+        [previewMaterial.id]: 'pending_transcode'
       }));
       toast({
-        title: "审核完成",
-        description: `素材 "${previewMaterial.name}" 已标记为通过`,
+        title: "人审通过",
+        description: `素材 "${previewMaterial.name}" 已通过人审，进入待转码状态`,
       });
       setPreviewDialogOpen(false);
       setPreviewMaterial(null);
     }
   };
 
-  // Mark material as rejected
-  const handleMarkAsRejected = () => {
+  // Human review - reject
+  const handleHumanReviewReject = () => {
     if (previewMaterial) {
       setReviewStatuses(prev => ({
         ...prev,
         [previewMaterial.id]: 'rejected'
       }));
       toast({
-        title: "审核完成",
-        description: `素材 "${previewMaterial.name}" 已标记为不通过`,
+        title: "人审不通过",
+        description: `素材 "${previewMaterial.name}" 已标记为未通过`,
       });
       setPreviewDialogOpen(false);
       setPreviewMaterial(null);
@@ -338,28 +343,44 @@ const Materials = () => {
   // Render review status badge
   const renderReviewBadge = (materialId: string) => {
     const status = getReviewStatus(materialId);
-    if (status === 'approved') {
-      return (
-        <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 text-xs">
-          <CheckCircle size={10} className="mr-1" />
-          已通过
-        </Badge>
-      );
+    switch (status) {
+      case 'approved':
+        return (
+          <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 text-xs">
+            <CheckCircle size={10} className="mr-1" />
+            审核通过
+          </Badge>
+        );
+      case 'rejected':
+        return (
+          <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs">
+            <XCircle size={10} className="mr-1" />
+            未通过
+          </Badge>
+        );
+      case 'pending_human':
+        return (
+          <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-xs">
+            <User size={10} className="mr-1" />
+            待人审
+          </Badge>
+        );
+      case 'pending_transcode':
+        return (
+          <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20 text-xs">
+            <RefreshCw size={10} className="mr-1" />
+            待转码
+          </Badge>
+        );
+      case 'pending_machine':
+      default:
+        return (
+          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs">
+            <Cpu size={10} className="mr-1" />
+            待机审
+          </Badge>
+        );
     }
-    if (status === 'rejected') {
-      return (
-        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs">
-          <XCircle size={10} className="mr-1" />
-          未通过
-        </Badge>
-      );
-    }
-    return (
-      <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs">
-        <Clock size={10} className="mr-1" />
-        待审核
-      </Badge>
-    );
   };
 
   if (loading) {
@@ -409,14 +430,24 @@ const Materials = () => {
               />
               <span className="text-sm text-muted-foreground">审核模式</span>
             </div>
-            {/* Review Status Counts (always visible) */}
+          </div>
+          {/* Review Status Counts (always visible) */}
+          <div className="flex items-center gap-2">
             <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-              <Clock size={12} className="mr-1" />
-              待审核 {pendingCount}
+              <Cpu size={12} className="mr-1" />
+              待机审 {pendingMachineCount}
+            </Badge>
+            <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
+              <User size={12} className="mr-1" />
+              待人审 {pendingHumanCount}
+            </Badge>
+            <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
+              <RefreshCw size={12} className="mr-1" />
+              待转码 {pendingTranscodeCount}
             </Badge>
             <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
               <CheckCircle size={12} className="mr-1" />
-              已通过 {approvedCount}
+              审核通过 {approvedCount}
             </Badge>
             <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
               <XCircle size={12} className="mr-1" />
@@ -727,13 +758,13 @@ const Materials = () => {
             <Button variant="outline" onClick={() => setPreviewDialogOpen(false)}>
               关闭
             </Button>
-            {previewMaterial && (
+            {previewMaterial && reviewMode && (
               <>
-                <Button onClick={handleMarkAsRejected} variant="destructive">
+                <Button onClick={handleHumanReviewReject} variant="destructive">
                   <XCircle size={16} className="mr-2" />
                   不通过
                 </Button>
-                <Button onClick={handleMarkAsApproved} className="bg-green-600 hover:bg-green-700">
+                <Button onClick={handleHumanReviewPass} className="bg-green-600 hover:bg-green-700">
                   <CheckCircle size={16} className="mr-2" />
                   通过
                 </Button>
