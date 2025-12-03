@@ -37,7 +37,8 @@ import {
   Plus,
   Folder,
   CheckCircle,
-  Clock
+  Clock,
+  XCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import FolderSidebar, { FolderItem } from "@/components/FolderManagement/FolderSidebar";
@@ -53,7 +54,7 @@ const Materials = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
-  const [reviewStatuses, setReviewStatuses] = useState<Record<string, 'pending' | 'reviewed'>>({});
+  const [reviewStatuses, setReviewStatuses] = useState<Record<string, 'pending' | 'approved' | 'rejected'>>({});
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [previewMaterial, setPreviewMaterial] = useState<Material | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,13 +71,14 @@ const Materials = () => {
   } = useMaterials();
 
   // Get review status for a material
-  const getReviewStatus = (materialId: string): 'pending' | 'reviewed' => {
+  const getReviewStatus = (materialId: string): 'pending' | 'approved' | 'rejected' => {
     return reviewStatuses[materialId] || 'pending';
   };
 
   // Count materials by review status
   const pendingCount = materials.filter(m => getReviewStatus(m.id) === 'pending').length;
-  const reviewedCount = materials.filter(m => getReviewStatus(m.id) === 'reviewed').length;
+  const approvedCount = materials.filter(m => getReviewStatus(m.id) === 'approved').length;
+  const rejectedCount = materials.filter(m => getReviewStatus(m.id) === 'rejected').length;
   
   // Dynamic folder structure with correct counts
   const getDynamicFolders = (): FolderItem[] => [
@@ -301,12 +303,12 @@ const Materials = () => {
     }
   };
 
-  // Mark material as reviewed
-  const handleMarkAsReviewed = () => {
+  // Mark material as approved
+  const handleMarkAsApproved = () => {
     if (previewMaterial) {
       setReviewStatuses(prev => ({
         ...prev,
-        [previewMaterial.id]: 'reviewed'
+        [previewMaterial.id]: 'approved'
       }));
       toast({
         title: "审核完成",
@@ -317,14 +319,38 @@ const Materials = () => {
     }
   };
 
+  // Mark material as rejected
+  const handleMarkAsRejected = () => {
+    if (previewMaterial) {
+      setReviewStatuses(prev => ({
+        ...prev,
+        [previewMaterial.id]: 'rejected'
+      }));
+      toast({
+        title: "审核完成",
+        description: `素材 "${previewMaterial.name}" 已标记为不通过`,
+      });
+      setPreviewDialogOpen(false);
+      setPreviewMaterial(null);
+    }
+  };
+
   // Render review status badge
   const renderReviewBadge = (materialId: string) => {
     const status = getReviewStatus(materialId);
-    if (status === 'reviewed') {
+    if (status === 'approved') {
       return (
         <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 text-xs">
           <CheckCircle size={10} className="mr-1" />
-          已审核
+          已通过
+        </Badge>
+      );
+    }
+    if (status === 'rejected') {
+      return (
+        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs">
+          <XCircle size={10} className="mr-1" />
+          未通过
         </Badge>
       );
     }
@@ -390,7 +416,11 @@ const Materials = () => {
             </Badge>
             <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
               <CheckCircle size={12} className="mr-1" />
-              已审核 {reviewedCount}
+              已通过 {approvedCount}
+            </Badge>
+            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
+              <XCircle size={12} className="mr-1" />
+              未通过 {rejectedCount}
             </Badge>
           </div>
 
@@ -698,10 +728,16 @@ const Materials = () => {
               关闭
             </Button>
             {previewMaterial && (
-              <Button onClick={handleMarkAsReviewed} className="bg-green-600 hover:bg-green-700">
-                <CheckCircle size={16} className="mr-2" />
-                标记为通过
-              </Button>
+              <>
+                <Button onClick={handleMarkAsRejected} variant="destructive">
+                  <XCircle size={16} className="mr-2" />
+                  不通过
+                </Button>
+                <Button onClick={handleMarkAsApproved} className="bg-green-600 hover:bg-green-700">
+                  <CheckCircle size={16} className="mr-2" />
+                  通过
+                </Button>
+              </>
             )}
           </DialogFooter>
         </DialogContent>
