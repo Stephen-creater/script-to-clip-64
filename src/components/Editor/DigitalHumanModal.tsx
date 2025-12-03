@@ -172,7 +172,7 @@ export const DigitalHumanModal = ({
         setIsGenerating(false);
         toast({
           title: "视频转码失败",
-          description: "数字人已生成但转码过程出错，请稍后重试",
+          description: "数字人已生成但转码过程出错，请联系开发人员",
           variant: "destructive",
         });
       }
