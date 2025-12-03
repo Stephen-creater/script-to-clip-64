@@ -371,7 +371,7 @@ export const DigitalHumanModal = ({
           </div>
 
           {/* Right: Preview */}
-          <div className="flex-1 flex flex-col gap-3 relative">
+          <div className="flex-1 flex flex-col gap-3">
             <Label>预览效果</Label>
             <div 
               className="relative flex-1 bg-muted rounded-lg overflow-hidden"
@@ -414,22 +414,17 @@ export const DigitalHumanModal = ({
                 </div>
               )}
             </div>
-
-            {/* Progress indicator - bottom right */}
-            {isGenerating && (
-              <div className="absolute bottom-4 right-4 bg-primary text-primary-foreground rounded-lg p-4 shadow-xl min-w-[240px]">
-                <div className="flex items-center gap-3 mb-3">
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span className="font-semibold">正在生成数字人...</span>
-                </div>
-                <Progress value={progress} className="h-3 bg-primary-foreground/20" />
-                <div className="flex justify-between mt-2 text-sm">
-                  <span>{progress}%</span>
-                  <span>预计约2分钟</span>
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Toast-style progress indicator - fixed bottom right */}
+          {isGenerating && (
+            <div className="fixed bottom-6 right-6 z-[100] bg-background border border-border rounded-lg p-4 shadow-lg min-w-[280px]">
+              <div className="font-semibold text-foreground mb-1">正在生成数字人...</div>
+              <div className="text-sm text-muted-foreground mb-3">预计需要约2分钟，请耐心等待</div>
+              <Progress value={progress} className="h-2" />
+              <div className="text-xs text-muted-foreground mt-2 text-right">{progress}%</div>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="flex items-center justify-between">
