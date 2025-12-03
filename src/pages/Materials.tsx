@@ -1,10 +1,11 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -15,25 +16,32 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { 
   Upload, 
   Search, 
-  Filter,
   Grid,
   List,
   FileVideo,
   FileImage,
   FileAudio,
   Trash2,
-  Move,
   Eye,
   Download,
   Plus,
-  Folder
+  Folder,
+  CheckCircle,
+  Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import FolderSidebar, { FolderItem } from "@/components/FolderManagement/FolderSidebar";
-import { useMaterials } from "@/hooks/useMaterials";
+import { useMaterials, Material } from "@/hooks/useMaterials";
 import { useToast } from "@/hooks/use-toast";
 
 const Materials = () => {
@@ -44,6 +52,10 @@ const Materials = () => {
   const [expandedFolders, setExpandedFolders] = useState<string[]>(['all', 'images', 'audio']);
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [reviewMode, setReviewMode] = useState(false);
+  const [reviewStatuses, setReviewStatuses] = useState<Record<string, 'pending' | 'reviewed'>>({});
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [previewMaterial, setPreviewMaterial] = useState<Material | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { 
@@ -55,8 +67,16 @@ const Materials = () => {
     deleteMaterial, 
     getMaterialsByCategory, 
     getMaterialUrl,
-    isSupabaseConfigured 
   } = useMaterials();
+
+  // Get review status for a material
+  const getReviewStatus = (materialId: string): 'pending' | 'reviewed' => {
+    return reviewStatuses[materialId] || 'pending';
+  };
+
+  // Count materials by review status
+  const pendingCount = materials.filter(m => getReviewStatus(m.id) === 'pending').length;
+  const reviewedCount = materials.filter(m => getReviewStatus(m.id) === 'reviewed').length;
   
   // Dynamic folder structure with correct counts
   const getDynamicFolders = (): FolderItem[] => [
@@ -273,6 +293,49 @@ const Materials = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // Handle material click for preview (in review mode)
+  const handleMaterialClick = (material: Material) => {
+    if (reviewMode) {
+      setPreviewMaterial(material);
+      setPreviewDialogOpen(true);
+    }
+  };
+
+  // Mark material as reviewed
+  const handleMarkAsReviewed = () => {
+    if (previewMaterial) {
+      setReviewStatuses(prev => ({
+        ...prev,
+        [previewMaterial.id]: 'reviewed'
+      }));
+      toast({
+        title: "审核完成",
+        description: `素材 "${previewMaterial.name}" 已标记为通过`,
+      });
+      setPreviewDialogOpen(false);
+      setPreviewMaterial(null);
+    }
+  };
+
+  // Render review status badge
+  const renderReviewBadge = (materialId: string) => {
+    const status = getReviewStatus(materialId);
+    if (status === 'reviewed') {
+      return (
+        <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 text-xs">
+          <CheckCircle size={10} className="mr-1" />
+          已审核
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs">
+        <Clock size={10} className="mr-1" />
+        待审核
+      </Badge>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -312,6 +375,26 @@ const Materials = () => {
             <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
               演示模式
             </Badge>
+            {/* Review Mode Toggle */}
+            <div className="flex items-center gap-2 ml-4">
+              <Switch
+                checked={reviewMode}
+                onCheckedChange={setReviewMode}
+              />
+              <span className="text-sm text-muted-foreground">审核模式</span>
+            </div>
+            {/* Review Status Counts (always visible) */}
+            <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+              <Clock size={12} className="mr-1" />
+              待审核 {pendingCount}
+            </Badge>
+            <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+              <CheckCircle size={12} className="mr-1" />
+              已审核 {reviewedCount}
+            </Badge>
+          </div>
+
+          <div className="flex items-center gap-3">
             <Button 
               className="bg-gradient-primary"
               onClick={handleUploadClick}
@@ -320,9 +403,6 @@ const Materials = () => {
               <Upload size={16} className="mr-2" />
               {uploading ? '上传中...' : '上传素材'}
             </Button>
-          </div>
-
-          <div className="flex items-center gap-3">
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
               <Input 
@@ -426,12 +506,14 @@ const Materials = () => {
                     "bg-card border border-border rounded-lg p-3 hover:shadow-card transition-all cursor-pointer",
                     selectedItems.includes(material.id) && "ring-2 ring-primary"
                   )}
+                  onClick={() => handleMaterialClick(material)}
                 >
                   <div className="relative mb-2">
                     <Checkbox
                       className="absolute top-2 left-2 z-10"
                       checked={selectedItems.includes(material.id)}
                       onCheckedChange={(checked) => handleSelectItem(material.id, !!checked)}
+                      onClick={(e) => e.stopPropagation()}
                     />
                     <div className="aspect-video bg-muted rounded flex items-center justify-center overflow-hidden">
                       {material.file_type === 'image' ? (
@@ -455,8 +537,13 @@ const Materials = () => {
                       </span>
                     )}
                   </div>
-                  <h3 className="text-sm font-medium truncate">{material.name}</h3>
-                  <p className="text-xs text-muted-foreground">{formatFileSize(material.file_size)}</p>
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-sm font-medium truncate flex-1">{material.name}</h3>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">{formatFileSize(material.file_size)}</p>
+                    {renderReviewBadge(material.id)}
+                  </div>
                 </div>
               ))}
             </div>
@@ -469,7 +556,9 @@ const Materials = () => {
                 checked={selectedItems.length === filteredMaterials.length && filteredMaterials.length > 0}
                 onCheckedChange={handleSelectAll}
               />
-              <span className="text-sm font-medium">名称</span>
+              <span className="text-sm font-medium flex-1">名称</span>
+              <span className="text-sm font-medium w-24 text-center">状态</span>
+              <span className="text-sm font-medium w-32">操作</span>
             </div>
             {filteredMaterials.map((material) => (
               <div
@@ -478,10 +567,12 @@ const Materials = () => {
                   "flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer",
                   selectedItems.includes(material.id) && "bg-primary/10"
                 )}
+                onClick={() => handleMaterialClick(material)}
               >
                 <Checkbox
                   checked={selectedItems.includes(material.id)}
                   onCheckedChange={(checked) => handleSelectItem(material.id, !!checked)}
+                  onClick={(e) => e.stopPropagation()}
                 />
                 {getFileIcon(material.file_type)}
                 <div className="flex-1 min-w-0">
@@ -490,17 +581,23 @@ const Materials = () => {
                     {formatFileSize(material.file_size)} • {new Date(material.created_at).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="sm">
+                <div className="w-24 flex justify-center">
+                  {renderReviewBadge(material.id)}
+                </div>
+                <div className="flex items-center gap-1 w-32">
+                  <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
                     <Eye size={14} />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
                     <Download size={14} />
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => deleteMaterial(material.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteMaterial(material.id);
+                    }}
                   >
                     <Trash2 size={14} />
                   </Button>
@@ -543,6 +640,72 @@ const Materials = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Preview Dialog for Review Mode */}
+      <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {previewMaterial && getFileIcon(previewMaterial.file_type)}
+              {previewMaterial?.name}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {previewMaterial && (
+              <div className="space-y-4">
+                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                  {previewMaterial.file_type === 'video' && (
+                    <video 
+                      src={getMaterialUrl(previewMaterial)}
+                      controls
+                      className="w-full h-full object-contain"
+                    />
+                  )}
+                  {previewMaterial.file_type === 'image' && (
+                    <img 
+                      src={getMaterialUrl(previewMaterial)}
+                      alt={previewMaterial.name}
+                      className="w-full h-full object-contain"
+                    />
+                  )}
+                  {previewMaterial.file_type === 'audio' && (
+                    <div className="flex flex-col items-center gap-4">
+                      <FileAudio size={64} className="text-purple-500" />
+                      <audio 
+                        src={getMaterialUrl(previewMaterial)}
+                        controls
+                        className="w-full max-w-md"
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>大小: {formatFileSize(previewMaterial.file_size)}</span>
+                  {previewMaterial.duration && <span>时长: {previewMaterial.duration}s</span>}
+                  <div className="flex items-center gap-2">
+                    <span>状态:</span>
+                    {renderReviewBadge(previewMaterial.id)}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPreviewDialogOpen(false)}>
+              关闭
+            </Button>
+            {previewMaterial && getReviewStatus(previewMaterial.id) === 'pending' && (
+              <Button onClick={handleMarkAsReviewed} className="bg-green-600 hover:bg-green-700">
+                <CheckCircle size={16} className="mr-2" />
+                标记为通过
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Hidden file input */}
       <input

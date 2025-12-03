@@ -13,8 +13,7 @@ import {
   X,
   Film,
   ArrowLeft,
-  Edit2,
-  ClipboardCheck
+  Edit2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ExportVideoModal } from "@/components/Editor/ExportVideoModal";
@@ -71,7 +70,6 @@ const MainLayout = () => {
     { name: "项目库", href: "/", icon: FolderOpen },
     { name: "素材库", href: "/materials", icon: Video },
     { name: "成片库", href: "/video-library", icon: Film },
-    { name: "审核库", href: "/review-library", icon: ClipboardCheck },
   ];
 
   const isEditor = location.pathname.startsWith('/editor');

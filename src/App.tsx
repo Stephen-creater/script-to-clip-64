@@ -7,7 +7,6 @@ import ProjectLibrary from "./pages/ProjectLibrary";
 import Materials from "./pages/Materials";
 import VideoLibrary from "./pages/VideoLibrary";
 import Editor from "./pages/Editor";
-import ReviewLibrary from "./pages/ReviewLibrary";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -21,7 +20,6 @@ const App = () => (
           <Route path="materials" element={<Materials />} />
           <Route path="video-library" element={<VideoLibrary />} />
           <Route path="editor/:id?" element={<Editor />} />
-          <Route path="review-library" element={<ReviewLibrary />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
