@@ -136,7 +136,11 @@ export const DigitalHumanModal = ({
     try {
       await new Promise(resolve => setTimeout(resolve, 5000));
       
-      setTimeout(() => {
+      // 模拟三种情况，各1/3概率
+      const randomResult = Math.random();
+      
+      if (randomResult < 1/3) {
+        // 情况一：生成成功
         const newGeneratedHumans = selectedHumans.map(humanId => ({
           id: humanId,
           name: DIGITAL_HUMAN_TEMPLATES.find(h => h.id === humanId)?.name || "未知",
@@ -151,7 +155,23 @@ export const DigitalHumanModal = ({
           title: `${segmentId === 'global' ? '全局配置' : `分段 ${segmentId}`}生成成功！`,
           description: `已生成${selectedHumans.length}个数字人`,
         });
-      }, 100);
+      } else if (randomResult < 2/3) {
+        // 情况二：HeyGen API调用生成失败
+        setIsGenerating(false);
+        toast({
+          title: "数字人生成失败",
+          description: "HeyGen API调用失败，请稍后重试",
+          variant: "destructive",
+        });
+      } else {
+        // 情况三：视频转码失败
+        setIsGenerating(false);
+        toast({
+          title: "视频转码失败",
+          description: "数字人已生成但转码过程出错，请稍后重试",
+          variant: "destructive",
+        });
+      }
       
     } catch (error) {
       setIsGenerating(false);
