@@ -40,6 +40,9 @@ const DIGITAL_HUMAN_TEMPLATES = [
 
 const MAX_DIGITAL_HUMANS = 3;
 
+// 模拟计数器，用于循环三种情况
+let simulationCounter = 0;
+
 export const DigitalHumanModal = ({ 
   isOpen, 
   onClose, 
@@ -136,10 +139,11 @@ export const DigitalHumanModal = ({
     try {
       await new Promise(resolve => setTimeout(resolve, 5000));
       
-      // 模拟三种情况，各1/3概率
-      const randomResult = Math.random();
+      // 模拟三种情况，依次循环
+      const currentCase = simulationCounter % 3;
+      simulationCounter++;
       
-      if (randomResult < 1/3) {
+      if (currentCase === 0) {
         // 情况一：生成成功
         const newGeneratedHumans = selectedHumans.map(humanId => ({
           id: humanId,
@@ -155,7 +159,7 @@ export const DigitalHumanModal = ({
           title: `${segmentId === 'global' ? '全局配置' : `分段 ${segmentId}`}生成成功！`,
           description: `已生成${selectedHumans.length}个数字人`,
         });
-      } else if (randomResult < 2/3) {
+      } else if (currentCase === 1) {
         // 情况二：HeyGen API调用生成失败
         setIsGenerating(false);
         toast({
