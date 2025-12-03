@@ -1,10 +1,10 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
+
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +23,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { 
-  Upload, 
   Search, 
   Grid,
   List,
@@ -57,18 +56,12 @@ const ReviewLibrary = () => {
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [previewMaterial, setPreviewMaterial] = useState<ReviewMaterial | null>(null);
   const [reviewStatuses, setReviewStatuses] = useState<Record<string, 'pending' | 'reviewed'>>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
   const { 
     materials, 
     loading, 
-    uploading, 
-    uploadProgress,
-    uploadMaterial, 
     deleteMaterial, 
     getMaterialsByCategory, 
     getMaterialUrl,
-    isSupabaseConfigured 
   } = useMaterials();
 
   // Convert materials to ReviewMaterial with status
@@ -169,24 +162,6 @@ const ReviewLibrary = () => {
     
     const folder = findFolder(folders, folderId);
     return folder?.children || [];
-  };
-
-  // File upload handlers
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    if (files.length > 0) {
-      const { category, subcategory } = getFolderInfo(selectedFolder);
-      files.forEach(file => {
-        uploadMaterial(file, category, subcategory);
-      });
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
   };
 
   // Get filtered materials
@@ -363,14 +338,6 @@ const ReviewLibrary = () => {
                 已审核 {reviewedCount}
               </Badge>
             </div>
-            <Button 
-              className="bg-gradient-primary"
-              onClick={handleUploadClick}
-              disabled={uploading}
-            >
-              <Upload size={16} className="mr-2" />
-              {uploading ? '上传中...' : '上传素材'}
-            </Button>
           </div>
 
           <div className="flex items-center gap-3">
@@ -403,21 +370,6 @@ const ReviewLibrary = () => {
           </div>
         </div>
 
-        {/* Upload Progress */}
-        {uploading && (
-          <Card className="mb-4">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Upload size={16} className="text-primary animate-pulse" />
-                <div className="flex-1">
-                  <p className="text-body-small font-medium">正在上传到 {getFolderInfo(selectedFolder).category}...</p>
-                  <Progress value={uploadProgress} className="h-2 mt-2" />
-                  <p className="text-caption text-muted-foreground mt-1">{uploadProgress}% 完成</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Selection Bar */}
         {selectedItems.length > 0 && (
@@ -435,16 +387,6 @@ const ReviewLibrary = () => {
             </div>
           </div>
         )}
-
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="video/*,image/*,audio/*"
-          className="hidden"
-          onChange={handleFileSelect}
-        />
 
         {/* Show subfolders or materials */}
         {shouldShowSubfolders ? (
@@ -601,11 +543,7 @@ const ReviewLibrary = () => {
               <FileVideo size={48} className="mx-auto opacity-50" />
             </div>
             <h3 className="text-lg font-medium mb-2">暂无素材</h3>
-            <p className="text-muted-foreground mb-4">点击上传按钮添加素材</p>
-            <Button onClick={handleUploadClick}>
-              <Upload size={16} className="mr-2" />
-              上传素材
-            </Button>
+            <p className="text-muted-foreground">当前分类下没有待审核的素材</p>
           </div>
         )}
       </div>
