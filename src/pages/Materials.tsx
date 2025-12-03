@@ -697,7 +697,7 @@ const Materials = () => {
             <Button variant="outline" onClick={() => setPreviewDialogOpen(false)}>
               关闭
             </Button>
-            {previewMaterial && getReviewStatus(previewMaterial.id) === 'pending' && (
+            {previewMaterial && (
               <Button onClick={handleMarkAsReviewed} className="bg-green-600 hover:bg-green-700">
                 <CheckCircle size={16} className="mr-2" />
                 标记为通过
