@@ -148,7 +148,7 @@ export const DigitalHumanModal = ({
         setIsGenerating(false);
         
         toast({
-          title: `分段 ${segmentId} 生成成功！`,
+          title: `${segmentId === 'global' ? '全局配置' : `分段 ${segmentId}`}生成成功！`,
           description: `已生成${selectedHumans.length}个数字人`,
         });
       }, 100);
