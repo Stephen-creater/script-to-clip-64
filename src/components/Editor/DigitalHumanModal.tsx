@@ -216,7 +216,7 @@ export const DigitalHumanModal = ({
       <DialogContent className="sm:max-w-[900px] h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>配置数字人 - 分段 {segmentId}</span>
+            <span>配置数字人 - {segmentId === 'global' ? '全局配置' : `分段 ${segmentId}`}</span>
             {!isControlling && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground font-normal">
                 <Lock size={14} />
