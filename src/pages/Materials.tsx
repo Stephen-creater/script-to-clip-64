@@ -57,7 +57,16 @@ const Materials = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
-  const [reviewStatuses, setReviewStatuses] = useState<Record<string, 'pending_machine' | 'pending_human' | 'pending_transcode' | 'approved' | 'rejected'>>({});
+  // Initialize with demo data showing all 5 statuses
+  const [reviewStatuses, setReviewStatuses] = useState<Record<string, 'pending_machine' | 'pending_human' | 'pending_transcode' | 'approved' | 'rejected'>>({
+    'video-1': 'pending_machine',
+    'video-2': 'pending_human',
+    'video-3': 'pending_transcode',
+    'video-4': 'approved',
+    'video-5': 'rejected',
+    'video-6': 'pending_human',
+    'video-7': 'approved',
+  });
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [previewMaterial, setPreviewMaterial] = useState<Material | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -303,24 +312,49 @@ const Materials = () => {
   // Handle material click for preview (in review mode)
   const handleMaterialClick = (material: Material) => {
     if (reviewMode) {
+      const status = getReviewStatus(material.id);
+      if (status === 'pending_machine') {
+        toast({
+          title: "无法预览",
+          description: "待机审状态的素材无法预览，请等待机审完成",
+          variant: "destructive",
+        });
+        return;
+      }
       setPreviewMaterial(material);
       setPreviewDialogOpen(true);
     }
   };
 
-  // Human review - pass (moves to pending_transcode)
+  // Human review - pass (moves to pending_transcode, then auto to approved after 3s)
   const handleHumanReviewPass = () => {
     if (previewMaterial) {
+      const materialId = previewMaterial.id;
+      const materialName = previewMaterial.name;
+      
+      // First set to pending_transcode
       setReviewStatuses(prev => ({
         ...prev,
-        [previewMaterial.id]: 'pending_transcode'
+        [materialId]: 'pending_transcode'
       }));
       toast({
         title: "人审通过",
-        description: `素材 "${previewMaterial.name}" 已通过人审，进入待转码状态`,
+        description: `素材 "${materialName}" 已通过人审，开始转码中...`,
       });
       setPreviewDialogOpen(false);
       setPreviewMaterial(null);
+      
+      // Simulate transcode delay (3s), then set to approved
+      setTimeout(() => {
+        setReviewStatuses(prev => ({
+          ...prev,
+          [materialId]: 'approved'
+        }));
+        toast({
+          title: "转码完成",
+          description: `素材 "${materialName}" 转码成功，已审核通过`,
+        });
+      }, 3000);
     }
   };
 
