@@ -129,7 +129,7 @@ export const DigitalHumanModal = ({
 
     toast({
       title: `${isRegenerate ? "重新" : "开始"}生成数字人...`,
-      description: "正在生成数字人并转码中，预计需要约2分钟，请耐心等待。极少数情况下可能生成或转码失败",
+      description: "正在生成数字人并转码中，预计需要约2分钟，请耐心等待。您可以关闭此窗口，生成会在后台继续进行。极少数情况下可能生成或转码失败",
       duration: 120000,
     });
 
