@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
 import { Search, User, Loader2, RefreshCw, Sparkles, Lock, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -55,7 +54,6 @@ export const DigitalHumanModal = ({
   const [generatedHumans, setGeneratedHumans] = useState<DigitalHuman[]>([]);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [progress, setProgress] = useState(0);
 
   // 初始化已配置的数字人
   useEffect(() => {
@@ -125,31 +123,18 @@ export const DigitalHumanModal = ({
     }
 
     setIsGenerating(true);
-    setProgress(0);
     if (isRegenerate) {
       setGeneratedHumans([]);
     }
 
     toast({
       title: `${isRegenerate ? "重新" : "开始"}生成数字人...`,
-      description: "预计需要约2分钟，请耐心等待",
+      description: "正在生成数字人并转码中，预计需要约2分钟，请耐心等待。极少数情况下可能生成或转码失败",
+      duration: 120000,
     });
-
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 95) {
-          clearInterval(progressInterval);
-          return 95;
-        }
-        return prev + 2;
-      });
-    }, 100);
 
     try {
       await new Promise(resolve => setTimeout(resolve, 5000));
-      
-      clearInterval(progressInterval);
-      setProgress(100);
       
       setTimeout(() => {
         const newGeneratedHumans = selectedHumans.map(humanId => ({
@@ -169,11 +154,9 @@ export const DigitalHumanModal = ({
       }, 100);
       
     } catch (error) {
-      clearInterval(progressInterval);
       setIsGenerating(false);
-      setProgress(0);
       toast({
-        title: `分段 ${segmentId} 生成失败`,
+        title: `生成失败`,
         description: "请稍后重试",
         variant: "destructive",
       });
@@ -223,7 +206,6 @@ export const DigitalHumanModal = ({
     if (!isOpen) {
       if (generatedHumans.length === 0) {
         setIsGenerating(false);
-        setProgress(0);
         setSelectedHumans([]);
       }
     }
@@ -415,16 +397,6 @@ export const DigitalHumanModal = ({
               )}
             </div>
           </div>
-
-          {/* Toast-style progress indicator - fixed bottom right */}
-          {isGenerating && (
-            <div className="fixed bottom-6 right-6 z-[100] bg-background border border-border rounded-lg p-4 shadow-lg min-w-[280px]">
-              <div className="font-semibold text-foreground mb-1">正在生成数字人...</div>
-              <div className="text-sm text-muted-foreground mb-3">预计需要约2分钟，请耐心等待</div>
-              <Progress value={progress} className="h-2" />
-              <div className="text-xs text-muted-foreground mt-2 text-right">{progress}%</div>
-            </div>
-          )}
         </div>
 
         <DialogFooter className="flex items-center justify-between">
