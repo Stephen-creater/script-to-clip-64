@@ -179,7 +179,7 @@ const MainLayout = () => {
           </Button>
         </div>
 
-        <nav className="p-4 space-y-1">
+        <nav className="p-4 space-y-2">
           {navigation.map((item) => {
             // Check if this item or any of its sub-items is active
             const isActive = item.href ? location.pathname === item.href : false;
@@ -192,7 +192,7 @@ const MainLayout = () => {
                   <button
                     onClick={() => setMaterialSubMenuOpen(!materialSubMenuOpen)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                      "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200",
                       hasActiveSubItem
                         ? "bg-sidebar-accent text-sidebar-accent-foreground"
                         : "text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -246,7 +246,7 @@ const MainLayout = () => {
                 key={item.name}
                 to={item.href!}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                  "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200",
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/50"
