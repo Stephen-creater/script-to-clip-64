@@ -53,7 +53,7 @@ const Materials = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [selectedFolder, setSelectedFolder] = useState('all');
-  const [expandedFolders, setExpandedFolders] = useState<string[]>(['all', 'images', 'audio']);
+  const [expandedFolders, setExpandedFolders] = useState<string[]>(['all', 'images', 'stickers', 'audio']);
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
@@ -120,6 +120,18 @@ const Materials = () => {
       ]
     },
     { 
+      id: 'stickers', 
+      name: '贴纸素材', 
+      count: materials.filter(m => m.category === '贴纸素材').length,
+      type: 'image',
+      hasChildren: true,
+      children: [
+        { id: 'sticker-emoji', name: '表情贴纸', count: getMaterialsByCategory('贴纸素材', '表情贴纸').length, parentId: 'stickers', type: 'image' },
+        { id: 'sticker-text', name: '文字贴纸', count: getMaterialsByCategory('贴纸素材', '文字贴纸').length, parentId: 'stickers', type: 'image' },
+        { id: 'sticker-effect', name: '特效贴纸', count: getMaterialsByCategory('贴纸素材', '特效贴纸').length, parentId: 'stickers', type: 'image' },
+      ]
+    },
+    { 
       id: 'audio', 
       name: '音频素材', 
       count: materials.filter(m => m.file_type === 'audio').length,
@@ -144,6 +156,13 @@ const Materials = () => {
         subcategory: folderId === 'emotion' ? '表情类' : 
                     folderId === 'decorative' ? '装饰类' :
                     folderId === 'marketing' ? '营销类' : undefined
+      };
+    } else if (folderId === 'stickers' || folderId === 'sticker-emoji' || folderId === 'sticker-text' || folderId === 'sticker-effect') {
+      return { 
+        category: '贴纸素材', 
+        subcategory: folderId === 'sticker-emoji' ? '表情贴纸' : 
+                    folderId === 'sticker-text' ? '文字贴纸' :
+                    folderId === 'sticker-effect' ? '特效贴纸' : undefined
       };
     } else if (folderId === 'audio' || folderId === 'bgm' || folderId === 'sound-effects') {
       return { 
@@ -227,6 +246,12 @@ const Materials = () => {
         filtered = getMaterialsByCategory('图片素材', '装饰类');
       } else if (selectedFolder === 'marketing') {
         filtered = getMaterialsByCategory('图片素材', '营销类');
+      } else if (selectedFolder === 'sticker-emoji') {
+        filtered = getMaterialsByCategory('贴纸素材', '表情贴纸');
+      } else if (selectedFolder === 'sticker-text') {
+        filtered = getMaterialsByCategory('贴纸素材', '文字贴纸');
+      } else if (selectedFolder === 'sticker-effect') {
+        filtered = getMaterialsByCategory('贴纸素材', '特效贴纸');
       } else if (selectedFolder === 'bgm') {
         filtered = getMaterialsByCategory('音频素材', 'BGM');
       } else if (selectedFolder === 'sound-effects') {
