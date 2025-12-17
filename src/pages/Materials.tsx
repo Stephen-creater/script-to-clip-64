@@ -6,6 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -55,6 +62,9 @@ const Materials = () => {
   const [selectedFolder, setSelectedFolder] = useState('all');
   const [expandedFolders, setExpandedFolders] = useState<string[]>(['all', 'images', 'stickers', 'audio']);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [uploaderFilter, setUploaderFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState<string>("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
   // Initialize with demo data showing all 5 statuses
@@ -263,10 +273,39 @@ const Materials = () => {
       }
     }
 
+    // Filter by material name
     if (searchTerm) {
       filtered = filtered.filter(material =>
         material.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
+    }
+
+    // Filter by status
+    if (statusFilter && statusFilter !== 'all') {
+      filtered = filtered.filter(material => 
+        getReviewStatus(material.id) === statusFilter
+      );
+    }
+
+    // Filter by uploader (mock - materials don't have uploader field, using fallback)
+    if (uploaderFilter) {
+      filtered = filtered.filter(material =>
+        '系统管理员'.toLowerCase().includes(uploaderFilter.toLowerCase())
+      );
+    }
+
+    // Filter by date
+    if (dateFilter && dateFilter !== 'all') {
+      const now = new Date();
+      filtered = filtered.filter(material => {
+        const createdAt = material.created_at ? new Date(material.created_at) : now;
+        const diffDays = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (dateFilter === 'today') return diffDays === 0;
+        if (dateFilter === 'week') return diffDays <= 7;
+        if (dateFilter === 'month') return diffDays <= 30;
+        return true;
+      });
     }
 
     return filtered;
@@ -474,6 +513,58 @@ const Materials = () => {
 
       {/* Main Content */}
       <div className="flex-1 p-6">
+        {/* Search and Filter Bar */}
+        <div className="bg-card border border-border rounded-lg p-4 mb-6">
+          <div className="grid grid-cols-4 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">素材名</label>
+              <Input
+                placeholder="搜索素材名..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">状态</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="全部状态" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border border-border z-50">
+                  <SelectItem value="all">全部状态</SelectItem>
+                  <SelectItem value="pending_machine">机审时间待确定</SelectItem>
+                  <SelectItem value="pending_human">待人审</SelectItem>
+                  <SelectItem value="approved">审核通过</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">上传人</label>
+              <Input
+                placeholder="搜索上传人..."
+                value={uploaderFilter}
+                onChange={(e) => setUploaderFilter(e.target.value)}
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">上传时间</label>
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="全部时间" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border border-border z-50">
+                  <SelectItem value="all">全部时间</SelectItem>
+                  <SelectItem value="today">今天</SelectItem>
+                  <SelectItem value="week">最近一周</SelectItem>
+                  <SelectItem value="month">最近一个月</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
