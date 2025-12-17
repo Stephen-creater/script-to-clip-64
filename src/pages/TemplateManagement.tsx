@@ -8,7 +8,9 @@ import {
   Play,
   Clock,
   Layers,
-  FileText
+  FileText,
+  User,
+  BarChart3
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +23,8 @@ interface Template {
   duration: number;
   category: string;
   createdAt: string;
+  usageCount: number;
+  owner: string;
 }
 
 const TemplateManagement = () => {
@@ -37,7 +41,9 @@ const TemplateManagement = () => {
       segmentsCount: 5,
       duration: 60,
       category: '产品',
-      createdAt: '2024-12-15'
+      createdAt: '2024-12-15',
+      usageCount: 128,
+      owner: '运营1组-小王'
     },
     {
       id: '2',
@@ -46,7 +52,9 @@ const TemplateManagement = () => {
       segmentsCount: 8,
       duration: 120,
       category: '旅行',
-      createdAt: '2024-12-10'
+      createdAt: '2024-12-10',
+      usageCount: 86,
+      owner: '内容2组-小李'
     },
     {
       id: '3',
@@ -55,7 +63,9 @@ const TemplateManagement = () => {
       segmentsCount: 6,
       duration: 90,
       category: '教程',
-      createdAt: '2024-12-08'
+      createdAt: '2024-12-08',
+      usageCount: 215,
+      owner: '培训组-小张'
     }
   ]);
 
@@ -143,6 +153,17 @@ const TemplateManagement = () => {
                   <div className="flex items-center gap-1">
                     <Clock size={14} />
                     <span>{formatDuration(template.duration)}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <BarChart3 size={14} />
+                    <span>使用 {template.usageCount} 次</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <User size={14} />
+                    <span>{template.owner}</span>
                   </div>
                 </div>
 
