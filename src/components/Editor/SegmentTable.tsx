@@ -418,7 +418,6 @@ const SegmentTable = ({
                   />
                 </th>
                 <th className="w-8 p-4"></th>
-                <th className="min-w-[160px] px-4 py-4 text-left text-body-small font-semibold text-foreground">分段名称</th>
                 <th className="min-w-[180px] px-4 py-4 text-left text-body-small font-semibold text-foreground">画面</th>
                 <th className="min-w-[320px] px-4 py-4 text-left text-body-small font-semibold text-foreground">文案</th>
                 <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">花字</th>
@@ -458,14 +457,6 @@ const SegmentTable = ({
                     <td className="w-8 p-4 border-r border-border/50">
                       <GripVertical size={16} className="text-muted-foreground cursor-grab" />
                     </td>
-                     <td className="min-w-[160px] p-4 border-r border-border/50">
-                       <Input
-                         value={segment.name}
-                         onChange={(e) => updateSegmentName(segment.id, e.target.value)}
-                         className="text-sm border-0 bg-transparent p-1 font-medium focus:border-border focus:bg-background/50"
-                         placeholder="分段名称"
-                       />
-                     </td>
                      <td className="min-w-[180px] p-4 border-r border-border/50">
                        <Button 
                          variant="outline" 
@@ -488,25 +479,27 @@ const SegmentTable = ({
                            placeholder="请输入文案内容"
                            disabled={segment.scriptVariants && segment.scriptVariants.length > 0}
                          />
-                         <Button
-                           variant="ghost"
-                           size="icon"
-                           className={cn(
-                             "absolute top-1 right-1 h-7 w-7 opacity-60 hover:opacity-100 transition-opacity",
-                             segment.scriptVariants && segment.scriptVariants.length > 0 && "text-primary"
-                           )}
-                           onClick={() => openModal('scriptVariant', segment.id)}
-                           title={segment.scriptVariants && segment.scriptVariants.length > 0 
-                             ? `管理变体 (${segment.scriptVariants.length})` 
-                             : "配置文案变体"}
-                         >
-                           <Wand2 className="h-4 w-4" />
-                           {segment.scriptVariants && segment.scriptVariants.length > 0 && (
-                             <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center font-medium">
-                               {segment.scriptVariants.length}
-                             </span>
-                           )}
-                         </Button>
+                         <div className="absolute bottom-1 right-1 flex flex-col items-end gap-1">
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             className={cn(
+                               "h-7 px-2 text-xs gap-1 opacity-70 hover:opacity-100 transition-opacity",
+                               segment.scriptVariants && segment.scriptVariants.length > 0 && "text-primary opacity-100"
+                             )}
+                             onClick={() => openModal('scriptVariant', segment.id)}
+                             title={segment.scriptVariants && segment.scriptVariants.length > 0 
+                               ? `管理变体 (${segment.scriptVariants.length})` 
+                               : "AI文案一键多"}
+                           >
+                             <Wand2 className="h-3.5 w-3.5" />
+                             {segment.scriptVariants && segment.scriptVariants.length > 0 ? (
+                               <span>已配置{segment.scriptVariants.length}个</span>
+                             ) : (
+                               <span>AI一键多</span>
+                             )}
+                           </Button>
+                         </div>
                        </div>
                      </td>
                     <td className="min-w-[100px] p-4 border-r border-border/50">
