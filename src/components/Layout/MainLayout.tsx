@@ -13,7 +13,12 @@ import {
   X,
   Film,
   ArrowLeft,
-  Edit2
+  Edit2,
+  ListTodo,
+  FileText,
+  Scissors,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ExportVideoModal } from "@/components/Editor/ExportVideoModal";
@@ -26,6 +31,7 @@ const MainLayout = () => {
   const [projectName, setProjectName] = useState(""); // Will be set based on creation type
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempProjectName, setTempProjectName] = useState("");
+  const [materialSubMenuOpen, setMaterialSubMenuOpen] = useState(true);
   const [configuration, setConfiguration] = useState({
     isAudioGenerated: false,
     isGlobalSubtitleConfigured: false,
@@ -66,10 +72,21 @@ const MainLayout = () => {
     setTempProjectName(projectName);
   }, [projectName]);
 
+  // Navigation structure with sub-items
   const navigation = [
-    { name: "项目库", href: "/", icon: FolderOpen },
-    { name: "素材库", href: "/materials", icon: Video },
-    { name: "成片库", href: "/video-library", icon: Film },
+    { 
+      name: "素材管理", 
+      subtitle: "素材上传和初剪",
+      icon: Video,
+      hasSubItems: true,
+      subItems: [
+        { name: "素材预处理", href: "/material-preprocessing", icon: Scissors },
+        { name: "素材库", href: "/materials", icon: FolderOpen },
+      ]
+    },
+    { name: "任务管理", subtitle: "从这里创建混剪任务", href: "/", icon: ListTodo },
+    { name: "模板管理", subtitle: "在这里使用优秀剪辑模板", href: "/templates", icon: FileText },
+    { name: "成片管理", subtitle: "从这里看成片", href: "/video-library", icon: Film },
   ];
 
   const isEditor = location.pathname.startsWith('/editor');
@@ -162,13 +179,72 @@ const MainLayout = () => {
           </Button>
         </div>
 
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-1">
           {navigation.map((item) => {
-            const isActive = location.pathname === item.href;
+            // Check if this item or any of its sub-items is active
+            const isActive = item.href ? location.pathname === item.href : false;
+            const hasActiveSubItem = item.subItems?.some(sub => location.pathname === sub.href);
+
+            if (item.hasSubItems && item.subItems) {
+              return (
+                <div key={item.name}>
+                  {/* Parent item with sub-menu */}
+                  <button
+                    onClick={() => setMaterialSubMenuOpen(!materialSubMenuOpen)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                      hasActiveSubItem
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                    )}
+                    title={!sidebarOpen ? item.name : undefined}
+                  >
+                    <item.icon size={20} className="flex-shrink-0" />
+                    <div className={cn(
+                      "flex-1 text-left transition-all duration-300",
+                      sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"
+                    )}>
+                      <div>{item.name}</div>
+                      {item.subtitle && (
+                        <div className="text-xs text-muted-foreground font-normal">{item.subtitle}</div>
+                      )}
+                    </div>
+                    {sidebarOpen && (
+                      materialSubMenuOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />
+                    )}
+                  </button>
+                  
+                  {/* Sub-items */}
+                  {materialSubMenuOpen && sidebarOpen && (
+                    <div className="ml-6 mt-1 space-y-1">
+                      {item.subItems.map((subItem) => {
+                        const subIsActive = location.pathname === subItem.href;
+                        return (
+                          <Link
+                            key={subItem.name}
+                            to={subItem.href}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                              subIsActive
+                                ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                                : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                            )}
+                          >
+                            <subItem.icon size={16} className="flex-shrink-0" />
+                            <span>{subItem.name}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={item.name}
-                to={item.href}
+                to={item.href!}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                   isActive
@@ -177,13 +253,16 @@ const MainLayout = () => {
                 )}
                 title={!sidebarOpen ? item.name : undefined}
               >
-                <item.icon size={20} className="flex-shrink-0 transition-transform duration-200 hover:scale-110" />
-                <span className={cn(
+                <item.icon size={20} className="flex-shrink-0" />
+                <div className={cn(
                   "transition-all duration-300",
                   sidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"
                 )}>
-                  {item.name}
-                </span>
+                  <div>{item.name}</div>
+                  {item.subtitle && sidebarOpen && (
+                    <div className="text-xs text-muted-foreground font-normal">{item.subtitle}</div>
+                  )}
+                </div>
               </Link>
             );
           })}
