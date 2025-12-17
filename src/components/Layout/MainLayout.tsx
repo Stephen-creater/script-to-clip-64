@@ -84,8 +84,8 @@ const MainLayout = () => {
         { name: "素材库", href: "/materials", icon: FolderOpen },
       ]
     },
-    { name: "任务管理", subtitle: "从这里创建混剪任务", href: "/", icon: ListTodo },
-    { name: "模板管理", subtitle: "在这里使用优秀剪辑模板", href: "/templates", icon: FileText },
+    { name: "开始创作", subtitle: "创建新任务或使用模板", href: "/", icon: Edit2 },
+    { name: "任务看板", subtitle: "查看和管理混剪任务", href: "/tasks", icon: ListTodo },
     { name: "成片管理", subtitle: "从这里看成片", href: "/video-library", icon: Film },
   ];
 

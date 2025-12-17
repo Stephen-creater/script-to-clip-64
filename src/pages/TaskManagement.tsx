@@ -1,14 +1,9 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { 
-  Plus, 
   Search, 
   Filter,
   User,
@@ -16,7 +11,6 @@ import {
   Calendar
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
 
 interface Task {
   id: string;
@@ -32,13 +26,9 @@ interface Task {
 
 const TaskManagement = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTime, setFilterTime] = useState('all');
   const [filterGroup, setFilterGroup] = useState('all');
-  const [taskType, setTaskType] = useState<'flexible' | 'fixed'>('flexible');
-  const [taskName, setTaskName] = useState('');
 
   // Get today's date in format YYYYMMDD
   const today = new Date();
@@ -130,22 +120,6 @@ const TaskManagement = () => {
     }
   };
 
-  const handleCreateTask = () => {
-    if (!taskName.trim()) {
-      toast({
-        title: "请填写任务名",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Navigate to editor with task type
-    navigate(`/editor/new?taskType=${taskType}&taskName=${encodeURIComponent(taskName)}`);
-    setCreateDialogOpen(false);
-    setTaskName('');
-    setTaskType('flexible');
-  };
-
   const handleTaskClick = (taskId: string) => {
     navigate(`/editor/${taskId}`);
   };
@@ -153,73 +127,11 @@ const TaskManagement = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto min-h-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-display bg-gradient-primary bg-clip-text text-transparent">
-            任务管理
-          </h1>
-          <p className="text-body-small text-muted-foreground mt-1">从这里创建混剪任务</p>
-        </div>
-
-        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-primary shadow-tech">
-              <Plus size={16} className="mr-2" />
-              创建新任务
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>创建新任务</DialogTitle>
-              <DialogDescription>
-                配置您的混剪任务
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-6 py-4">
-              {/* Task Type */}
-              <div className="space-y-3">
-                <Label className="text-base font-medium">任务类型</Label>
-                <RadioGroup value={taskType} onValueChange={(v) => setTaskType(v as 'flexible' | 'fixed')}>
-                  <div className="flex items-start space-x-3 p-3 rounded-lg border hover:border-primary transition-colors cursor-pointer" onClick={() => setTaskType('flexible')}>
-                    <RadioGroupItem value="flexible" id="flexible" className="mt-1" />
-                    <div className="flex-1">
-                      <Label htmlFor="flexible" className="font-medium cursor-pointer">灵活时长</Label>
-                      <p className="text-sm text-muted-foreground mt-1">每个分段的时长由其文案口播的时长决定</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 p-3 rounded-lg border hover:border-primary transition-colors cursor-pointer" onClick={() => setTaskType('fixed')}>
-                    <RadioGroupItem value="fixed" id="fixed" className="mt-1" />
-                    <div className="flex-1">
-                      <Label htmlFor="fixed" className="font-medium cursor-pointer">固定时长</Label>
-                      <p className="text-sm text-muted-foreground mt-1">你可以固定每个分段的时长</p>
-                    </div>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              {/* Task Name */}
-              <div className="space-y-3">
-                <Label className="text-base font-medium">请填写你的任务名</Label>
-                <Input 
-                  placeholder="输入任务名称..." 
-                  value={taskName}
-                  onChange={(e) => setTaskName(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button 
-                className="w-full bg-gradient-primary" 
-                size="lg"
-                onClick={handleCreateTask}
-              >
-                开始创建任务
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <div className="mb-8">
+        <h1 className="text-display bg-gradient-primary bg-clip-text text-transparent">
+          任务看板
+        </h1>
+        <p className="text-body-small text-muted-foreground mt-1">查看和管理所有混剪任务</p>
       </div>
 
       {/* Search and Filter */}
@@ -322,7 +234,7 @@ const TaskManagement = () => {
             <Layers size={48} className="mx-auto mb-4 opacity-50" />
             <p className="text-heading-3">暂无任务</p>
             <p className="text-body-small">
-              {searchTerm ? '没有找到匹配的任务' : '创建您的第一个混剪任务吧'}
+              {searchTerm ? '没有找到匹配的任务' : '还没有任何任务'}
             </p>
           </div>
         </div>
