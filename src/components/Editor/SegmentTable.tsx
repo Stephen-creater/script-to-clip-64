@@ -490,13 +490,13 @@ const SegmentTable = ({
                              onClick={() => openModal('scriptVariant', segment.id)}
                              title={segment.scriptVariants && segment.scriptVariants.length > 0 
                                ? `管理变体 (${segment.scriptVariants.length})` 
-                               : "AI文案一键多"}
+                               : "多选文案"}
                            >
-                             <Wand2 className="h-3.5 w-3.5" />
+                             <Plus className="h-3.5 w-3.5" />
                              {segment.scriptVariants && segment.scriptVariants.length > 0 ? (
                                <span>已配置{segment.scriptVariants.length}个</span>
                              ) : (
-                               <span>AI一键多</span>
+                               <span>多选文案</span>
                              )}
                            </Button>
                          </div>
