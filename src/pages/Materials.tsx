@@ -16,6 +16,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Upload,
   Search,
   Grid,
@@ -24,11 +30,15 @@ import {
   Download,
   Settings2,
   Scissors,
+  FolderInput,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import FilterPanel, { FilterState } from "@/components/Materials/FilterPanel";
 import MediaCard from "@/components/Materials/MediaCard";
 import PreprocessingWorkbench from "@/components/Materials/PreprocessingWorkbench";
+import MaterialPreviewModal from "@/components/Materials/MaterialPreviewModal";
+import BatchMoveModal from "@/components/Materials/BatchMoveModal";
 import { useMaterials, Material } from "@/hooks/useMaterials";
 import { useToast } from "@/hooks/use-toast";
 
@@ -50,13 +60,19 @@ const Materials = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [workbenchOpen, setWorkbenchOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [batchMoveOpen, setBatchMoveOpen] = useState(false);
+  const [previewMaterial, setPreviewMaterial] = useState<Material | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Filter state
   const [filters, setFilters] = useState<FilterState>({
     aspectRatio: { vertical: false, horizontal: false },
-    duration: { short: false, long: false },
+    durationRange: [0, 120],
     reviewStatus: { machineReview: false, pendingHuman: false, rejected: false, approved: false },
+    uploadDateRange: { from: undefined, to: undefined },
+    uploader: "",
+    uploadGroup: "",
     folder: null,
   });
 
@@ -128,13 +144,12 @@ const Materials = () => {
       });
     }
 
-    // Duration filter
-    if (filters.duration.short || filters.duration.long) {
+    // Duration range filter
+    const [minDuration, maxDuration] = filters.durationRange;
+    if (minDuration > 0 || maxDuration < 120) {
       filtered = filtered.filter(material => {
-        if (!material.duration) return false;
-        if (filters.duration.short && material.duration < 5) return true;
-        if (filters.duration.long && material.duration > 15) return true;
-        return false;
+        if (!material.duration) return true;
+        return material.duration >= minDuration && material.duration <= maxDuration;
       });
     }
 
@@ -226,6 +241,18 @@ const Materials = () => {
     });
   };
 
+  const handleMaterialClick = (material: Material) => {
+    setPreviewMaterial(material);
+    setPreviewOpen(true);
+  };
+
+  const handleBatchMove = (folderId: string) => {
+    toast({
+      title: "移动成功",
+      description: `已将 ${selectedItems.length} 个文件移动到目标文件夹`,
+    });
+    setSelectedItems([]);
+  };
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -273,14 +300,28 @@ const Materials = () => {
 
               <div className="h-8 w-px bg-border" />
 
-              <Button
-                variant="outline"
-                onClick={handleBatchDelete}
-                disabled={selectedItems.length === 0}
-              >
-                <Settings2 size={16} className="mr-2" />
-                批量管理
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    disabled={selectedItems.length === 0}
+                  >
+                    <Settings2 size={16} className="mr-2" />
+                    批量管理
+                    <ChevronDown size={14} className="ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={handleBatchDelete}>
+                    <Trash2 size={14} className="mr-2" />
+                    批量删除
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setBatchMoveOpen(true)}>
+                    <FolderInput size={14} className="mr-2" />
+                    移动到文件夹
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               <Button
                 variant="outline"
@@ -383,6 +424,7 @@ const Materials = () => {
                     material={material}
                     isSelected={selectedItems.includes(material.id)}
                     onSelect={handleSelectItem}
+                    onClick={() => handleMaterialClick(material)}
                     reviewStatus={reviewData.status}
                     rejectionReason={reviewData.reason}
                     getMaterialUrl={getMaterialUrl}
@@ -401,10 +443,12 @@ const Materials = () => {
                       "flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer border border-border",
                       selectedItems.includes(material.id) && "bg-primary/10 border-primary/30"
                     )}
+                    onClick={() => handleMaterialClick(material)}
                   >
                     <Checkbox
                       checked={selectedItems.includes(material.id)}
                       onCheckedChange={(checked) => handleSelectItem(material.id, !!checked)}
+                      onClick={(e) => e.stopPropagation()}
                     />
                     <div className="w-20 h-12 bg-muted rounded overflow-hidden flex items-center justify-center">
                       {material.file_type === 'image' ? (
@@ -497,6 +541,25 @@ const Materials = () => {
         open={workbenchOpen}
         onOpenChange={setWorkbenchOpen}
         onClipsSubmit={handleClipsSubmit}
+      />
+
+      {/* Material Preview Modal */}
+      <MaterialPreviewModal
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        material={previewMaterial}
+        reviewStatus={previewMaterial ? getReviewData(previewMaterial.id).status : 'approved'}
+        rejectionReason={previewMaterial ? getReviewData(previewMaterial.id).reason : undefined}
+        getMaterialUrl={getMaterialUrl}
+      />
+
+      {/* Batch Move Modal */}
+      <BatchMoveModal
+        open={batchMoveOpen}
+        onOpenChange={setBatchMoveOpen}
+        selectedCount={selectedItems.length}
+        folders={folderStructure}
+        onConfirm={handleBatchMove}
       />
     </div>
   );

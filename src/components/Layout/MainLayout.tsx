@@ -72,18 +72,9 @@ const MainLayout = () => {
     setTempProjectName(projectName);
   }, [projectName]);
 
-  // Navigation structure with sub-items
+  // Navigation structure
   const navigation = [
-    { 
-      name: "素材管理", 
-      subtitle: "素材上传和初剪",
-      icon: Video,
-      hasSubItems: true,
-      subItems: [
-        { name: "素材预处理", href: "/material-preprocessing", icon: Scissors },
-        { name: "素材库", href: "/materials", icon: FolderOpen },
-      ]
-    },
+    { name: "素材管理", subtitle: "素材上传和初剪", href: "/materials", icon: Video },
     { name: "开始创作", subtitle: "创建新任务或使用模板", href: "/", icon: Edit2 },
     { name: "任务看板", subtitle: "查看和管理混剪任务", href: "/tasks", icon: ListTodo },
     { name: "成片管理", subtitle: "从这里看成片", href: "/video-library", icon: Film },
@@ -181,70 +172,12 @@ const MainLayout = () => {
 
         <nav className="p-4 space-y-2">
           {navigation.map((item) => {
-            // Check if this item or any of its sub-items is active
-            const isActive = item.href ? location.pathname === item.href : false;
-            const hasActiveSubItem = item.subItems?.some(sub => location.pathname === sub.href);
-
-            if (item.hasSubItems && item.subItems) {
-              return (
-                <div key={item.name}>
-                  {/* Parent item with sub-menu */}
-                  <button
-                    onClick={() => setMaterialSubMenuOpen(!materialSubMenuOpen)}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200",
-                      hasActiveSubItem
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                    )}
-                    title={!sidebarOpen ? item.name : undefined}
-                  >
-                    <item.icon size={20} className="flex-shrink-0" />
-                    <div className={cn(
-                      "flex-1 text-left transition-all duration-300",
-                      sidebarOpen ? "opacity-100" : "opacity-0 w-0 overflow-hidden"
-                    )}>
-                      <div>{item.name}</div>
-                      {item.subtitle && (
-                        <div className="text-xs text-muted-foreground font-normal">{item.subtitle}</div>
-                      )}
-                    </div>
-                    {sidebarOpen && (
-                      materialSubMenuOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />
-                    )}
-                  </button>
-                  
-                  {/* Sub-items */}
-                  {materialSubMenuOpen && sidebarOpen && (
-                    <div className="ml-6 mt-1 space-y-1">
-                      {item.subItems.map((subItem) => {
-                        const subIsActive = location.pathname === subItem.href;
-                        return (
-                          <Link
-                            key={subItem.name}
-                            to={subItem.href}
-                            className={cn(
-                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200",
-                              subIsActive
-                                ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                                : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                            )}
-                          >
-                            <subItem.icon size={16} className="flex-shrink-0" />
-                            <span>{subItem.name}</span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            }
+            const isActive = location.pathname === item.href;
 
             return (
               <Link
                 key={item.name}
-                to={item.href!}
+                to={item.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200",
                   isActive
