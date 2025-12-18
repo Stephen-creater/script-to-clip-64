@@ -18,7 +18,8 @@ import {
   FileText,
   Scissors,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  ClipboardCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ExportVideoModal } from "@/components/Editor/ExportVideoModal";
@@ -72,9 +73,18 @@ const MainLayout = () => {
     setTempProjectName(projectName);
   }, [projectName]);
 
-  // Navigation structure
+  // Navigation structure with sub-items
   const navigation = [
-    { name: "素材管理", subtitle: "素材上传和初剪", href: "/materials", icon: Video },
+    { 
+      name: "素材管理", 
+      subtitle: "素材上传和初剪", 
+      href: "/materials", 
+      icon: Video,
+      subItems: [
+        { name: "素材库", href: "/materials" },
+        { name: "素材审核", href: "/material-review", requiresRole: "reviewer" },
+      ]
+    },
     { name: "开始创作", subtitle: "创建新任务或使用模板", href: "/", icon: Edit2 },
     { name: "任务看板", subtitle: "查看和管理混剪任务", href: "/tasks", icon: ListTodo },
     { name: "成片管理", subtitle: "从这里看成片", href: "/video-library", icon: Film },
@@ -172,31 +182,70 @@ const MainLayout = () => {
 
         <nav className="p-4 space-y-2">
           {navigation.map((item) => {
-            const isActive = location.pathname === item.href;
+            const isActive = location.pathname === item.href || 
+              (item.subItems?.some(sub => location.pathname === sub.href));
+            const hasSubItems = item.subItems && item.subItems.length > 0;
 
             return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                )}
-                title={!sidebarOpen ? item.name : undefined}
-              >
-                <item.icon size={20} className="flex-shrink-0" />
-                <div className={cn(
-                  "transition-all duration-300",
-                  sidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"
-                )}>
-                  <div>{item.name}</div>
-                  {item.subtitle && sidebarOpen && (
-                    <div className="text-xs text-muted-foreground font-normal">{item.subtitle}</div>
+              <div key={item.name}>
+                <Link
+                  to={item.href}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                   )}
-                </div>
-              </Link>
+                  title={!sidebarOpen ? item.name : undefined}
+                  onClick={(e) => {
+                    if (hasSubItems && sidebarOpen) {
+                      e.preventDefault();
+                      setMaterialSubMenuOpen(!materialSubMenuOpen);
+                    }
+                  }}
+                >
+                  <item.icon size={20} className="flex-shrink-0" />
+                  <div className={cn(
+                    "flex-1 transition-all duration-300",
+                    sidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"
+                  )}>
+                    <div className="flex items-center justify-between">
+                      <div>{item.name}</div>
+                      {hasSubItems && sidebarOpen && (
+                        materialSubMenuOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />
+                      )}
+                    </div>
+                    {item.subtitle && sidebarOpen && (
+                      <div className="text-xs text-muted-foreground font-normal">{item.subtitle}</div>
+                    )}
+                  </div>
+                </Link>
+                
+                {/* Sub-menu items */}
+                {hasSubItems && sidebarOpen && materialSubMenuOpen && (
+                  <div className="ml-6 mt-1 space-y-1">
+                    {item.subItems?.map((subItem) => {
+                      const isSubActive = location.pathname === subItem.href;
+                      return (
+                        <Link
+                          key={subItem.name}
+                          to={subItem.href}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                            isSubActive
+                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                              : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                          )}
+                        >
+                          {subItem.name === "素材审核" && <ClipboardCheck size={16} />}
+                          {subItem.name === "素材库" && <Video size={16} />}
+                          <span>{subItem.name}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>

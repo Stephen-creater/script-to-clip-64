@@ -7,6 +7,7 @@ import StartCreation from "./pages/StartCreation";
 import TaskManagement from "./pages/TaskManagement";
 import Materials from "./pages/Materials";
 import MaterialPreprocessing from "./pages/MaterialPreprocessing";
+import MaterialReview from "./pages/MaterialReview";
 import VideoLibraryNew from "./pages/VideoLibraryNew";
 import Editor from "./pages/Editor";
 import NotFound from "./pages/NotFound";
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="tasks" element={<TaskManagement />} />
           <Route path="materials" element={<Materials />} />
           <Route path="material-preprocessing" element={<MaterialPreprocessing />} />
+          <Route path="material-review" element={<MaterialReview />} />
           <Route path="video-library" element={<VideoLibraryNew />} />
           <Route path="editor/:id?" element={<Editor />} />
         </Route>
