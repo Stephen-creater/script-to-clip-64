@@ -1,9 +1,19 @@
 import { useState, useRef, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate, useSearchParams } from "react-router-dom";
 import SegmentTable from "@/components/Editor/SegmentTable";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Play, Pause, SkipBack, SkipForward, Save } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface DigitalHuman {
   id: string;
@@ -25,6 +35,9 @@ interface Segment {
 }
 
 const Editor = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
   const { previewOpen, onConfigurationChange } = useOutletContext<{ 
     previewOpen: boolean;
     onConfigurationChange?: (config: {
@@ -39,6 +52,28 @@ const Editor = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [totalDuration, setTotalDuration] = useState(45.6); // Total video duration in seconds
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
+
+  const taskName = searchParams.get('taskName') || '未命名任务';
+
+  const handleSaveAsTemplate = () => {
+    if (!newTemplateName.trim()) {
+      toast({
+        title: "请输入模板名称",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "模板保存成功",
+      description: `模板"${newTemplateName}"已保存`
+    });
+    setSaveTemplateOpen(false);
+    setNewTemplateName('');
+    navigate('/templates');
+  };
 
   const handleSegmentsChange = (newSegments: Segment[]) => {
     setSegments(newSegments);
@@ -160,16 +195,34 @@ const Editor = () => {
   };
 
   return (
-    <div className="flex min-h-full">
-      {/* Segment Table */}
-      <div className={previewOpen ? "flex-1 min-h-0" : "w-full"}>
-        <SegmentTable 
-          onSegmentsChange={handleSegmentsChange}
-          onConfigurationChange={handleConfigurationChange}
-          globalDigitalHumans={globalDigitalHumans}
-          onGlobalDigitalHumansChange={handleGlobalDigitalHumansChange}
-        />
+    <div className="flex flex-col min-h-full">
+      {/* Top Header with Save as Template */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card">
+        <div>
+          <h2 className="text-lg font-semibold">{decodeURIComponent(taskName)}</h2>
+          <p className="text-sm text-muted-foreground">编辑任务</p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setSaveTemplateOpen(true)}
+        >
+          <Save size={16} className="mr-2" />
+          另存为模板
+        </Button>
       </div>
+
+      {/* Main Content */}
+      <div className="flex flex-1 min-h-0">
+        {/* Segment Table */}
+        <div className={previewOpen ? "flex-1 min-h-0" : "w-full"}>
+          <SegmentTable 
+            onSegmentsChange={handleSegmentsChange}
+            onConfigurationChange={handleConfigurationChange}
+            globalDigitalHumans={globalDigitalHumans}
+            onGlobalDigitalHumansChange={handleGlobalDigitalHumansChange}
+          />
+        </div>
 
       {/* Video Preview - Only show when previewOpen is true */}
       {previewOpen && (
@@ -307,6 +360,33 @@ const Editor = () => {
           </div>
         </div>
       )}
+      </div>
+
+      {/* Save as Template Dialog */}
+      <Dialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>另存为模板</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label className="text-sm font-medium">模板名称</Label>
+            <Input
+              placeholder="输入模板名称..."
+              value={newTemplateName}
+              onChange={(e) => setNewTemplateName(e.target.value)}
+              className="mt-2"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSaveTemplateOpen(false)}>
+              取消
+            </Button>
+            <Button onClick={handleSaveAsTemplate}>
+              确认保存
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

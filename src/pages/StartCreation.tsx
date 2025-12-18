@@ -5,21 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { 
   Plus,
   Clock,
   Layers,
   FileText,
   BarChart3,
-  Search,
-  Save
+  Search
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -42,8 +34,6 @@ const StartCreation = () => {
   const [taskType, setTaskType] = useState<'flexible' | 'fixed'>('flexible');
   const [taskName, setTaskName] = useState('');
   const [templateSearch, setTemplateSearch] = useState('');
-  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
-  const [newTemplateName, setNewTemplateName] = useState('');
 
   // Demo templates
   const [templates] = useState<Template[]>([
@@ -113,24 +103,6 @@ const StartCreation = () => {
     });
   };
 
-  const handleSaveAsTemplate = () => {
-    if (!newTemplateName.trim()) {
-      toast({
-        title: "请输入模板名称",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    toast({
-      title: "模板保存成功",
-      description: `模板"${newTemplateName}"已保存`
-    });
-    setSaveTemplateOpen(false);
-    setNewTemplateName('');
-    navigate('/templates');
-  };
-
   return (
     <div className="p-6 max-w-4xl mx-auto min-h-full space-y-8">
       {/* Header */}
@@ -145,22 +117,12 @@ const StartCreation = () => {
       <div className="space-y-6">
         {/* Module 1: Create New Task */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Plus size={20} />
-                创建新任务
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">创建全新任务</p>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setSaveTemplateOpen(true)}
-            >
-              <Save size={16} className="mr-2" />
-              另存为模板
-            </Button>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Plus size={20} />
+              创建新任务
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">创建全新任务</p>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Task Type */}
@@ -281,31 +243,6 @@ const StartCreation = () => {
         </Card>
       </div>
 
-      {/* Save as Template Dialog */}
-      <Dialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>另存为模板</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <Label className="text-sm font-medium">模板名称</Label>
-            <Input
-              placeholder="输入模板名称..."
-              value={newTemplateName}
-              onChange={(e) => setNewTemplateName(e.target.value)}
-              className="mt-2"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSaveTemplateOpen(false)}>
-              取消
-            </Button>
-            <Button onClick={handleSaveAsTemplate}>
-              确认保存
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
