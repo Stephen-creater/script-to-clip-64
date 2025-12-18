@@ -5,15 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Switch } from "@/components/ui/switch";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { 
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -24,286 +16,151 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { 
-  Upload, 
-  Search, 
+  Upload,
+  Search,
   Grid,
   List,
-  FileVideo,
-  FileImage,
-  FileAudio,
   Trash2,
-  Eye,
   Download,
-  Plus,
-  Folder,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Cpu,
-  User,
-  RefreshCw
+  Settings2,
+  Scissors,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import FolderSidebar, { FolderItem } from "@/components/FolderManagement/FolderSidebar";
+import FilterPanel, { FilterState } from "@/components/Materials/FilterPanel";
+import MediaCard from "@/components/Materials/MediaCard";
+import PreprocessingWorkbench from "@/components/Materials/PreprocessingWorkbench";
 import { useMaterials, Material } from "@/hooks/useMaterials";
 import { useToast } from "@/hooks/use-toast";
+
+// Mock review statuses and rejection reasons
+const mockReviewData: Record<string, { status: 'machine_review' | 'pending_human' | 'rejected' | 'approved'; reason?: string }> = {
+  'video-1': { status: 'machine_review' },
+  'video-2': { status: 'pending_human' },
+  'video-3': { status: 'rejected', reason: '背景音乐侵权' },
+  'video-4': { status: 'approved' },
+  'video-5': { status: 'rejected', reason: '画面模糊不清晰' },
+  'video-6': { status: 'pending_human' },
+  'video-7': { status: 'approved' },
+};
 
 const Materials = () => {
   const { toast } = useToast();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState('all');
-  const [expandedFolders, setExpandedFolders] = useState<string[]>(['all', 'images', 'stickers', 'audio']);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [uploaderFilter, setUploaderFilter] = useState("");
-  const [dateFilter, setDateFilter] = useState<string>("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [reviewMode, setReviewMode] = useState(false);
-  // Initialize with demo data showing all 5 statuses
-  const [reviewStatuses, setReviewStatuses] = useState<Record<string, 'pending_machine' | 'pending_human' | 'pending_transcode' | 'approved' | 'rejected'>>({
-    'video-1': 'pending_machine',
-    'video-2': 'pending_human',
-    'video-3': 'pending_transcode',
-    'video-4': 'approved',
-    'video-5': 'rejected',
-    'video-6': 'pending_human',
-    'video-7': 'approved',
-  });
-  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
-  const [previewMaterial, setPreviewMaterial] = useState<Material | null>(null);
+  const [workbenchOpen, setWorkbenchOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const { 
-    materials, 
-    loading, 
-    uploading, 
+
+  // Filter state
+  const [filters, setFilters] = useState<FilterState>({
+    aspectRatio: { vertical: false, horizontal: false },
+    duration: { short: false, long: false },
+    reviewStatus: { machineReview: false, pendingHuman: false, rejected: false, approved: false },
+    folder: null,
+  });
+
+  const {
+    materials,
+    loading,
+    uploading,
     uploadProgress,
-    uploadMaterial, 
-    deleteMaterial, 
-    getMaterialsByCategory, 
+    uploadMaterial,
+    deleteMaterial,
     getMaterialUrl,
   } = useMaterials();
 
-  // Get review status for a material
-  const getReviewStatus = (materialId: string): 'pending_machine' | 'pending_human' | 'pending_transcode' | 'approved' | 'rejected' => {
-    return reviewStatuses[materialId] || 'pending_machine';
-  };
-
-  // Count materials by review status
-  const pendingMachineCount = materials.filter(m => getReviewStatus(m.id) === 'pending_machine').length;
-  const pendingHumanCount = materials.filter(m => getReviewStatus(m.id) === 'pending_human').length;
-  const pendingTranscodeCount = materials.filter(m => getReviewStatus(m.id) === 'pending_transcode').length;
-  const approvedCount = materials.filter(m => getReviewStatus(m.id) === 'approved').length;
-  const rejectedCount = materials.filter(m => getReviewStatus(m.id) === 'rejected').length;
-  
-  // Dynamic folder structure with correct counts
-  const getDynamicFolders = (): FolderItem[] => [
-    { 
-      id: 'all', 
-      name: '视频素材', 
+  // Folder structure for filter panel
+  const folderStructure = [
+    {
+      id: 'video',
+      name: '视频素材',
       count: materials.filter(m => m.file_type === 'video').length,
-      type: 'video',
-      hasChildren: true,
       children: [
-        { id: 'window-scenery', name: '车窗外风景', count: getMaterialsByCategory('视频素材', '车窗外风景').length, parentId: 'all', type: 'video' },
-        { id: 'station-interior', name: '车站内', count: getMaterialsByCategory('视频素材', '车站内').length, parentId: 'all', type: 'video' },
-      ]
+        { id: 'window-scenery', name: '车窗外风景', count: 5 },
+        { id: 'station-interior', name: '车站内', count: 3 },
+      ],
     },
-    { 
-      id: 'images', 
-      name: '图片素材', 
+    {
+      id: 'images',
+      name: '图片素材',
       count: materials.filter(m => m.file_type === 'image').length,
-      type: 'image',
-      hasChildren: true,
       children: [
-        { id: 'emotion', name: '表情类', count: getMaterialsByCategory('图片素材', '表情类').length, parentId: 'images', type: 'image' },
-        { id: 'decorative', name: '装饰类', count: getMaterialsByCategory('图片素材', '装饰类').length, parentId: 'images', type: 'image' },
-        { id: 'marketing', name: '营销类', count: getMaterialsByCategory('图片素材', '营销类').length, parentId: 'images', type: 'image' },
-      ]
+        { id: 'emotion', name: '表情类', count: 8 },
+        { id: 'decorative', name: '装饰类', count: 4 },
+      ],
     },
-    { 
-      id: 'stickers', 
-      name: '贴纸素材', 
-      count: materials.filter(m => m.category === '贴纸素材').length,
-      type: 'image',
-      hasChildren: true,
-      children: [
-        { id: 'sticker-emoji', name: '表情贴纸', count: getMaterialsByCategory('贴纸素材', '表情贴纸').length, parentId: 'stickers', type: 'image' },
-        { id: 'sticker-text', name: '文字贴纸', count: getMaterialsByCategory('贴纸素材', '文字贴纸').length, parentId: 'stickers', type: 'image' },
-        { id: 'sticker-effect', name: '特效贴纸', count: getMaterialsByCategory('贴纸素材', '特效贴纸').length, parentId: 'stickers', type: 'image' },
-      ]
-    },
-    { 
-      id: 'audio', 
-      name: '音频素材', 
+    {
+      id: 'audio',
+      name: '音频素材',
       count: materials.filter(m => m.file_type === 'audio').length,
-      type: 'audio',
-      hasChildren: true,
       children: [
-        { id: 'bgm', name: 'BGM', count: getMaterialsByCategory('音频素材', 'BGM').length, parentId: 'audio', type: 'audio' },
-        { id: 'sound-effects', name: '音效素材', count: getMaterialsByCategory('音频素材', '音效素材').length, parentId: 'audio', type: 'audio' },
-      ]
+        { id: 'bgm', name: 'BGM', count: 6 },
+        { id: 'sound-effects', name: '音效', count: 10 },
+      ],
     },
   ];
 
-  const folders = getDynamicFolders();
-
-  // Get category and subcategory from selected folder
-  const getFolderInfo = (folderId: string) => {
-    if (folderId === 'all' || folderId === 'window-scenery' || folderId === 'station-interior') {
-      return { category: '视频素材', subcategory: folderId === 'window-scenery' ? '车窗外风景' : folderId === 'station-interior' ? '车站内' : undefined };
-    } else if (folderId === 'images' || folderId === 'emotion' || folderId === 'decorative' || folderId === 'marketing') {
-      return { 
-        category: '图片素材', 
-        subcategory: folderId === 'emotion' ? '表情类' : 
-                    folderId === 'decorative' ? '装饰类' :
-                    folderId === 'marketing' ? '营销类' : undefined
-      };
-    } else if (folderId === 'stickers' || folderId === 'sticker-emoji' || folderId === 'sticker-text' || folderId === 'sticker-effect') {
-      return { 
-        category: '贴纸素材', 
-        subcategory: folderId === 'sticker-emoji' ? '表情贴纸' : 
-                    folderId === 'sticker-text' ? '文字贴纸' :
-                    folderId === 'sticker-effect' ? '特效贴纸' : undefined
-      };
-    } else if (folderId === 'audio' || folderId === 'bgm' || folderId === 'sound-effects') {
-      return { 
-        category: '音频素材', 
-        subcategory: folderId === 'bgm' ? 'BGM' : folderId === 'sound-effects' ? '音效素材' : undefined
-      };
-    }
-    return { category: '视频素材', subcategory: undefined };
+  // Get review status for a material
+  const getReviewData = (materialId: string) => {
+    return mockReviewData[materialId] || { status: 'approved' as const };
   };
 
-  // Check if folder has children (should show subfolders instead of files)
-  const hasSubfolders = (folderId: string) => {
-    const findFolder = (folders: FolderItem[], id: string): FolderItem | null => {
-      for (const folder of folders) {
-        if (folder.id === id) return folder;
-        if (folder.children) {
-          const found = findFolder(folder.children, id);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-    
-    const folder = findFolder(folders, folderId);
-    return folder?.hasChildren || (folder?.children && folder.children.length > 0);
-  };
-
-  // Get subfolders for parent folders
-  const getSubfolders = (folderId: string) => {
-    const findFolder = (folders: FolderItem[], id: string): FolderItem | null => {
-      for (const folder of folders) {
-        if (folder.id === id) return folder;
-        if (folder.children) {
-          const found = findFolder(folder.children, id);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-    
-    const folder = findFolder(folders, folderId);
-    return folder?.children || [];
-  };
-
-  // File upload handlers
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    if (files.length > 0) {
-      const { category, subcategory } = getFolderInfo(selectedFolder);
-      files.forEach(file => {
-        uploadMaterial(file, category, subcategory);
-      });
-    }
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  // Get filtered materials - only for leaf folders
+  // Filter materials
   const getFilteredMaterials = () => {
-    // If folder has subfolders, don't show materials
-    if (hasSubfolders(selectedFolder)) {
-      return [];
-    }
-
     let filtered = materials;
-    
-    if (selectedFolder !== 'all') {
-      if (selectedFolder === 'window-scenery') {
-        filtered = getMaterialsByCategory('视频素材', '车窗外风景');
-      } else if (selectedFolder === 'station-interior') {
-        filtered = getMaterialsByCategory('视频素材', '车站内');
-      } else if (selectedFolder === 'emotion') {
-        filtered = getMaterialsByCategory('图片素材', '表情类');
-      } else if (selectedFolder === 'decorative') {
-        filtered = getMaterialsByCategory('图片素材', '装饰类');
-      } else if (selectedFolder === 'marketing') {
-        filtered = getMaterialsByCategory('图片素材', '营销类');
-      } else if (selectedFolder === 'sticker-emoji') {
-        filtered = getMaterialsByCategory('贴纸素材', '表情贴纸');
-      } else if (selectedFolder === 'sticker-text') {
-        filtered = getMaterialsByCategory('贴纸素材', '文字贴纸');
-      } else if (selectedFolder === 'sticker-effect') {
-        filtered = getMaterialsByCategory('贴纸素材', '特效贴纸');
-      } else if (selectedFolder === 'bgm') {
-        filtered = getMaterialsByCategory('音频素材', 'BGM');
-      } else if (selectedFolder === 'sound-effects') {
-        filtered = getMaterialsByCategory('音频素材', '音效素材');
-      } else if (selectedFolder === 'all') {
-        filtered = materials.filter(m => m.file_type === 'video');
-      } else if (selectedFolder === 'audio') {
-        filtered = materials.filter(m => m.file_type === 'audio');
-      }
-    }
 
-    // Filter by material name
+    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(material =>
-        material.name.toLowerCase().includes(searchTerm.toLowerCase())
+        material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        material.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
-    // Filter by status
-    if (statusFilter && statusFilter !== 'all') {
-      filtered = filtered.filter(material => 
-        getReviewStatus(material.id) === statusFilter
-      );
-    }
-
-    // Filter by uploader (mock - materials don't have uploader field, using fallback)
-    if (uploaderFilter) {
-      filtered = filtered.filter(material =>
-        '系统管理员'.toLowerCase().includes(uploaderFilter.toLowerCase())
-      );
-    }
-
-    // Filter by date
-    if (dateFilter && dateFilter !== 'all') {
-      const now = new Date();
+    // Aspect ratio filter
+    if (filters.aspectRatio.vertical || filters.aspectRatio.horizontal) {
       filtered = filtered.filter(material => {
-        const createdAt = material.created_at ? new Date(material.created_at) : now;
-        const diffDays = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
-        
-        if (dateFilter === 'today') return diffDays === 0;
-        if (dateFilter === 'week') return diffDays <= 7;
-        if (dateFilter === 'month') return diffDays <= 30;
+        // Mock aspect ratio check - in real app, would check actual dimensions
+        if (filters.aspectRatio.vertical && material.file_type === 'video') return true;
+        if (filters.aspectRatio.horizontal && material.file_type === 'image') return true;
+        return false;
+      });
+    }
+
+    // Duration filter
+    if (filters.duration.short || filters.duration.long) {
+      filtered = filtered.filter(material => {
+        if (!material.duration) return false;
+        if (filters.duration.short && material.duration < 5) return true;
+        if (filters.duration.long && material.duration > 15) return true;
+        return false;
+      });
+    }
+
+    // Review status filter
+    const statusFilters = filters.reviewStatus;
+    const hasStatusFilter = statusFilters.machineReview || statusFilters.pendingHuman ||
+      statusFilters.rejected || statusFilters.approved;
+
+    if (hasStatusFilter) {
+      filtered = filtered.filter(material => {
+        const status = getReviewData(material.id).status;
+        if (statusFilters.machineReview && status === 'machine_review') return true;
+        if (statusFilters.pendingHuman && status === 'pending_human') return true;
+        if (statusFilters.rejected && status === 'rejected') return true;
+        if (statusFilters.approved && status === 'approved') return true;
+        return false;
+      });
+    }
+
+    // Folder filter
+    if (filters.folder) {
+      filtered = filtered.filter(material => {
+        // Mock folder matching
+        if (filters.folder === 'video') return material.file_type === 'video';
+        if (filters.folder === 'images') return material.file_type === 'image';
+        if (filters.folder === 'audio') return material.file_type === 'audio';
         return true;
       });
     }
@@ -312,17 +169,6 @@ const Materials = () => {
   };
 
   const filteredMaterials = getFilteredMaterials();
-  const subfolders = hasSubfolders(selectedFolder) ? getSubfolders(selectedFolder) : [];
-  const shouldShowSubfolders = hasSubfolders(selectedFolder) && subfolders.length > 0;
-
-  const getFileIcon = (fileType: string) => {
-    switch (fileType) {
-      case 'video': return <FileVideo size={16} className="text-blue-500" />;
-      case 'image': return <FileImage size={16} className="text-green-500" />;
-      case 'audio': return <FileAudio size={16} className="text-purple-500" />;
-      default: return <FileVideo size={16} />;
-    }
-  };
 
   const handleSelectItem = (itemId: string, checked: boolean) => {
     if (checked) {
@@ -357,128 +203,27 @@ const Materials = () => {
     setDeleteDialogOpen(false);
   };
 
-  const handleFolderToggle = (folderId: string) => {
-    if (expandedFolders.includes(folderId)) {
-      setExpandedFolders(expandedFolders.filter(id => id !== folderId));
-    } else {
-      setExpandedFolders([...expandedFolders, folderId]);
-    }
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  // Handle material click for preview (in review mode)
-  const handleMaterialClick = (material: Material) => {
-    if (reviewMode) {
-      const status = getReviewStatus(material.id);
-      if (status === 'pending_machine') {
-        toast({
-          title: "无法预览",
-          description: "待机审状态的素材无法预览，请等待机审完成",
-          variant: "destructive",
-        });
-        return;
-      }
-      setPreviewMaterial(material);
-      setPreviewDialogOpen(true);
-    }
-  };
-
-  // Human review - pass (moves to pending_transcode, then auto to approved after 3s)
-  const handleHumanReviewPass = () => {
-    if (previewMaterial) {
-      const materialId = previewMaterial.id;
-      const materialName = previewMaterial.name;
-      
-      // First set to pending_transcode
-      setReviewStatuses(prev => ({
-        ...prev,
-        [materialId]: 'pending_transcode'
-      }));
-      toast({
-        title: "人审通过",
-        description: `素材 "${materialName}" 已通过人审，开始转码中...`,
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      files.forEach(file => {
+        uploadMaterial(file, '视频素材');
       });
-      setPreviewDialogOpen(false);
-      setPreviewMaterial(null);
-      
-      // Simulate transcode delay (3s), then set to approved
-      setTimeout(() => {
-        setReviewStatuses(prev => ({
-          ...prev,
-          [materialId]: 'approved'
-        }));
-        toast({
-          title: "转码完成",
-          description: `素材 "${materialName}" 转码成功，已审核通过`,
-        });
-      }, 3000);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
-  // Human review - reject
-  const handleHumanReviewReject = () => {
-    if (previewMaterial) {
-      setReviewStatuses(prev => ({
-        ...prev,
-        [previewMaterial.id]: 'rejected'
-      }));
-      toast({
-        title: "人审不通过",
-        description: `素材 "${previewMaterial.name}" 已标记为未通过`,
-      });
-      setPreviewDialogOpen(false);
-      setPreviewMaterial(null);
-    }
-  };
-
-  // Render review status badge
-  const renderReviewBadge = (materialId: string) => {
-    const status = getReviewStatus(materialId);
-    switch (status) {
-      case 'approved':
-        return (
-          <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 text-xs">
-            <CheckCircle size={10} className="mr-1" />
-            审核通过
-          </Badge>
-        );
-      case 'rejected':
-        return (
-          <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs">
-            <XCircle size={10} className="mr-1" />
-            未通过
-          </Badge>
-        );
-      case 'pending_human':
-        return (
-          <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-xs">
-            <User size={10} className="mr-1" />
-            待人审
-          </Badge>
-        );
-      case 'pending_transcode':
-        return (
-          <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20 text-xs">
-            <RefreshCw size={10} className="mr-1" />
-            待转码
-          </Badge>
-        );
-      case 'pending_machine':
-      default:
-        return (
-          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20 text-xs">
-            <Cpu size={10} className="mr-1" />
-            待机审
-          </Badge>
-        );
-    }
+  const handleClipsSubmit = (clips: any[]) => {
+    toast({
+      title: "素材入库成功",
+      description: `${clips.length} 个片段已添加到素材库`,
+    });
   };
 
   if (loading) {
@@ -494,345 +239,240 @@ const Materials = () => {
 
   return (
     <div className="flex h-full">
-      <FolderSidebar
-        folders={folders}
-        selectedFolder={selectedFolder}
-        expandedFolders={expandedFolders}
-        onFolderSelect={setSelectedFolder}
-        onFolderToggle={handleFolderToggle}
-        onFolderCreate={(name: string, type: 'video' | 'image' | 'audio') => {
-          toast({
-            title: "提示",
-            description: `文件夹 "${name}" (${type === 'video' ? '视频' : type === 'image' ? '图片' : '音频'}) 创建功能即将上线`,
-          });
-        }}
-        onFolderRename={() => {}}
-        onFolderDelete={() => {}}
-        title="素材文件夹"
+      {/* Left Filter Panel */}
+      <FilterPanel
+        filters={filters}
+        onFiltersChange={setFilters}
+        folders={folderStructure}
       />
 
       {/* Main Content */}
-      <div className="flex-1 p-6">
-        {/* Search and Filter Bar */}
-        <div className="bg-card border border-border rounded-lg p-4 mb-6">
-          <div className="grid grid-cols-4 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">素材名</label>
-              <Input
-                placeholder="搜索素材名..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-9"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">状态</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="全部状态" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border border-border z-50">
-                  <SelectItem value="all">全部状态</SelectItem>
-                  <SelectItem value="pending_machine">机审时间待确定</SelectItem>
-                  <SelectItem value="pending_human">待人审</SelectItem>
-                  <SelectItem value="approved">审核通过</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">上传人</label>
-              <Input
-                placeholder="搜索上传人..."
-                value={uploaderFilter}
-                onChange={(e) => setUploaderFilter(e.target.value)}
-                className="h-9"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">上传时间</label>
-              <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="全部时间" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border border-border z-50">
-                  <SelectItem value="all">全部时间</SelectItem>
-                  <SelectItem value="today">今天</SelectItem>
-                  <SelectItem value="week">最近一周</SelectItem>
-                  <SelectItem value="month">最近一个月</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <h1 className="text-display">素材库</h1>
-            <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-              演示模式
-            </Badge>
-            {/* Review Mode Toggle */}
-            <div className="flex items-center gap-2 ml-4">
-              <Switch
-                checked={reviewMode}
-                onCheckedChange={setReviewMode}
-              />
-              <span className="text-sm text-muted-foreground">审核模式</span>
-            </div>
-          </div>
-          {/* Review Status Counts (always visible) */}
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-              <Cpu size={12} className="mr-1" />
-              待机审 {pendingMachineCount}
-            </Badge>
-            <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-              <User size={12} className="mr-1" />
-              待人审 {pendingHumanCount}
-            </Badge>
-            <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
-              <RefreshCw size={12} className="mr-1" />
-              待转码 {pendingTranscodeCount}
-            </Badge>
-            <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-              <CheckCircle size={12} className="mr-1" />
-              审核通过 {approvedCount}
-            </Badge>
-            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
-              <XCircle size={12} className="mr-1" />
-              未通过 {rejectedCount}
-            </Badge>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button 
-              className="bg-gradient-primary"
-              onClick={handleUploadClick}
-              disabled={uploading}
-            >
-              <Upload size={16} className="mr-2" />
-              {uploading ? '上传中...' : '上传素材'}
-            </Button>
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-              <Input 
-                placeholder="搜索素材..." 
-                className="pl-10 w-64"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            <div className="flex bg-secondary rounded-lg p-1">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Action Bar */}
+        <div className="p-4 border-b border-border bg-card">
+          <div className="flex items-center justify-between gap-4">
+            {/* Primary Actions */}
+            <div className="flex items-center gap-3">
               <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
+                size="lg"
+                className="bg-gradient-primary gap-2"
+                onClick={() => setWorkbenchOpen(true)}
               >
-                <Grid size={16} />
+                <Scissors size={18} />
+                上传并粗剪
               </Button>
+
               <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
+                variant="outline"
+                onClick={handleUploadClick}
+                disabled={uploading}
               >
-                <List size={16} />
+                <Upload size={16} className="mr-2" />
+                {uploading ? '上传中...' : '直接上传'}
               </Button>
+
+              <div className="h-8 w-px bg-border" />
+
+              <Button
+                variant="outline"
+                onClick={handleBatchDelete}
+                disabled={selectedItems.length === 0}
+              >
+                <Settings2 size={16} className="mr-2" />
+                批量管理
+              </Button>
+
+              <Button
+                variant="outline"
+                disabled={selectedItems.length === 0}
+              >
+                <Download size={16} className="mr-2" />
+                下载
+              </Button>
+            </div>
+
+            {/* Search and View Toggle */}
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="搜索素材..."
+                  className="pl-10 w-64"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="flex bg-secondary rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid size={16} />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List size={16} />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Upload Progress */}
         {uploading && (
-          <Card className="mb-4">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Upload size={16} className="text-primary animate-pulse" />
-                <div className="flex-1">
-                  <p className="text-body-small font-medium">正在上传到 {getFolderInfo(selectedFolder).category}...</p>
-                  <Progress value={uploadProgress} className="h-2 mt-2" />
-                  <p className="text-caption text-muted-foreground mt-1">{uploadProgress}% 完成</p>
+          <div className="px-4 pt-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <Upload size={16} className="text-primary animate-pulse" />
+                  <div className="flex-1">
+                    <p className="text-body-small font-medium">正在上传...</p>
+                    <Progress value={uploadProgress} className="h-2 mt-2" />
+                    <p className="text-caption text-muted-foreground mt-1">{uploadProgress}% 完成</p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* Selection Bar */}
         {selectedItems.length > 0 && (
-          <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg mb-4 border border-primary/20">
-            <span className="text-body-small font-medium">已选择 {selectedItems.length} 个文件</span>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="destructive" 
-                size="sm"
-                onClick={handleBatchDelete}
-              >
-                <Trash2 size={16} className="mr-2" />
-                删除
-              </Button>
+          <div className="px-4 pt-4">
+            <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <span className="text-body-small font-medium">已选择 {selectedItems.length} 个文件</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBatchDelete}
+                >
+                  <Trash2 size={16} className="mr-2" />
+                  删除
+                </Button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Show subfolders or materials based on folder type */}
-        {shouldShowSubfolders ? (
-          // Show subfolders as cards
-          <div>
-            <div className="mb-4">
-              <span className="text-sm text-muted-foreground">子文件夹</span>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {subfolders.map((subfolder) => (
-                <div
-                  key={subfolder.id}
-                  className="bg-card border border-border rounded-lg p-4 hover:shadow-card transition-all cursor-pointer"
-                  onClick={() => setSelectedFolder(subfolder.id)}
-                >
-                  <div className="flex flex-col items-center text-center">
-                    <Folder size={32} className="text-primary mb-2" />
-                    <h3 className="text-sm font-medium truncate w-full">{subfolder.name}</h3>
-                    <p className="text-xs text-muted-foreground">{subfolder.count} 个文件</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* Materials Grid/List */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {/* Select All */}
+          <div className="flex items-center gap-2 mb-4">
+            <Checkbox
+              checked={selectedItems.length === filteredMaterials.length && filteredMaterials.length > 0}
+              onCheckedChange={handleSelectAll}
+            />
+            <span className="text-sm text-muted-foreground">
+              全选 ({filteredMaterials.length} 个素材)
+            </span>
           </div>
-        ) : viewMode === 'grid' ? (
-          // Show materials in grid view
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Checkbox
-                checked={selectedItems.length === filteredMaterials.length && filteredMaterials.length > 0}
-                onCheckedChange={handleSelectAll}
-              />
-              <span className="text-sm text-muted-foreground">全选</span>
+
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {filteredMaterials.map((material) => {
+                const reviewData = getReviewData(material.id);
+                return (
+                  <MediaCard
+                    key={material.id}
+                    material={material}
+                    isSelected={selectedItems.includes(material.id)}
+                    onSelect={handleSelectItem}
+                    reviewStatus={reviewData.status}
+                    rejectionReason={reviewData.reason}
+                    getMaterialUrl={getMaterialUrl}
+                  />
+                );
+              })}
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {filteredMaterials.map((material) => (
-                <div
-                  key={material.id}
-                  className={cn(
-                    "bg-card border border-border rounded-lg p-3 hover:shadow-card transition-all cursor-pointer",
-                    selectedItems.includes(material.id) && "ring-2 ring-primary"
-                  )}
-                  onClick={() => handleMaterialClick(material)}
-                >
-                  <div className="relative mb-2">
+          ) : (
+            <div className="space-y-2">
+              {filteredMaterials.map((material) => {
+                const reviewData = getReviewData(material.id);
+                return (
+                  <div
+                    key={material.id}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer border border-border",
+                      selectedItems.includes(material.id) && "bg-primary/10 border-primary/30"
+                    )}
+                  >
                     <Checkbox
-                      className="absolute top-2 left-2 z-10"
                       checked={selectedItems.includes(material.id)}
                       onCheckedChange={(checked) => handleSelectItem(material.id, !!checked)}
-                      onClick={(e) => e.stopPropagation()}
                     />
-                    <div className="aspect-video bg-muted rounded flex items-center justify-center overflow-hidden">
+                    <div className="w-20 h-12 bg-muted rounded overflow-hidden flex items-center justify-center">
                       {material.file_type === 'image' ? (
-                        <img 
+                        <img
                           src={getMaterialUrl(material)}
                           alt={material.name}
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                          }}
                         />
-                      ) : null}
-                      <div className={material.file_type === 'image' ? 'hidden' : ''}>
-                        {getFileIcon(material.file_type)}
+                      ) : (
+                        <span className="text-xs text-muted-foreground">{material.file_type}</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{material.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        {material.tags?.slice(0, 2).map(tag => (
+                          <Badge key={tag} variant="outline" className="text-xs">
+                            #{tag}
+                          </Badge>
+                        ))}
                       </div>
                     </div>
-                    {material.duration && (
-                      <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1 rounded">
-                        {material.duration}s
-                      </span>
-                    )}
+                    <Badge
+                      className={cn(
+                        "text-xs",
+                        reviewData.status === 'approved' && "bg-success/90 text-success-foreground",
+                        reviewData.status === 'rejected' && "bg-destructive/90 text-destructive-foreground",
+                        reviewData.status === 'pending_human' && "bg-info/90 text-info-foreground",
+                        reviewData.status === 'machine_review' && "bg-warning/90 text-warning-foreground"
+                      )}
+                    >
+                      {reviewData.status === 'approved' && '已入库'}
+                      {reviewData.status === 'rejected' && '已驳回'}
+                      {reviewData.status === 'pending_human' && '待人审'}
+                      {reviewData.status === 'machine_review' && '机审中'}
+                    </Badge>
                   </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-sm font-medium truncate flex-1">{material.name}</h3>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">{formatFileSize(material.file_size)}</p>
-                    {renderReviewBadge(material.id)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-          </div>
-        ) : (
-          // List View
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 p-2 border-b">
-              <Checkbox
-                checked={selectedItems.length === filteredMaterials.length && filteredMaterials.length > 0}
-                onCheckedChange={handleSelectAll}
-              />
-              <span className="text-sm font-medium flex-1">名称</span>
-              <span className="text-sm font-medium w-24 text-center">状态</span>
-              <span className="text-sm font-medium w-32">操作</span>
-            </div>
-            {filteredMaterials.map((material) => (
-              <div
-                key={material.id}
-                className={cn(
-                  "flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer",
-                  selectedItems.includes(material.id) && "bg-primary/10"
-                )}
-                onClick={() => handleMaterialClick(material)}
-              >
-                <Checkbox
-                  checked={selectedItems.includes(material.id)}
-                  onCheckedChange={(checked) => handleSelectItem(material.id, !!checked)}
-                  onClick={(e) => e.stopPropagation()}
-                />
-                {getFileIcon(material.file_type)}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{material.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatFileSize(material.file_size)} • {new Date(material.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="w-24 flex justify-center">
-                  {renderReviewBadge(material.id)}
-                </div>
-                <div className="flex items-center gap-1 w-32">
-                  <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
-                    <Eye size={14} />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
-                    <Download size={14} />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteMaterial(material.id);
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+          )}
 
-        {/* Empty State */}
-        {!shouldShowSubfolders && filteredMaterials.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <div className="text-muted-foreground mb-4">
-              <Upload size={48} className="mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium">暂无素材文件</p>
-              <p className="text-sm">上传您的第一个素材文件吧</p>
+          {/* Empty State */}
+          {filteredMaterials.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <div className="text-muted-foreground mb-4">
+                <Upload size={48} className="mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium">暂无素材文件</p>
+                <p className="text-sm">点击"上传并粗剪"开始添加素材</p>
+              </div>
+              <Button onClick={() => setWorkbenchOpen(true)} className="mt-4 bg-gradient-primary">
+                <Scissors size={16} className="mr-2" />
+                上传并粗剪
+              </Button>
             </div>
-            <Button onClick={handleUploadClick} className="mt-4">
-              <Plus size={16} className="mr-2" />
-              上传素材
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        multiple
+        accept="video/*,image/*,audio/*"
+        onChange={handleFileSelect}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -852,86 +492,11 @@ const Materials = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Preview Dialog for Review Mode */}
-      <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {previewMaterial && getFileIcon(previewMaterial.file_type)}
-              {previewMaterial?.name}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4">
-            {previewMaterial && (
-              <div className="space-y-4">
-                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                  {previewMaterial.file_type === 'video' && (
-                    <video 
-                      src={getMaterialUrl(previewMaterial)}
-                      controls
-                      className="w-full h-full object-contain"
-                    />
-                  )}
-                  {previewMaterial.file_type === 'image' && (
-                    <img 
-                      src={getMaterialUrl(previewMaterial)}
-                      alt={previewMaterial.name}
-                      className="w-full h-full object-contain"
-                    />
-                  )}
-                  {previewMaterial.file_type === 'audio' && (
-                    <div className="flex flex-col items-center gap-4">
-                      <FileAudio size={64} className="text-purple-500" />
-                      <audio 
-                        src={getMaterialUrl(previewMaterial)}
-                        controls
-                        className="w-full max-w-md"
-                      />
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>大小: {formatFileSize(previewMaterial.file_size)}</span>
-                  {previewMaterial.duration && <span>时长: {previewMaterial.duration}s</span>}
-                  <div className="flex items-center gap-2">
-                    <span>状态:</span>
-                    {renderReviewBadge(previewMaterial.id)}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewDialogOpen(false)}>
-              关闭
-            </Button>
-            {previewMaterial && reviewMode && (
-              <>
-                <Button onClick={handleHumanReviewReject} variant="destructive">
-                  <XCircle size={16} className="mr-2" />
-                  不通过
-                </Button>
-                <Button onClick={handleHumanReviewPass} className="bg-green-600 hover:bg-green-700">
-                  <CheckCircle size={16} className="mr-2" />
-                  通过
-                </Button>
-              </>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        className="hidden"
-        accept="image/*,video/*,audio/*"
-        onChange={handleFileSelect}
+      {/* Preprocessing Workbench Modal */}
+      <PreprocessingWorkbench
+        open={workbenchOpen}
+        onOpenChange={setWorkbenchOpen}
+        onClipsSubmit={handleClipsSubmit}
       />
     </div>
   );
