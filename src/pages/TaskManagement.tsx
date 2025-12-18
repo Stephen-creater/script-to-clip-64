@@ -10,7 +10,6 @@ import {
   Layers,
   Calendar
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 interface Task {
   id: string;
@@ -25,7 +24,6 @@ interface Task {
 }
 
 const TaskManagement = () => {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTime, setFilterTime] = useState('all');
   const [filterGroup, setFilterGroup] = useState('all');
@@ -120,9 +118,6 @@ const TaskManagement = () => {
     }
   };
 
-  const handleTaskClick = (taskId: string) => {
-    navigate(`/editor/${taskId}`);
-  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto min-h-full">
@@ -178,8 +173,7 @@ const TaskManagement = () => {
         {filteredTasks.map((task) => (
           <Card 
             key={task.id} 
-            className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
-            onClick={() => handleTaskClick(task.id)}
+            className="hover:shadow-md transition-shadow duration-200"
           >
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
