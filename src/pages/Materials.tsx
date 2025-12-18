@@ -222,11 +222,27 @@ const Materials = () => {
     fileInputRef.current?.click();
   };
 
+  // Generate auto-naming based on folder + uploader + sequence
+  const generateAutoName = (originalName: string, folderName: string, uploaderName: string, index: number) => {
+    const extension = originalName.substring(originalName.lastIndexOf('.'));
+    const sequenceNum = String(index + 1).padStart(2, '0');
+    return `${folderName}_${uploaderName}_${sequenceNum}${extension}`;
+  };
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     if (files.length > 0) {
-      files.forEach(file => {
-        uploadMaterial(file, '视频素材');
+      // Get current folder name and uploader name
+      const currentFolderName = filters.folder 
+        ? folderStructure.flatMap(f => [f, ...(f.children || [])]).find(f => f.id === filters.folder)?.name || '未分类'
+        : '未分类';
+      const uploaderName = '熊浩成'; // In real app, get from auth context
+      
+      files.forEach((file, index) => {
+        const autoName = generateAutoName(file.name, currentFolderName, uploaderName, index);
+        // Create a new file with the auto-generated name
+        const renamedFile = new File([file], autoName, { type: file.type });
+        uploadMaterial(renamedFile, '视频素材');
       });
     }
     if (fileInputRef.current) {
@@ -388,6 +404,14 @@ const Materials = () => {
             <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border border-primary/20">
               <span className="text-body-small font-medium">已选择 {selectedItems.length} 个文件</span>
               <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setBatchMoveOpen(true)}
+                >
+                  <FolderInput size={16} className="mr-2" />
+                  移动
+                </Button>
                 <Button
                   variant="destructive"
                   size="sm"
