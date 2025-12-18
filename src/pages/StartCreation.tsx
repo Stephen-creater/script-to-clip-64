@@ -5,14 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { 
   Plus,
-  Play,
   Clock,
   Layers,
   FileText,
-  User,
-  BarChart3
+  BarChart3,
+  Search,
+  Save
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +41,9 @@ const StartCreation = () => {
   const { toast } = useToast();
   const [taskType, setTaskType] = useState<'flexible' | 'fixed'>('flexible');
   const [taskName, setTaskName] = useState('');
+  const [templateSearch, setTemplateSearch] = useState('');
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
 
   // Demo templates
   const [templates] = useState<Template[]>([
@@ -72,6 +82,10 @@ const StartCreation = () => {
     }
   ]);
 
+  const filteredTemplates = templates.filter(template =>
+    template.name.toLowerCase().includes(templateSearch.toLowerCase())
+  );
+
   const formatDuration = (seconds: number) => {
     if (seconds < 60) return `${seconds}秒`;
     const mins = Math.floor(seconds / 60);
@@ -99,8 +113,26 @@ const StartCreation = () => {
     });
   };
 
+  const handleSaveAsTemplate = () => {
+    if (!newTemplateName.trim()) {
+      toast({
+        title: "请输入模板名称",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "模板保存成功",
+      description: `模板"${newTemplateName}"已保存`
+    });
+    setSaveTemplateOpen(false);
+    setNewTemplateName('');
+    navigate('/templates');
+  };
+
   return (
-    <div className="p-6 max-w-7xl mx-auto min-h-full space-y-8">
+    <div className="p-6 max-w-4xl mx-auto min-h-full space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-display bg-gradient-primary bg-clip-text text-transparent">
@@ -109,16 +141,26 @@ const StartCreation = () => {
         <p className="text-body-small text-muted-foreground mt-1">创建全新任务或使用模板快速开始</p>
       </div>
 
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Vertical Layout */}
+      <div className="space-y-6">
         {/* Module 1: Create New Task */}
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Plus size={20} />
-              创建新任务
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">创建全新任务</p>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Plus size={20} />
+                创建新任务
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">创建全新任务</p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setSaveTemplateOpen(true)}
+            >
+              <Save size={16} className="mr-2" />
+              另存为模板
+            </Button>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Task Type */}
@@ -171,7 +213,7 @@ const StartCreation = () => {
         </Card>
 
         {/* Module 2: Start from Template */}
-        <Card className="h-fit">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <FileText size={20} />
@@ -179,10 +221,21 @@ const StartCreation = () => {
             </CardTitle>
             <p className="text-sm text-muted-foreground">使用优秀剪辑模板快速开始</p>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Template Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="搜索模板名称..."
+                value={templateSearch}
+                onChange={(e) => setTemplateSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
             {/* Template List */}
             <div className="space-y-4">
-              {templates.map((template) => (
+              {filteredTemplates.map((template) => (
                 <div 
                   key={template.id} 
                   className="group p-4 rounded-lg border hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer"
@@ -216,15 +269,43 @@ const StartCreation = () => {
             </div>
 
             {/* Empty State */}
-            {templates.length === 0 && (
+            {filteredTemplates.length === 0 && (
               <div className="text-center py-8">
                 <FileText size={32} className="mx-auto mb-3 text-muted-foreground opacity-50" />
-                <p className="text-sm text-muted-foreground">暂无可用模板</p>
+                <p className="text-sm text-muted-foreground">
+                  {templateSearch ? '未找到匹配的模板' : '暂无可用模板'}
+                </p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Save as Template Dialog */}
+      <Dialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>另存为模板</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label className="text-sm font-medium">模板名称</Label>
+            <Input
+              placeholder="输入模板名称..."
+              value={newTemplateName}
+              onChange={(e) => setNewTemplateName(e.target.value)}
+              className="mt-2"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSaveTemplateOpen(false)}>
+              取消
+            </Button>
+            <Button onClick={handleSaveAsTemplate}>
+              确认保存
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
