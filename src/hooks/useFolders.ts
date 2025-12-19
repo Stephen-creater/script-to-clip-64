@@ -134,6 +134,68 @@ const mockFolders: Folder[] = [
     user_id: 'demo-user',
     created_at: '2024-01-10T13:00:00Z',
     updated_at: '2024-01-10T13:00:00Z'
+  },
+  // 主文件夹 - 贴纸素材
+  {
+    id: 'folder-sticker',
+    name: '贴纸素材',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T14:00:00Z',
+    updated_at: '2024-01-10T14:00:00Z'
+  },
+  // 子文件夹 - 震惊
+  {
+    id: 'folder-sticker-shocked',
+    name: '震惊',
+    parent_id: 'folder-sticker',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T14:10:00Z',
+    updated_at: '2024-01-10T14:10:00Z'
+  },
+  // 子文件夹 - 开心
+  {
+    id: 'folder-sticker-happy',
+    name: '开心',
+    parent_id: 'folder-sticker',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T14:20:00Z',
+    updated_at: '2024-01-10T14:20:00Z'
+  },
+  // 子文件夹 - 伤心
+  {
+    id: 'folder-sticker-sad',
+    name: '伤心',
+    parent_id: 'folder-sticker',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T14:30:00Z',
+    updated_at: '2024-01-10T14:30:00Z'
+  },
+  // 子文件夹 - 愤怒
+  {
+    id: 'folder-sticker-angry',
+    name: '愤怒',
+    parent_id: 'folder-sticker',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T14:40:00Z',
+    updated_at: '2024-01-10T14:40:00Z'
+  },
+  // 子文件夹 - 可爱
+  {
+    id: 'folder-sticker-cute',
+    name: '可爱',
+    parent_id: 'folder-sticker',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T14:50:00Z',
+    updated_at: '2024-01-10T14:50:00Z'
+  },
+  // 子文件夹 - 搞笑
+  {
+    id: 'folder-sticker-funny',
+    name: '搞笑',
+    parent_id: 'folder-sticker',
+    user_id: 'demo-user',
+    created_at: '2024-01-10T15:00:00Z',
+    updated_at: '2024-01-10T15:00:00Z'
   }
 ]
 
