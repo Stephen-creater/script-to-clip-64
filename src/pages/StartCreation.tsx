@@ -248,36 +248,38 @@ const StartCreation = () => {
             />
           </div>
 
-          {/* Duration Mode */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">时长模式</Label>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={taskType === 'flexible' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTaskType('flexible')}
-                className={cn(
-                  "flex-1",
-                  taskType === 'flexible' && "bg-emerald-500 hover:bg-emerald-600"
-                )}
-              >
-                灵活时长
-              </Button>
-              <Button
-                type="button"
-                variant={taskType === 'fixed' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTaskType('fixed')}
-                className={cn(
-                  "flex-1",
-                  taskType === 'fixed' && "bg-emerald-500 hover:bg-emerald-600"
-                )}
-              >
-                固定时长
-              </Button>
+          {/* Duration Mode - Only show for blank mode */}
+          {creationMode === 'blank' && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">时长模式</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={taskType === 'flexible' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTaskType('flexible')}
+                  className={cn(
+                    "flex-1",
+                    taskType === 'flexible' && "bg-emerald-500 hover:bg-emerald-600"
+                  )}
+                >
+                  灵活时长
+                </Button>
+                <Button
+                  type="button"
+                  variant={taskType === 'fixed' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTaskType('fixed')}
+                  className={cn(
+                    "flex-1",
+                    taskType === 'fixed' && "bg-emerald-500 hover:bg-emerald-600"
+                  )}
+                >
+                  固定时长
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Selected Template Info */}
           {creationMode === 'template' && selectedTemplate && (
