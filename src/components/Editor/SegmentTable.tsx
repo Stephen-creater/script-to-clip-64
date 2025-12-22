@@ -44,6 +44,7 @@ interface Segment {
   name: string;
   type: string;
   video: string;
+  videoDuration?: number; // 素材时长（秒）
   script: string;
   scriptVariants?: ScriptVariant[];
   animatedText: string;
@@ -51,6 +52,7 @@ interface Segment {
   enableDigitalHumans?: boolean; // 是否显示数字人
   audio: string;
   audioTimestamp?: string;
+  materialWarning?: string; // 素材警告信息
 }
 
 interface SegmentTableProps {
@@ -295,11 +297,20 @@ const SegmentTable = ({
 
   const updateSegmentScript = (segmentId: string, script: string) => {
     setSegments(prevSegments => 
-      prevSegments.map(segment => 
-        segment.id === segmentId 
-          ? { ...segment, script }
-          : segment
-      )
+      prevSegments.map(segment => {
+        if (segment.id === segmentId) {
+          // 检查文案长度与素材时长是否匹配
+          const estimatedScriptDuration = script.length * 0.3;
+          let materialWarning: string | undefined;
+          
+          if (segment.videoDuration && script.length > 0 && estimatedScriptDuration > segment.videoDuration) {
+            materialWarning = "素材时长过小，请重新选择素材！";
+          }
+          
+          return { ...segment, script, materialWarning };
+        }
+        return segment;
+      })
     );
   };
 
@@ -321,11 +332,30 @@ const SegmentTable = ({
     thumbnail?: string;
   }) => {
     setSegments(prevSegments => 
-      prevSegments.map(segment => 
-        segment.id === segmentId 
-          ? { ...segment, video: material.name }
-          : segment
-      )
+      prevSegments.map(segment => {
+        if (segment.id === segmentId) {
+          // 模拟素材时长（实际应从素材库获取）
+          const mockDuration = Math.random() * 5 + 2; // 2-7秒
+          
+          // 检查文案长度与素材时长是否匹配
+          // 假设每个字符需要0.3秒来朗读
+          const scriptLength = segment.script.length;
+          const estimatedScriptDuration = scriptLength * 0.3;
+          
+          let materialWarning: string | undefined;
+          if (scriptLength > 0 && estimatedScriptDuration > mockDuration) {
+            materialWarning = "素材时长过小，请重新选择素材！";
+          }
+          
+          return { 
+            ...segment, 
+            video: material.name,
+            videoDuration: mockDuration,
+            materialWarning
+          };
+        }
+        return segment;
+      })
     );
   };
 
@@ -458,15 +488,22 @@ const SegmentTable = ({
                       <GripVertical size={16} className="text-muted-foreground cursor-grab" />
                     </td>
                      <td className="min-w-[180px] p-4 border-r border-border/50">
-                       <Button 
-                         variant="outline" 
-                         size="sm" 
-                         className="w-full justify-start"
-                         onClick={() => openModal('materialSelection', segment.id)}
-                       >
-                         <Upload size={14} className="mr-2" />
-                         {segment.video || "选择素材"}
-                       </Button>
+                       <div className="space-y-1">
+                         <Button 
+                           variant="outline" 
+                           size="sm" 
+                           className="w-full justify-start"
+                           onClick={() => openModal('materialSelection', segment.id)}
+                         >
+                           <Upload size={14} className="mr-2" />
+                           {segment.video || "选择素材"}
+                         </Button>
+                         {segment.materialWarning && (
+                           <p className="text-xs text-destructive">
+                             {segment.materialWarning}
+                           </p>
+                         )}
+                       </div>
                      </td>
                      <td className="min-w-[320px] p-4 border-r border-border/50">
                        <div className="relative group">
