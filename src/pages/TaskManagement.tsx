@@ -21,6 +21,7 @@ interface Task {
   status: 'pending' | 'processing' | 'completed' | 'failed';
   createdAt: string;
   taskType: 'flexible' | 'fixed';
+  failedCount?: number;
 }
 
 const TaskManagement = () => {
@@ -66,6 +67,18 @@ const TaskManagement = () => {
       status: 'pending',
       createdAt: '2024-12-17 10:15',
       taskType: 'flexible'
+    },
+    {
+      id: '4',
+      name: `品牌推广合集-${dateStr}`,
+      segmentsCount: 8,
+      progress: { completed: 6, total: 8 },
+      creator: '运营组-小李',
+      group: '运营组',
+      status: 'completed',
+      createdAt: '2024-12-17 08:45',
+      taskType: 'fixed',
+      failedCount: 2
     }
   ]);
 
@@ -91,13 +104,20 @@ const TaskManagement = () => {
     return matchesSearch && matchesGroup && matchesTime;
   });
 
-  const getStatusBadge = (status: Task['status'], progress: Task['progress']) => {
+  const getStatusBadge = (status: Task['status'], progress: Task['progress'], failedCount?: number) => {
     switch (status) {
       case 'completed':
         return (
-          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-            已完成 {progress.completed}/{progress.total}
-          </Badge>
+          <div className="flex flex-col items-end gap-1">
+            <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+              已完成 {progress.completed}/{progress.total}
+            </Badge>
+            {failedCount && failedCount > 0 && (
+              <span className="text-xs text-destructive">
+                有{failedCount}条生成失败
+              </span>
+            )}
+          </div>
         );
       case 'pending':
         return <Badge variant="secondary">待开始</Badge>;
@@ -213,7 +233,7 @@ const TaskManagement = () => {
 
                 {/* Right: Status */}
                 <div className="flex-shrink-0">
-                  {getStatusBadge(task.status, task.progress)}
+                  {getStatusBadge(task.status, task.progress, task.failedCount)}
                 </div>
               </div>
             </CardContent>
