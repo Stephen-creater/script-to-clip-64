@@ -45,6 +45,9 @@ const MaterialReview = () => {
   const [endDate, setEndDate] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [previewMaterial, setPreviewMaterial] = useState<ReviewMaterial | null>(null);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
   const { toast } = useToast();
 
   const filteredMaterials = materials.filter(m => {
@@ -70,11 +73,25 @@ const MaterialReview = () => {
     toast({ title: "审核通过", description: "素材已通过审核" });
   };
 
-  const handleReject = (id: string) => {
+  const openRejectModal = (id: string) => {
+    setRejectingId(id);
+    setRejectReason("");
+    setRejectModalOpen(true);
+  };
+
+  const handleConfirmReject = () => {
+    if (!rejectingId) return;
+    if (!rejectReason.trim()) {
+      toast({ title: "请输入驳回原因", variant: "destructive" });
+      return;
+    }
     setMaterials(prev => prev.map(m => 
-      m.id === id ? { ...m, status: "rejected" as const } : m
+      m.id === rejectingId ? { ...m, status: "rejected" as const } : m
     ));
-    toast({ title: "已拒绝", description: "素材已被拒绝", variant: "destructive" });
+    toast({ title: "已拒绝", description: `素材已被拒绝，原因：${rejectReason}`, variant: "destructive" });
+    setRejectModalOpen(false);
+    setRejectingId(null);
+    setRejectReason("");
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -210,7 +227,6 @@ const MaterialReview = () => {
               <TableHead className="min-w-[300px]">素材名称</TableHead>
               <TableHead className="w-24 text-center">素材类型</TableHead>
               <TableHead className="w-24 text-center">预览</TableHead>
-              <TableHead className="w-24 text-center">文件大小</TableHead>
               <TableHead className="w-40 text-center">上传时间</TableHead>
               <TableHead className="w-24 text-center">上传人</TableHead>
               <TableHead className="w-32 text-center">素材文件夹</TableHead>
@@ -240,9 +256,6 @@ const MaterialReview = () => {
                   </Button>
                 </TableCell>
                 <TableCell className="text-center text-muted-foreground">
-                  {material.fileSize}
-                </TableCell>
-                <TableCell className="text-center text-muted-foreground">
                   {format(material.uploadTime, "yyyy-MM-dd HH:mm:ss")}
                 </TableCell>
                 <TableCell className="text-center">{material.uploader}</TableCell>
@@ -262,7 +275,7 @@ const MaterialReview = () => {
                     <Button 
                       size="sm" 
                       variant="destructive"
-                      onClick={() => handleReject(material.id)}
+                      onClick={() => openRejectModal(material.id)}
                     >
                       <X size={14} className="mr-1" />
                       拒绝
@@ -273,7 +286,7 @@ const MaterialReview = () => {
             ))}
             {filteredMaterials.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                   暂无待审核素材
                 </TableCell>
               </TableRow>
@@ -318,13 +331,37 @@ const MaterialReview = () => {
                 variant="destructive"
                 onClick={() => {
                   if (previewMaterial) {
-                    handleReject(previewMaterial.id);
+                    openRejectModal(previewMaterial.id);
                     setPreviewMaterial(null);
                   }
                 }}
               >
                 <X size={16} className="mr-2" />
                 拒绝
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Reason Modal */}
+      <Dialog open={rejectModalOpen} onOpenChange={setRejectModalOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>请输入驳回原因</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="请输入驳回原因..."
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setRejectModalOpen(false)}>
+                取消
+              </Button>
+              <Button variant="destructive" onClick={handleConfirmReject}>
+                确认拒绝
               </Button>
             </div>
           </div>
