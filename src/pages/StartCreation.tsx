@@ -1,247 +1,144 @@
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { 
+  Zap, 
+  Plus, 
+  FileText, 
+  Rocket, 
+  Clock, 
+  Lock, 
+  X, 
+  Search,
+  Building2,
+  User,
+  Check,
+  Layers
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Plus,
-  Clock,
-  Layers,
-  FileText,
-  BarChart3,
-  Search,
-  Rocket,
-  Check,
-  Building2,
-  User
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 interface Template {
-  id: string;
-  name: string;
-  description: string;
-  segmentsCount: number;
-  duration: number;
-  category: string;
-  createdAt: string;
-  usageCount: number;
-  owner: string;
-  ownerType: 'team' | 'personal';
-  coverImage?: string;
+  id: number;
+  title: string;
+  type: 'team' | 'personal';
+  duration: string;
+  segments: number;
+  tags: string[];
+  color: string;
 }
 
-const StartCreation = () => {
+const TEMPLATES: Template[] = [
+  { id: 1, title: '带货混剪_快节奏', type: 'team', duration: '15s', segments: 5, tags: ['高转化', '快闪'], color: 'bg-orange-100' },
+  { id: 2, title: '风景Vlog_舒缓', type: 'team', duration: '30s', segments: 3, tags: ['卡点', '空镜'], color: 'bg-emerald-100' },
+  { id: 3, title: '口播_知识科普', type: 'team', duration: '60s', segments: 8, tags: ['字幕大', '安全区'], color: 'bg-blue-100' },
+  { id: 4, title: '我的专用_英铁', type: 'personal', duration: '20s', segments: 4, tags: ['个人'], color: 'bg-purple-100' }
+];
+
+const StartCreation: React.FC = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [creationMode, setCreationMode] = useState<'template' | 'blank'>('template');
-  const [taskType, setTaskType] = useState<'flexible' | 'fixed'>('flexible');
+  
+  // Left panel state
+  const [sourceMode, setSourceMode] = useState<'blank' | 'template'>('blank');
   const [taskName, setTaskName] = useState('');
-  const [templateSearch, setTemplateSearch] = useState('');
+  const [durationMode, setDurationMode] = useState<'flexible' | 'fixed'>('flexible');
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
-  const [templateTab, setTemplateTab] = useState<'all' | 'team' | 'personal'>('all');
+  
+  // Right panel state
+  const [templateTab, setTemplateTab] = useState<'team' | 'personal'>('team');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Demo templates
-  const [templates] = useState<Template[]>([
-    {
-      id: '1',
-      name: '产品展示模板',
-      description: '适合产品介绍类视频，包含开场、特点展示、总结三个部分',
-      segmentsCount: 5,
-      duration: 60,
-      category: '产品',
-      createdAt: '2024-12-15',
-      usageCount: 128,
-      owner: '运营1组-小王',
-      ownerType: 'team'
-    },
-    {
-      id: '2',
-      name: '旅行Vlog通用模板',
-      description: '旅行记录类视频模板，包含目的地介绍、行程安排、精彩瞬间',
-      segmentsCount: 8,
-      duration: 120,
-      category: '旅行',
-      createdAt: '2024-12-10',
-      usageCount: 86,
-      owner: '内容2组-小李',
-      ownerType: 'team'
-    },
-    {
-      id: '3',
-      name: '教程讲解模板',
-      description: '适合教学类视频，包含问题引入、步骤讲解、总结回顾',
-      segmentsCount: 6,
-      duration: 90,
-      category: '教程',
-      createdAt: '2024-12-08',
-      usageCount: 215,
-      owner: '培训组-小张',
-      ownerType: 'team'
-    },
-    {
-      id: '4',
-      name: '我的日常Vlog',
-      description: '个人日常记录模板，轻松风格',
-      segmentsCount: 4,
-      duration: 45,
-      category: '生活',
-      createdAt: '2024-12-12',
-      usageCount: 32,
-      owner: '我',
-      ownerType: 'personal'
-    },
-    {
-      id: '5',
-      name: '美食探店模板',
-      description: '餐厅探店专用，包含环境、菜品、点评',
-      segmentsCount: 6,
-      duration: 75,
-      category: '美食',
-      createdAt: '2024-12-14',
-      usageCount: 156,
-      owner: '内容1组-小刘',
-      ownerType: 'team'
-    },
-    {
-      id: '6',
-      name: '个人作品集',
-      description: '作品展示专用模板',
-      segmentsCount: 5,
-      duration: 60,
-      category: '作品',
-      createdAt: '2024-12-11',
-      usageCount: 18,
-      owner: '我',
-      ownerType: 'personal'
-    }
-  ]);
+  const filteredTemplates = useMemo(() => {
+    return TEMPLATES.filter(template => {
+      const matchesTab = template.type === templateTab;
+      const matchesSearch = template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        template.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesTab && matchesSearch;
+    });
+  }, [templateTab, searchQuery]);
 
-  const filteredTemplates = templates.filter(template => {
-    const matchesSearch = template.name.toLowerCase().includes(templateSearch.toLowerCase());
-    const matchesTab = templateTab === 'all' || 
-      (templateTab === 'team' && template.ownerType === 'team') ||
-      (templateTab === 'personal' && template.ownerType === 'personal');
-    return matchesSearch && matchesTab;
-  });
+  const handleSelectTemplate = (template: Template) => {
+    setSelectedTemplate(template);
+    setSourceMode('template');
+  };
 
-  const formatDuration = (seconds: number) => {
-    if (seconds < 60) return `${seconds}s`;
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return secs > 0 ? `${mins}m${secs}s` : `${mins}m`;
+  const handleClearTemplate = () => {
+    setSelectedTemplate(null);
+    setSourceMode('blank');
   };
 
   const handleCreateTask = () => {
     if (!taskName.trim()) {
-      toast({
-        title: "请填写任务名",
-        variant: "destructive"
-      });
+      toast.error("请输入任务名称");
       return;
-    }
-
-    if (creationMode === 'template' && !selectedTemplate) {
-      toast({
-        title: "请选择一个模板",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (creationMode === 'template' && selectedTemplate) {
-      navigate(`/editor/new?template=${selectedTemplate.id}&taskName=${encodeURIComponent(taskName)}&taskType=${taskType}`);
-    } else {
-      navigate(`/editor/new?taskType=${taskType}&taskName=${encodeURIComponent(taskName)}`);
     }
     
-    toast({
-      title: "任务创建成功",
-      description: creationMode === 'template' ? "正在基于模板创建新任务" : "正在创建空白项目"
+    toast.success("任务创建成功！");
+    navigate('/editor', {
+      state: {
+        taskName: taskName.trim(),
+        templateId: selectedTemplate?.id,
+        durationMode
+      }
     });
   };
 
-  const handleSelectTemplate = (template: Template) => {
-    setSelectedTemplate(template);
-    // Auto-set duration mode based on template (demo logic)
-    if (template.duration > 60) {
-      setTaskType('flexible');
-    }
-  };
-
   return (
-    <div className="flex h-full min-h-screen">
-      {/* Left Panel - Configuration */}
-      <div className="w-[400px] flex-shrink-0 bg-white border-r flex flex-col">
-        <div className="flex-1 p-6 space-y-6 overflow-y-auto">
-          {/* Title */}
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">创建新任务</h1>
-            <p className="text-sm text-muted-foreground mt-1">配置您的混剪逻辑</p>
+    <div className="h-screen flex flex-row overflow-hidden bg-background">
+      {/* Left Panel - Command Center */}
+      <div className="w-[420px] flex-shrink-0 bg-card border-r border-border shadow-xl z-10 flex flex-col">
+        {/* Header */}
+        <div className="p-6 border-b border-border">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Zap className="w-5 h-5 text-primary" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">开始创作</h1>
           </div>
+          <p className="text-muted-foreground text-sm">配置参数，一键启动流水线</p>
+        </div>
 
-          {/* Creation Mode */}
+        {/* Scrollable Form Area */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Source Switch */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">创作方式</Label>
-            <div className="grid grid-cols-2 gap-3">
-              {/* Template Mode Card */}
-              <div
+            <label className="text-sm font-medium text-foreground">创作基准</label>
+            <div className="flex gap-2">
+              <Button
+                variant={sourceMode === 'blank' ? 'default' : 'outline'}
                 className={cn(
-                  "relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200",
-                  creationMode === 'template'
-                    ? "border-emerald-500 bg-emerald-50/50"
-                    : "border-border hover:border-muted-foreground/50"
+                  "flex-1 justify-center gap-2",
+                  sourceMode === 'blank' && "bg-primary text-primary-foreground"
                 )}
-                onClick={() => setCreationMode('template')}
+                onClick={() => {
+                  setSourceMode('blank');
+                  setSelectedTemplate(null);
+                }}
               >
-                {creationMode === 'template' && (
-                  <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
-                    <Check size={12} className="text-white" />
-                  </div>
-                )}
-                <div className="text-center space-y-2">
-                  <div className="w-10 h-10 mx-auto rounded-lg bg-emerald-100 flex items-center justify-center">
-                    <FileText size={20} className="text-emerald-600" />
-                  </div>
-                  <div className="font-medium text-sm">使用模板</div>
-                  <p className="text-xs text-muted-foreground">复用 SOP 快速生产</p>
-                </div>
-              </div>
-
-              {/* Blank Mode Card */}
-              <div
+                <Plus size={16} />
+                空白创建
+              </Button>
+              <Button
+                variant={sourceMode === 'template' ? 'default' : 'outline'}
                 className={cn(
-                  "relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200",
-                  creationMode === 'blank'
-                    ? "border-emerald-500 bg-emerald-50/50"
-                    : "border-border hover:border-muted-foreground/50"
+                  "flex-1 justify-center gap-2",
+                  sourceMode === 'template' && "bg-primary text-primary-foreground"
                 )}
-                onClick={() => setCreationMode('blank')}
+                onClick={() => setSourceMode('template')}
               >
-                {creationMode === 'blank' && (
-                  <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
-                    <Check size={12} className="text-white" />
-                  </div>
-                )}
-                <div className="text-center space-y-2">
-                  <div className="w-10 h-10 mx-auto rounded-lg bg-slate-100 flex items-center justify-center">
-                    <Plus size={20} className="text-slate-600" />
-                  </div>
-                  <div className="font-medium text-sm">从空项目开始</div>
-                  <p className="text-xs text-muted-foreground">从零搭建分段逻辑</p>
-                </div>
-              </div>
+                <FileText size={16} />
+                引用模板
+              </Button>
             </div>
           </div>
 
           {/* Task Name */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">任务名称</Label>
-            <Input 
-              placeholder="请输入任务名..." 
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-foreground">任务名称</label>
+            <Input
+              placeholder="例如：英铁混剪-2025..."
               value={taskName}
               onChange={(e) => setTaskName(e.target.value)}
               className="h-11"
@@ -249,186 +146,227 @@ const StartCreation = () => {
           </div>
 
           {/* Duration Mode - Only show for blank mode */}
-          {creationMode === 'blank' && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">时长模式</Label>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant={taskType === 'flexible' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setTaskType('flexible')}
+          {sourceMode === 'blank' && (
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground">时长模式</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setDurationMode('flexible')}
                   className={cn(
-                    "flex-1",
-                    taskType === 'flexible' && "bg-emerald-500 hover:bg-emerald-600"
+                    "p-4 rounded-xl border-2 text-left transition-all duration-200",
+                    durationMode === 'flexible'
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50 hover:bg-muted/50"
                   )}
                 >
-                  灵活时长
-                </Button>
-                <Button
-                  type="button"
-                  variant={taskType === 'fixed' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setTaskType('fixed')}
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock size={18} className={durationMode === 'flexible' ? "text-primary" : "text-muted-foreground"} />
+                    <span className="font-medium text-foreground">灵活时长</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    画面跟随口播时长自动伸缩
+                  </p>
+                </button>
+                <button
+                  onClick={() => setDurationMode('fixed')}
                   className={cn(
-                    "flex-1",
-                    taskType === 'fixed' && "bg-emerald-500 hover:bg-emerald-600"
+                    "p-4 rounded-xl border-2 text-left transition-all duration-200",
+                    durationMode === 'fixed'
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50 hover:bg-muted/50"
                   )}
                 >
-                  固定时长
-                </Button>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Lock size={18} className={durationMode === 'fixed' ? "text-primary" : "text-muted-foreground"} />
+                    <span className="font-medium text-foreground">固定时长</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    强制锁定每个分段的秒数
+                  </p>
+                </button>
               </div>
             </div>
           )}
 
           {/* Selected Template Info */}
-          {creationMode === 'template' && selectedTemplate && (
-            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-              <div className="flex items-center gap-2">
-                <Check size={16} className="text-emerald-600" />
-                <span className="text-sm font-medium text-emerald-800">
-                  已选模板：{selectedTemplate.name}
-                </span>
+          {sourceMode === 'template' && selectedTemplate && (
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground">已选模板</label>
+              <div className={cn(
+                "p-4 rounded-xl flex items-center justify-between",
+                selectedTemplate.color.replace('100', '50')
+              )} style={{ backgroundColor: `var(--${selectedTemplate.color.replace('bg-', '').replace('-100', '')}-50, hsl(var(--muted)))` }}>
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "w-10 h-10 rounded-lg flex items-center justify-center",
+                    selectedTemplate.color
+                  )}>
+                    <FileText size={18} className="text-foreground/70" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{selectedTemplate.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedTemplate.segments} 个分段 · {selectedTemplate.duration}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                  onClick={handleClearTemplate}
+                >
+                  <X size={16} />
+                </Button>
               </div>
-              <p className="text-xs text-emerald-600 mt-1 ml-6">
-                {selectedTemplate.segmentsCount} 个分段 · {formatDuration(selectedTemplate.duration)}
+            </div>
+          )}
+
+          {/* Prompt to select template */}
+          {sourceMode === 'template' && !selectedTemplate && (
+            <div className="p-4 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5">
+              <p className="text-sm text-muted-foreground text-center">
+                👉 请在右侧模板库中选择一个模板
               </p>
             </div>
           )}
         </div>
 
-        {/* Sticky Bottom Button */}
-        <div className="p-6 border-t bg-white">
-          <Button 
-            className="w-full h-12 text-base bg-emerald-500 hover:bg-emerald-600" 
-            size="lg"
+        {/* Sticky Bottom Action */}
+        <div className="p-6 border-t border-border bg-card">
+          <Button
             onClick={handleCreateTask}
+            className="w-full h-12 text-base font-medium bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
           >
-            <Rocket size={18} className="mr-2" />
+            <Rocket size={18} />
             立即创建任务
           </Button>
         </div>
       </div>
 
-      {/* Right Panel - Template Gallery */}
-      <div className="flex-1 bg-slate-50 flex flex-col overflow-hidden">
-        {creationMode === 'blank' ? (
-          /* Empty State for Blank Mode */
-          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
-            <div className="w-24 h-24 rounded-full bg-slate-200 flex items-center justify-center mb-4">
-              <Plus size={40} className="text-slate-400" />
-            </div>
-            <p className="text-lg font-medium text-slate-500">自定义模式无需选择模板</p>
-            <p className="text-sm text-slate-400 mt-1">将从空白项目开始创建</p>
-          </div>
-        ) : (
-          <>
-            {/* Filter Bar */}
-            <div className="p-4 bg-white border-b flex items-center gap-4">
-              <Tabs value={templateTab} onValueChange={(v) => setTemplateTab(v as 'all' | 'team' | 'personal')}>
-                <TabsList className="bg-slate-100">
-                  <TabsTrigger value="all" className="text-sm">全部</TabsTrigger>
-                  <TabsTrigger value="team" className="text-sm">
-                    <Building2 size={14} className="mr-1" />
-                    团队公共库
-                  </TabsTrigger>
-                  <TabsTrigger value="personal" className="text-sm">
-                    <User size={14} className="mr-1" />
-                    个人专用库
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <div className="flex-1 relative max-w-xs">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="搜索模板名称..."
-                  value={templateSearch}
-                  onChange={(e) => setTemplateSearch(e.target.value)}
-                  className="pl-9 h-9"
-                />
-              </div>
+      {/* Right Panel - Resource Pool */}
+      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-muted/30 overflow-hidden">
+        {/* Sticky Header */}
+        <div className="p-4 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+          <div className="flex items-center justify-between gap-4">
+            {/* Tabs */}
+            <div className="flex gap-1 p-1 bg-muted rounded-lg">
+              <button
+                onClick={() => setTemplateTab('team')}
+                className={cn(
+                  "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
+                  templateTab === 'team'
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Building2 size={16} />
+                团队公共库
+              </button>
+              <button
+                onClick={() => setTemplateTab('personal')}
+                className={cn(
+                  "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
+                  templateTab === 'personal'
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <User size={16} />
+                个人专用库
+              </button>
             </div>
 
-            {/* Template Grid */}
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-                {filteredTemplates.map((template) => {
-                  const isSelected = selectedTemplate?.id === template.id;
-                  return (
-                    <div
-                      key={template.id}
-                      className={cn(
-                        "group bg-white rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg",
-                        isSelected
-                          ? "ring-2 ring-emerald-500 shadow-lg"
-                          : "border border-slate-200 hover:border-slate-300"
-                      )}
-                      onClick={() => handleSelectTemplate(template)}
-                    >
-                      {/* Cover Image */}
-                      <div className="relative h-32 bg-gradient-to-br from-slate-100 to-slate-200">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <FileText size={32} className="text-slate-300" />
-                        </div>
-                        {/* Selected Checkmark */}
-                        {isSelected && (
-                          <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shadow-md">
-                            <Check size={14} className="text-white" />
-                          </div>
-                        )}
-                        {/* Owner Badge */}
-                        <div className="absolute bottom-2 left-2">
+            {/* Search */}
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="搜索模板..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-10"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Template Grid */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {filteredTemplates.length > 0 ? (
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredTemplates.map((template) => {
+                const isSelected = selectedTemplate?.id === template.id;
+                return (
+                  <button
+                    key={template.id}
+                    onClick={() => handleSelectTemplate(template)}
+                    className={cn(
+                      "group relative bg-card rounded-xl border-2 overflow-hidden text-left transition-all duration-200 hover:shadow-lg",
+                      isSelected
+                        ? "border-primary shadow-md"
+                        : "border-border hover:border-primary/50"
+                    )}
+                  >
+                    {/* Selected Check */}
+                    {isSelected && (
+                      <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary flex items-center justify-center z-10">
+                        <Check size={14} className="text-primary-foreground" />
+                      </div>
+                    )}
+
+                    {/* Color Header */}
+                    <div className={cn(
+                      "h-20 flex items-center justify-center relative",
+                      template.color
+                    )}>
+                      <Badge variant="secondary" className="bg-white/80 text-foreground gap-1">
+                        <Clock size={12} />
+                        {template.duration}
+                      </Badge>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-4 space-y-3">
+                      <h3 className="font-semibold text-foreground line-clamp-1">
+                        {template.title}
+                      </h3>
+                      
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {template.tags.map((tag, idx) => (
                           <Badge 
-                            variant="secondary" 
-                            className={cn(
-                              "text-xs",
-                              template.ownerType === 'team' 
-                                ? "bg-blue-100 text-blue-700" 
-                                : "bg-slate-100 text-slate-600"
-                            )}
+                            key={idx} 
+                            variant="outline" 
+                            className="text-xs px-2 py-0.5 text-muted-foreground"
                           >
-                            {template.ownerType === 'team' ? '团队' : '个人'}
+                            {tag}
                           </Badge>
-                        </div>
+                        ))}
                       </div>
 
-                      {/* Info */}
-                      <div className="p-3 space-y-2">
-                        <h3 className="font-semibold text-sm text-foreground truncate">
-                          {template.name}
-                        </h3>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Layers size={12} />
-                            <span>{template.segmentsCount}个分段</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock size={12} />
-                            <span>{formatDuration(template.duration)}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <BarChart3 size={12} />
-                          <span>已使用 {template.usageCount} 次</span>
-                        </div>
+                      {/* Segments Info */}
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Layers size={12} />
+                        <span>{template.segments} 个分段</span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Empty State */}
-              {filteredTemplates.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-16">
-                  <FileText size={48} className="text-slate-300 mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    {templateSearch ? '未找到匹配的模板' : '暂无可用模板'}
-                  </p>
-                </div>
-              )}
+                  </button>
+                );
+              })}
             </div>
-          </>
-        )}
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                  <FileText size={24} className="text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground">
+                  {searchQuery ? '未找到匹配的模板' : '暂无模板'}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
