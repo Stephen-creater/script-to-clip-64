@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   GripVertical, 
@@ -13,19 +11,17 @@ import {
   Settings2,
   FileText,
   Volume2,
-  Music,
   User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatedTextModal } from "./AnimatedTextModal";
-import { GlobalSubtitleModal } from "./GlobalSubtitleModal";
 import { StickerModal } from "./StickerModal";
 import { DigitalHumanModal } from "./DigitalHumanModal";
 import { BgmModal } from "./BgmModal";
-import { AudioGenerationModal } from "./AudioGenerationModal";
 import { MaterialSelectionModal } from "./MaterialSelectionModal";
 import { VoiceSelectionModal } from "./VoiceSelectionModal";
 import { ScriptVariantModal } from "./ScriptVariantModal";
+import { AudioSettingsModal } from "./AudioSettingsModal";
 
 interface ScriptVariant {
   id: string;
@@ -37,6 +33,19 @@ interface DigitalHuman {
   name: string;
   position: { x: number; y: number };
   scale: number;
+}
+
+interface AudioSettings {
+  voiceId: string;
+  voiceName: string;
+  voiceAvatar: string;
+  voiceStyle: string;
+  speed: number;
+  ttsVolume: number;
+  bgmVolume: number;
+  autoDucking: boolean;
+  bgmTracks: { id: string; name: string; duration: string }[];
+  loopMode: 'loop' | 'shuffle';
 }
 
 interface Segment {
@@ -53,6 +62,7 @@ interface Segment {
   audio: string;
   audioTimestamp?: string;
   materialWarning?: string; // 素材警告信息
+  audioSettings?: AudioSettings; // 音频设置
 }
 
 interface SegmentTableProps {
@@ -127,11 +137,12 @@ const SegmentTable = ({
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
-    type: 'animatedText' | 'sticker' | 'digitalHuman' | 'globalSubtitle' | 'bgm' | 'audioGeneration' | 'materialSelection' | 'voiceSelection' | 'scriptVariant' | null;
+    type: 'animatedText' | 'sticker' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'voiceSelection' | 'scriptVariant' | 'audioSettings' | null;
     segmentId: string | null;
   }>({ type: null, segmentId: null });
   
   const [selectedVoiceId, setSelectedVoiceId] = useState<string>("");
+  const [pendingAudioSettingsSegmentId, setPendingAudioSettingsSegmentId] = useState<string | null>(null);
   
   const [isAudioGenerated, setIsAudioGenerated] = useState(false);
   const [isGlobalSubtitleConfigured, setIsGlobalSubtitleConfigured] = useState(false);
@@ -170,40 +181,88 @@ const SegmentTable = ({
     }
   };
 
-  const handleGenerateAudio = () => {
-    // Open voice selection modal first
-    setActiveModal({ type: 'voiceSelection', segmentId: null });
+  const handleOpenAudioSettings = (segmentId: string) => {
+    setActiveModal({ type: 'audioSettings', segmentId });
   };
 
-  const handleVoiceSelected = (voiceId: string) => {
-    setSelectedVoiceId(voiceId);
-    // Close voice selection modal and open audio generation modal
-    closeModal();
-    setTimeout(() => {
-      setActiveModal({ type: 'audioGeneration', segmentId: null });
-    }, 100);
+  const handleVoiceSelectedForSegment = (voiceId: string, voiceName: string) => {
+    if (pendingAudioSettingsSegmentId) {
+      setSegments(prevSegments =>
+        prevSegments.map(segment =>
+          segment.id === pendingAudioSettingsSegmentId
+            ? {
+                ...segment,
+                audioSettings: {
+                  ...segment.audioSettings,
+                  voiceId,
+                  voiceName,
+                  voiceAvatar: "🎭",
+                  voiceStyle: "活泼",
+                  speed: segment.audioSettings?.speed || 1.0,
+                  ttsVolume: segment.audioSettings?.ttsVolume || 80,
+                  bgmVolume: segment.audioSettings?.bgmVolume || 30,
+                  autoDucking: segment.audioSettings?.autoDucking ?? true,
+                  bgmTracks: segment.audioSettings?.bgmTracks || [],
+                  loopMode: segment.audioSettings?.loopMode || 'loop'
+                }
+              }
+            : segment
+        )
+      );
+      closeModal();
+      setTimeout(() => {
+        setActiveModal({ type: 'audioSettings', segmentId: pendingAudioSettingsSegmentId });
+        setPendingAudioSettingsSegmentId(null);
+      }, 100);
+    }
   };
 
-  const handleAudioGenerationComplete = () => {
-    // Generate timestamps for all segments with scripts
-    let currentTime = 0;
-    const updatedSegments = segments.map(segment => {
-      if (segment.script) {
-        const duration = Math.random() * 3 + 1; // Random duration between 1-4 seconds
-        const startTime = currentTime;
-        const endTime = currentTime + duration;
-        currentTime = endTime;
-        
-        return {
-          ...segment,
-          audio: `audio_${segment.id}.mp3`,
-          audioTimestamp: `${startTime.toFixed(1)}~${endTime.toFixed(1)}s`
-        };
-      }
-      return segment;
-    });
-    setSegments(updatedSegments);
-    setIsAudioGenerated(true);
+  const updateSegmentAudioSettings = (segmentId: string, settings: AudioSettings) => {
+    setSegments(prevSegments =>
+      prevSegments.map(segment =>
+        segment.id === segmentId
+          ? { ...segment, audioSettings: settings }
+          : segment
+      )
+    );
+  };
+
+  const handleAddBgmToSegment = (bgm: { name: string; url: string }) => {
+    if (pendingAudioSettingsSegmentId) {
+      setSegments(prevSegments =>
+        prevSegments.map(segment => {
+          if (segment.id === pendingAudioSettingsSegmentId) {
+            const newTrack = {
+              id: Date.now().toString(),
+              name: bgm.name,
+              duration: "3:24" // Mock duration
+            };
+            return {
+              ...segment,
+              audioSettings: {
+                ...segment.audioSettings,
+                voiceId: segment.audioSettings?.voiceId || "voice_1",
+                voiceName: segment.audioSettings?.voiceName || "东伦敦女网红",
+                voiceAvatar: segment.audioSettings?.voiceAvatar || "🎭",
+                voiceStyle: segment.audioSettings?.voiceStyle || "活泼",
+                speed: segment.audioSettings?.speed || 1.0,
+                ttsVolume: segment.audioSettings?.ttsVolume || 80,
+                bgmVolume: segment.audioSettings?.bgmVolume || 30,
+                autoDucking: segment.audioSettings?.autoDucking ?? true,
+                bgmTracks: [...(segment.audioSettings?.bgmTracks || []), newTrack],
+                loopMode: segment.audioSettings?.loopMode || 'loop'
+              }
+            };
+          }
+          return segment;
+        })
+      );
+      closeModal();
+      setTimeout(() => {
+        setActiveModal({ type: 'audioSettings', segmentId: pendingAudioSettingsSegmentId });
+        setPendingAudioSettingsSegmentId(null);
+      }, 100);
+    }
   };
 
 
@@ -258,7 +317,7 @@ const SegmentTable = ({
     setSelectedSegments([]);
   };
 
-  const openModal = (type: 'animatedText' | 'sticker' | 'digitalHuman' | 'globalSubtitle' | 'bgm' | 'materialSelection' | 'scriptVariant', segmentId?: string) => {
+  const openModal = (type: 'animatedText' | 'sticker' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'scriptVariant' | 'audioSettings' | 'voiceSelection', segmentId?: string) => {
     setActiveModal({ type, segmentId: segmentId || null });
   };
 
@@ -453,14 +512,8 @@ const SegmentTable = ({
                 <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">花字</th>
                 <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">视频贴纸</th>
                 <th className="min-w-[140px] px-4 py-4 text-left text-body-small font-semibold text-foreground">数字人</th>
-                <th className="min-w-[120px] px-4 py-4 text-left text-body-small font-semibold text-foreground">
-                  {isAudioGenerated ? (
-                    <span>
-                      音频（<span className="text-info">已生成，请预览</span>）
-                    </span>
-                  ) : (
-                    "音频"
-                  )}
+                <th className="min-w-[140px] px-4 py-4 text-left text-body-small font-semibold text-foreground">
+                  音频设置
                 </th>
               </tr>
             </thead>
@@ -588,16 +641,22 @@ const SegmentTable = ({
                          )}
                        </Button>
                      </td>
-                     <td className="min-w-[120px] p-4">
-                       {segment.audioTimestamp ? (
-                         <div className="text-sm font-medium text-center py-2">
-                           {segment.audioTimestamp}
-                         </div>
-                       ) : (
-                         <div className="text-xs text-muted-foreground text-center py-2">
-                           未生成
-                         </div>
-                       )}
+                     <td className="min-w-[140px] p-4">
+                       <Button 
+                         variant={segment.audioSettings ? "default" : "outline"}
+                         size="sm" 
+                         className="w-full justify-start gap-2"
+                         onClick={() => handleOpenAudioSettings(segment.id)}
+                       >
+                         <Volume2 size={14} />
+                         {segment.audioSettings ? (
+                           <span className="truncate">
+                             {segment.audioSettings.voiceName} · {segment.audioSettings.speed}x
+                           </span>
+                         ) : (
+                           "配置音频"
+                         )}
+                       </Button>
                      </td>
                   </tr>
                 ))}
@@ -607,37 +666,6 @@ const SegmentTable = ({
         </ScrollArea>
       </div>
 
-      {/* Workflow Buttons at Bottom Left */}
-      <div className="mt-6 flex items-center gap-3">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className={isAudioGenerated ? "bg-info/10 text-info border-info/20 hover:bg-info/20" : "hover:bg-primary/10 hover:text-primary hover:border-primary/20"} 
-          onClick={handleGenerateAudio}
-        >
-          <Volume2 size={16} className="mr-2" />
-          {isAudioGenerated ? "重新生成音频" : "一键生成音频"}
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className={isGlobalSubtitleConfigured ? "bg-info/10 text-info border-info/20 hover:bg-info/20" : "hover:bg-primary/10 hover:text-primary hover:border-primary/20"}
-          onClick={() => openModal('globalSubtitle')}
-        >
-          <Settings2 size={16} className="mr-2" />
-          字幕全局设置
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className={isBgmConfigured ? "bg-info/10 text-info border-info/20 hover:bg-info/20" : "hover:bg-primary/10 hover:text-primary hover:border-primary/20"}
-          onClick={() => openModal('bgm')}
-        >
-          <Music size={16} className="mr-2" />
-          BGM配乐
-        </Button>
-      </div>
-
       {/* Modals */}
       {activeModal.type === 'animatedText' && (
         <AnimatedTextModal
@@ -645,16 +673,6 @@ const SegmentTable = ({
           onClose={closeModal}
           segmentId={activeModal.segmentId!}
           onSubmit={updateSegmentAnimatedText}
-        />
-      )}
-      
-      {activeModal.type === 'globalSubtitle' && (
-        <GlobalSubtitleModal
-          isOpen={true}
-          onClose={closeModal}
-          onComplete={() => {
-            setIsGlobalSubtitleConfigured(true);
-          }}
         />
       )}
       
@@ -681,30 +699,29 @@ const SegmentTable = ({
       {activeModal.type === 'bgm' && (
         <BgmModal
           isOpen={true}
-          onClose={closeModal}
+          onClose={() => {
+            closeModal();
+            if (pendingAudioSettingsSegmentId) {
+              setTimeout(() => {
+                setActiveModal({ type: 'audioSettings', segmentId: pendingAudioSettingsSegmentId });
+                setPendingAudioSettingsSegmentId(null);
+              }, 100);
+            }
+          }}
           selectedBgm={selectedBgm}
           onSelect={(bgm) => {
             console.log("BGM选择:", bgm);
             if (bgm.cancelled) {
-              setIsBgmConfigured(false);
-              setSelectedBgm(null);
+              closeModal();
+              if (pendingAudioSettingsSegmentId) {
+                setTimeout(() => {
+                  setActiveModal({ type: 'audioSettings', segmentId: pendingAudioSettingsSegmentId });
+                  setPendingAudioSettingsSegmentId(null);
+                }, 100);
+              }
             } else if (bgm.name && bgm.url) {
-              setIsBgmConfigured(true);
-              const matchedAudio = [
-                { id: "1", name: "轻松愉悦" },
-                { id: "2", name: "激励节拍" },
-                { id: "3", name: "温馨时光" },
-                { id: "4", name: "商务专业" },
-                { id: "5", name: "科技未来" },
-                { id: "6", name: "浪漫情调" }
-              ].find(audio => audio.name === bgm.name);
-              setSelectedBgm({ 
-                name: bgm.name, 
-                type: bgm.type, 
-                id: matchedAudio?.id 
-              });
+              handleAddBgmToSegment({ name: bgm.name, url: bgm.url });
             }
-            // Handle BGM selection here
           }}
         />
       )}
@@ -712,17 +729,50 @@ const SegmentTable = ({
       {activeModal.type === 'voiceSelection' && (
         <VoiceSelectionModal
           isOpen={true}
-          onClose={closeModal}
-          onConfirm={handleVoiceSelected}
+          onClose={() => {
+            closeModal();
+            if (pendingAudioSettingsSegmentId) {
+              setTimeout(() => {
+                setActiveModal({ type: 'audioSettings', segmentId: pendingAudioSettingsSegmentId });
+                setPendingAudioSettingsSegmentId(null);
+              }, 100);
+            }
+          }}
+          onConfirm={(voiceId) => {
+            // Find the voice name from the voice ID
+            const voiceNames: Record<string, string> = {
+              'xiaoxiao': '晓晓',
+              'yunxi': '云溪',
+              'xiaoyi': '晓艺',
+              'yunjian': '云健'
+            };
+            handleVoiceSelectedForSegment(voiceId, voiceNames[voiceId] || voiceId);
+          }}
         />
       )}
 
-      {activeModal.type === 'audioGeneration' && (
-        <AudioGenerationModal
+      {activeModal.type === 'audioSettings' && activeModal.segmentId && (
+        <AudioSettingsModal
           isOpen={true}
           onClose={closeModal}
-          onComplete={handleAudioGenerationComplete}
-          segmentCount={segments.filter(s => s.script).length}
+          segmentId={activeModal.segmentId}
+          segmentName={segments.find(s => s.id === activeModal.segmentId)?.name || ""}
+          currentSettings={segments.find(s => s.id === activeModal.segmentId)?.audioSettings}
+          onSave={updateSegmentAudioSettings}
+          onSelectVoice={() => {
+            setPendingAudioSettingsSegmentId(activeModal.segmentId);
+            closeModal();
+            setTimeout(() => {
+              setActiveModal({ type: 'voiceSelection', segmentId: null });
+            }, 100);
+          }}
+          onSelectBgm={() => {
+            setPendingAudioSettingsSegmentId(activeModal.segmentId);
+            closeModal();
+            setTimeout(() => {
+              setActiveModal({ type: 'bgm', segmentId: null });
+            }, 100);
+          }}
         />
       )}
       
