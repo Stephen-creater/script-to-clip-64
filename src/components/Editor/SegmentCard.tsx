@@ -15,7 +15,12 @@ import {
   Volume2,
   VolumeX,
   Type,
-  Smile
+  Smile,
+  Scissors,
+  AlignVerticalJustifyStart,
+  AlignVerticalJustifyCenter,
+  AlignVerticalJustifyEnd,
+  ChevronDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +50,7 @@ interface SegmentCardProps {
   onOpenBgmSettings?: () => void;
   onOpenAnimatedText?: () => void;
   onOpenSticker?: () => void;
+  onOpenBatchTrim?: () => void;
   onVideoSelect: (video: string) => void;
 }
 
@@ -85,6 +91,7 @@ const SegmentCard = ({
   onOpenBgmSettings,
   onOpenAnimatedText,
   onOpenSticker,
+  onOpenBatchTrim,
   onVideoSelect
 }: SegmentCardProps) => {
   const [isAiReady, setIsAiReady] = useState(false);
@@ -97,6 +104,10 @@ const SegmentCard = ({
   const [hasAnimatedText, setHasAnimatedText] = useState(false);
   const [hasSticker, setHasSticker] = useState(false);
   const [bgmEnabled, setBgmEnabled] = useState(false);
+  const [isSubtitlePanelOpen, setIsSubtitlePanelOpen] = useState(false);
+  const [subtitleColor, setSubtitleColor] = useState("white");
+  const [subtitleSize, setSubtitleSize] = useState([24]);
+  const [subtitlePosition, setSubtitlePosition] = useState<"top" | "center" | "bottom">("bottom");
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isMatched = !!matchedVideo;
@@ -200,7 +211,7 @@ const SegmentCard = ({
           </div>
 
           {/* Layer 1: Script Input */}
-          <div className="flex-1 mb-2">
+          <div className="mb-3">
             <Textarea
               value={script}
               onChange={(e) => onScriptChange(e.target.value)}
@@ -209,8 +220,136 @@ const SegmentCard = ({
             />
           </div>
 
-          {/* Layer 2: Audio Configuration - Split Controls */}
-          <div className="space-y-2 mb-2">
+          {/* Layer 2: Refinement Toolbar */}
+          <div className="mb-3 space-y-2">
+            <div className="flex items-center gap-2">
+              {/* Subtitle Settings Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsSubtitlePanelOpen(!isSubtitlePanelOpen)}
+                className={cn(
+                  "flex-1 h-8 text-xs gap-1.5 justify-between bg-background border-border/60",
+                  isSubtitlePanelOpen && "bg-muted border-primary/50"
+                )}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Type size={14} />
+                  字幕设置
+                </div>
+                <ChevronDown 
+                  size={12} 
+                  className={cn(
+                    "transition-transform duration-200",
+                    isSubtitlePanelOpen && "rotate-180"
+                  )}
+                />
+              </Button>
+
+              {/* Batch Trim Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onOpenBatchTrim}
+                className="flex-1 h-8 text-xs gap-1.5 bg-background border-border/60 hover:border-primary/50"
+              >
+                <Scissors size={14} />
+                批量裁剪
+              </Button>
+            </div>
+
+            {/* Subtitle Settings Accordion Panel */}
+            <div className={cn(
+              "overflow-hidden transition-all duration-200 ease-out",
+              isSubtitlePanelOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
+            )}>
+              <div className="p-3 bg-muted/40 rounded-lg border border-border/50 space-y-3">
+                {/* Color Presets */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground">预设样式</span>
+                  <div className="flex items-center gap-2">
+                    {[
+                      { color: "black", bg: "bg-black", border: "border-white/30" },
+                      { color: "white", bg: "bg-white", border: "border-gray-300" },
+                      { color: "yellow", bg: "bg-yellow-400", border: "border-yellow-500" },
+                      { color: "blue", bg: "bg-blue-500", border: "border-blue-600" }
+                    ].map((preset) => (
+                      <button
+                        key={preset.color}
+                        onClick={() => setSubtitleColor(preset.color)}
+                        className={cn(
+                          "w-6 h-6 rounded-full border-2 transition-all",
+                          preset.bg,
+                          subtitleColor === preset.color 
+                            ? "ring-2 ring-primary ring-offset-2 ring-offset-background" 
+                            : preset.border
+                        )}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Font Size Slider */}
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[10px] text-muted-foreground">字体大小</span>
+                  <div className="flex items-center gap-2 flex-1 max-w-[140px]">
+                    <Slider
+                      value={subtitleSize}
+                      onValueChange={setSubtitleSize}
+                      min={12}
+                      max={48}
+                      step={2}
+                      className="flex-1"
+                    />
+                    <span className="text-[10px] font-medium text-muted-foreground w-6">{subtitleSize[0]}</span>
+                  </div>
+                </div>
+
+                {/* Position Selector */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground">显示位置</span>
+                  <div className="flex items-center gap-1 bg-muted rounded-md p-0.5">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSubtitlePosition("top")}
+                      className={cn(
+                        "h-6 w-6",
+                        subtitlePosition === "top" && "bg-background shadow-sm"
+                      )}
+                    >
+                      <AlignVerticalJustifyStart size={12} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSubtitlePosition("center")}
+                      className={cn(
+                        "h-6 w-6",
+                        subtitlePosition === "center" && "bg-background shadow-sm"
+                      )}
+                    >
+                      <AlignVerticalJustifyCenter size={12} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSubtitlePosition("bottom")}
+                      className={cn(
+                        "h-6 w-6",
+                        subtitlePosition === "bottom" && "bg-background shadow-sm"
+                      )}
+                    >
+                      <AlignVerticalJustifyEnd size={12} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Layer 3: Audio Configuration - Split Controls */}
+          <div className="space-y-2 mb-3">
             {/* Voice/TTS Settings */}
             <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg border border-border/50">
               <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -279,7 +418,7 @@ const SegmentCard = ({
             </div>
           </div>
 
-          {/* Layer 3: Decoration Toolbar */}
+          {/* Layer 4: Decoration Toolbar */}
           <div className="flex items-center gap-2">
             <Button
               variant={hasAnimatedText ? "default" : "secondary"}
