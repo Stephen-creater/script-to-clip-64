@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -141,6 +142,7 @@ const mockReviewData: Record<string, { status: 'machine_review' | 'pending_human
 };
 
 const Materials = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -500,7 +502,7 @@ const Materials = () => {
               <Button
                 size="lg"
                 className="bg-gradient-primary gap-2"
-                onClick={() => setWorkbenchOpen(true)}
+                onClick={() => navigate("/material-preprocessing")}
               >
                 <Scissors size={18} />
                 上传并粗剪
