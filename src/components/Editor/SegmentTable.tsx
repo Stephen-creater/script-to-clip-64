@@ -137,8 +137,9 @@ const SegmentTable = ({
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
-    type: 'animatedText' | 'sticker' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'voiceSelection' | 'scriptVariant' | 'audioSettings' | null;
+    type: 'animatedText' | 'sticker' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'voiceSelection' | 'scriptVariant' | 'audioSettings' | 'batchAudioSettings' | null;
     segmentId: string | null;
+    segmentIds?: string[];
   }>({ type: null, segmentId: null });
   
   const [selectedVoiceId, setSelectedVoiceId] = useState<string>("");
@@ -225,6 +226,17 @@ const SegmentTable = ({
           : segment
       )
     );
+  };
+
+  const updateBatchAudioSettings = (segmentIds: string[], settings: AudioSettings) => {
+    setSegments(prevSegments =>
+      prevSegments.map(segment =>
+        segmentIds.includes(segment.id)
+          ? { ...segment, audioSettings: settings }
+          : segment
+      )
+    );
+    setSelectedSegments([]);
   };
 
   const handleAddBgmToSegment = (bgm: { name: string; url: string }) => {
@@ -457,6 +469,15 @@ const SegmentTable = ({
             <span className="text-sm text-muted-foreground">
               已选择 {selectedSegments.length} 个分段
             </span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setActiveModal({ type: 'batchAudioSettings', segmentId: null, segmentIds: selectedSegments })}
+              className="gap-2"
+            >
+              <Volume2 size={14} />
+              音频/BGM设置
+            </Button>
             <Button variant="destructive" size="sm" onClick={handleBatchDelete}>
               批量删除
             </Button>
@@ -509,12 +530,7 @@ const SegmentTable = ({
                 <th className="w-8 p-4"></th>
                 <th className="min-w-[180px] px-4 py-4 text-left text-body-small font-semibold text-foreground">画面</th>
                 <th className="min-w-[320px] px-4 py-4 text-left text-body-small font-semibold text-foreground">文案</th>
-                <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">花字</th>
-                <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">视频贴纸</th>
-                <th className="min-w-[140px] px-4 py-4 text-left text-body-small font-semibold text-foreground">数字人</th>
-                <th className="min-w-[140px] px-4 py-4 text-left text-body-small font-semibold text-foreground">
-                  音频设置
-                </th>
+                <th className="min-w-[180px] px-4 py-4 text-left text-body-small font-semibold text-foreground">花字/贴纸</th>
               </tr>
             </thead>
           </table>
@@ -592,72 +608,28 @@ const SegmentTable = ({
                          </div>
                        </div>
                      </td>
-                    <td className="min-w-[100px] p-4 border-r border-border/50">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full justify-start"
-                        onClick={() => openModal('animatedText', segment.id)}
-                      >
-                        <Wand2 size={14} className="mr-2" />
-                        {segment.animatedText}
-                      </Button>
+                    <td className="min-w-[180px] p-4">
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1 justify-start"
+                          onClick={() => openModal('animatedText', segment.id)}
+                        >
+                          <Wand2 size={14} className="mr-1" />
+                          {segment.animatedText === "未设置" ? "花字" : segment.animatedText}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1 justify-start"
+                          onClick={() => openModal('sticker', segment.id)}
+                        >
+                          <Settings2 size={14} className="mr-1" />
+                          {segment.sticker === "未设置" ? "贴纸" : segment.sticker}
+                        </Button>
+                      </div>
                     </td>
-                    <td className="min-w-[100px] p-4 border-r border-border/50">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full justify-start"
-                        onClick={() => openModal('sticker', segment.id)}
-                      >
-                        <Settings2 size={14} className="mr-2" />
-                        {segment.sticker}
-                      </Button>
-                    </td>
-                     <td className="min-w-[140px] p-4 border-r border-border/50">
-                       <Button 
-                         variant={segment.enableDigitalHumans ? "default" : "outline"}
-                         size="sm" 
-                         className="w-full justify-start gap-2"
-                         onClick={() => handleDigitalHumanClick(segment.id)}
-                       >
-                         <User size={14} />
-                         {segment.enableDigitalHumans && globalDigitalHumans.length > 0 ? (
-                           <div className="flex items-center gap-2">
-                             <span>已启用</span>
-                             <div className="flex gap-1">
-                               {globalDigitalHumans.map((_, index) => (
-                                 <div 
-                                   key={index}
-                                   className="h-5 w-5 rounded-full bg-primary-foreground text-primary text-[10px] flex items-center justify-center font-bold shadow-sm"
-                                 >
-                                   {index + 1}
-                                 </div>
-                               ))}
-                             </div>
-                           </div>
-                         ) : (
-                           <span>{segment.enableDigitalHumans ? "已启用" : "点击启用"}</span>
-                         )}
-                       </Button>
-                     </td>
-                     <td className="min-w-[140px] p-4">
-                       <Button 
-                         variant={segment.audioSettings ? "default" : "outline"}
-                         size="sm" 
-                         className="w-full justify-start gap-2"
-                         onClick={() => handleOpenAudioSettings(segment.id)}
-                       >
-                         <Volume2 size={14} />
-                         {segment.audioSettings ? (
-                           <span className="truncate">
-                             {segment.audioSettings.voiceName} · {segment.audioSettings.speed}x
-                           </span>
-                         ) : (
-                           "配置音频"
-                         )}
-                       </Button>
-                     </td>
                   </tr>
                 ))}
               </tbody>
@@ -805,6 +777,29 @@ const SegmentTable = ({
           segmentName={segments.find(s => s.id === activeModal.segmentId)?.name || ""}
           initialVariants={segments.find(s => s.id === activeModal.segmentId)?.scriptVariants}
           onSubmit={updateSegmentScriptVariants}
+        />
+      )}
+
+      {activeModal.type === 'batchAudioSettings' && activeModal.segmentIds && (
+        <AudioSettingsModal
+          isOpen={true}
+          onClose={closeModal}
+          segmentIds={activeModal.segmentIds}
+          segmentName={`${activeModal.segmentIds.length}个分段`}
+          onSave={updateSegmentAudioSettings}
+          onBatchSave={updateBatchAudioSettings}
+          onSelectVoice={() => {
+            closeModal();
+            setTimeout(() => {
+              setActiveModal({ type: 'voiceSelection', segmentId: null });
+            }, 100);
+          }}
+          onSelectBgm={() => {
+            closeModal();
+            setTimeout(() => {
+              setActiveModal({ type: 'bgm', segmentId: null });
+            }, 100);
+          }}
         />
       )}
     </div>
