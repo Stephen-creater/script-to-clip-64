@@ -311,30 +311,6 @@ const SegmentTable = ({
             导入文案
           </Button>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleGlobalDigitalHumanConfig}
-            className="gap-2"
-          >
-            <User size={14} />
-            数字人配置
-            {globalDigitalHumans.length > 0 && (
-              <div className="flex gap-1 ml-1">
-                {globalDigitalHumans.map((_, index) => (
-                  <div 
-                    key={index}
-                    className="h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold"
-                  >
-                    {index + 1}
-                  </div>
-                ))}
-              </div>
-            )}
-          </Button>
-        </div>
       </div>
 
       {/* Segment Cards - Compact spacing */}
