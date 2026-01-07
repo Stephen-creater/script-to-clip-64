@@ -506,15 +506,13 @@ const SegmentTable = ({
                     onCheckedChange={handleSelectAll}
                   />
                 </th>
-                <th className="w-8 p-4"></th>
-                <th className="min-w-[180px] px-4 py-4 text-left text-body-small font-semibold text-foreground">画面</th>
-                <th className="min-w-[320px] px-4 py-4 text-left text-body-small font-semibold text-foreground">文案</th>
-                <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">花字</th>
-                <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">视频贴纸</th>
-                <th className="min-w-[140px] px-4 py-4 text-left text-body-small font-semibold text-foreground">数字人</th>
-                <th className="min-w-[140px] px-4 py-4 text-left text-body-small font-semibold text-foreground">
-                  音频设置
-                </th>
+                <th className="w-12 px-4 py-4 text-left text-body-small font-semibold text-foreground">排序</th>
+                <th className="min-w-[120px] px-4 py-4 text-left text-body-small font-semibold text-foreground">分段名称</th>
+                <th className="min-w-[160px] px-4 py-4 text-left text-body-small font-semibold text-foreground">视频素材文件夹</th>
+                <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">花字/贴纸</th>
+                <th className="min-w-[280px] px-4 py-4 text-left text-body-small font-semibold text-foreground">字幕文案</th>
+                <th className="min-w-[120px] px-4 py-4 text-left text-body-small font-semibold text-foreground">字幕音频</th>
+                <th className="w-20 px-4 py-4 text-left text-body-small font-semibold text-foreground">操作</th>
               </tr>
             </thead>
           </table>
@@ -537,127 +535,97 @@ const SegmentTable = ({
                         onCheckedChange={(checked) => handleSelectSegment(segment.id, !!checked)}
                       />
                     </td>
-                    <td className="w-8 p-4 border-r border-border/50">
+                    <td className="w-12 p-4 border-r border-border/50">
                       <GripVertical size={16} className="text-muted-foreground cursor-grab" />
                     </td>
-                     <td className="min-w-[180px] p-4 border-r border-border/50">
-                       <div className="space-y-1">
-                         <Button 
-                           variant="outline" 
-                           size="sm" 
-                           className="w-full justify-start"
-                           onClick={() => openModal('materialSelection', segment.id)}
-                         >
-                           <Upload size={14} className="mr-2" />
-                           {segment.video || "选择素材"}
-                         </Button>
-                         {segment.materialWarning && (
-                           <p className="text-xs text-destructive">
-                             {segment.materialWarning}
-                           </p>
-                         )}
-                       </div>
-                     </td>
-                     <td className="min-w-[320px] p-4 border-r border-border/50">
-                       <div className="relative group">
-                         <Textarea
-                           value={segment.scriptVariants && segment.scriptVariants.length > 0 
-                             ? `已配置${segment.scriptVariants.length}个变体` 
-                             : segment.script}
-                           onChange={(e) => updateSegmentScript(segment.id, e.target.value)}
-                           className="min-h-[80px] text-sm resize-none border-0 bg-transparent p-1 pr-10 focus:border-border focus:bg-background/50"
-                           placeholder="请输入文案内容"
-                           disabled={segment.scriptVariants && segment.scriptVariants.length > 0}
-                         />
-                         <div className="absolute bottom-1 right-1 flex flex-col items-end gap-1">
-                           <Button
-                             variant="ghost"
-                             size="sm"
-                             className={cn(
-                               "h-7 px-2 text-xs gap-1 opacity-70 hover:opacity-100 transition-opacity",
-                               segment.scriptVariants && segment.scriptVariants.length > 0 && "text-primary opacity-100"
-                             )}
-                             onClick={() => openModal('scriptVariant', segment.id)}
-                             title={segment.scriptVariants && segment.scriptVariants.length > 0 
-                               ? `管理变体 (${segment.scriptVariants.length})` 
-                               : "多选文案"}
-                           >
-                             <Plus className="h-3.5 w-3.5" />
-                             {segment.scriptVariants && segment.scriptVariants.length > 0 ? (
-                               <span>已配置{segment.scriptVariants.length}个</span>
-                             ) : (
-                               <span>多选文案</span>
-                             )}
-                           </Button>
-                         </div>
-                       </div>
-                     </td>
-                    <td className="min-w-[100px] p-4 border-r border-border/50">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full justify-start"
-                        onClick={() => openModal('animatedText', segment.id)}
-                      >
-                        <Wand2 size={14} className="mr-2" />
-                        {segment.animatedText}
-                      </Button>
+                    <td className="min-w-[120px] p-4 border-r border-border/50">
+                      <span className="text-sm text-foreground">{segment.name}</span>
+                    </td>
+                    <td className="min-w-[160px] p-4 border-r border-border/50">
+                      <div className="space-y-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full justify-start text-muted-foreground hover:text-foreground"
+                          onClick={() => openModal('materialSelection', segment.id)}
+                        >
+                          <Upload size={14} className="mr-2" />
+                          {segment.video || "选择文件夹"}
+                        </Button>
+                        {segment.materialWarning && (
+                          <p className="text-xs text-destructive">
+                            {segment.materialWarning}
+                          </p>
+                        )}
+                      </div>
                     </td>
                     <td className="min-w-[100px] p-4 border-r border-border/50">
                       <Button 
-                        variant="outline" 
+                        variant="ghost" 
                         size="sm" 
-                        className="w-full justify-start"
+                        className="w-full justify-start text-muted-foreground hover:text-foreground"
                         onClick={() => openModal('sticker', segment.id)}
                       >
-                        <Settings2 size={14} className="mr-2" />
-                        {segment.sticker}
+                        {segment.sticker === "未设置" ? "✏ 未设置" : segment.sticker}
                       </Button>
                     </td>
-                     <td className="min-w-[140px] p-4 border-r border-border/50">
-                       <Button 
-                         variant={segment.enableDigitalHumans ? "default" : "outline"}
-                         size="sm" 
-                         className="w-full justify-start gap-2"
-                         onClick={() => handleDigitalHumanClick(segment.id)}
-                       >
-                         <User size={14} />
-                         {segment.enableDigitalHumans && globalDigitalHumans.length > 0 ? (
-                           <div className="flex items-center gap-2">
-                             <span>已启用</span>
-                             <div className="flex gap-1">
-                               {globalDigitalHumans.map((_, index) => (
-                                 <div 
-                                   key={index}
-                                   className="h-5 w-5 rounded-full bg-primary-foreground text-primary text-[10px] flex items-center justify-center font-bold shadow-sm"
-                                 >
-                                   {index + 1}
-                                 </div>
-                               ))}
-                             </div>
-                           </div>
-                         ) : (
-                           <span>{segment.enableDigitalHumans ? "已启用" : "点击启用"}</span>
-                         )}
-                       </Button>
-                     </td>
-                     <td className="min-w-[140px] p-4">
-                       <Button 
-                         variant={segment.audioSettings ? "default" : "outline"}
-                         size="sm" 
-                         className="w-full justify-start gap-2"
-                         onClick={() => handleOpenAudioSettings(segment.id)}
-                       >
-                         <Volume2 size={14} />
-                         {segment.audioSettings ? (
-                           <span className="truncate">
-                             {segment.audioSettings.voiceName} · {segment.audioSettings.speed}x
-                           </span>
-                         ) : (
-                           "配置音频"
-                         )}
-                       </Button>
-                     </td>
+                    <td className="min-w-[280px] p-4 border-r border-border/50">
+                      <div className="relative group">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={cn(
+                            "w-full justify-start text-muted-foreground hover:text-foreground",
+                            segment.scriptVariants && segment.scriptVariants.length > 0 && "text-foreground"
+                          )}
+                          onClick={() => openModal('scriptVariant', segment.id)}
+                        >
+                          ✏ {segment.scriptVariants && segment.scriptVariants.length > 0 
+                            ? `点击添加字幕文案` 
+                            : "点击添加字幕文案"}
+                        </Button>
+                      </div>
+                    </td>
+                    <td className="min-w-[120px] p-4 border-r border-border/50">
+                      <span className={cn(
+                        "text-sm",
+                        segment.audioSettings ? "text-foreground" : "text-muted-foreground"
+                      )}>
+                        {segment.audioSettings ? (
+                          <Button 
+                            variant="ghost"
+                            size="sm"
+                            className="text-foreground"
+                            onClick={() => handleOpenAudioSettings(segment.id)}
+                          >
+                            {segment.audioSettings.voiceName} · {segment.audioSettings.speed}x
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground hover:text-foreground"
+                            onClick={() => handleOpenAudioSettings(segment.id)}
+                          >
+                            未生成
+                          </Button>
+                        )}
+                      </span>
+                    </td>
+                    <td className="w-20 p-4">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          const filteredSegments = segments.filter(s => s.id !== segment.id);
+                          const renumberedSegments = renumberSegments(filteredSegments);
+                          setSegments(renumberedSegments);
+                        }}
+                      >
+                        🗑 删除
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
