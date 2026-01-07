@@ -1,27 +1,16 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
-  GripVertical, 
   Plus, 
-  Upload, 
-  Wand2, 
-  Settings2,
   FileText,
-  Volume2,
   User
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { AnimatedTextModal } from "./AnimatedTextModal";
-import { StickerModal } from "./StickerModal";
 import { DigitalHumanModal } from "./DigitalHumanModal";
 import { BgmModal } from "./BgmModal";
-import { MaterialSelectionModal } from "./MaterialSelectionModal";
 import { VoiceSelectionModal } from "./VoiceSelectionModal";
-import { ScriptVariantModal } from "./ScriptVariantModal";
 import { AudioSettingsModal } from "./AudioSettingsModal";
+import SegmentCard from "./SegmentCard";
 
 interface ScriptVariant {
   id: string;
@@ -53,16 +42,16 @@ interface Segment {
   name: string;
   type: string;
   video: string;
-  videoDuration?: number; // 素材时长（秒）
+  videoDuration?: number;
   script: string;
   scriptVariants?: ScriptVariant[];
   animatedText: string;
   sticker: string;
-  enableDigitalHumans?: boolean; // 是否显示数字人
+  enableDigitalHumans?: boolean;
   audio: string;
   audioTimestamp?: string;
-  materialWarning?: string; // 素材警告信息
-  audioSettings?: AudioSettings; // 音频设置
+  materialWarning?: string;
+  audioSettings?: AudioSettings;
 }
 
 interface SegmentTableProps {
@@ -88,7 +77,7 @@ const SegmentTable = ({
       name: "分段1",
       type: "口播",
       video: "",
-      script: "1",
+      script: "",
       animatedText: "未设置",
       sticker: "未设置",
       audio: ""
@@ -98,7 +87,7 @@ const SegmentTable = ({
       name: "分段2",
       type: "口播",
       video: "",
-      script: "2",
+      script: "",
       animatedText: "未设置",
       sticker: "未设置",
       audio: ""
@@ -108,40 +97,18 @@ const SegmentTable = ({
       name: "分段3",
       type: "口播",
       video: "",
-      script: "3",
-      animatedText: "未设置",
-      sticker: "未设置",
-      audio: ""
-    },
-    {
-      id: "4",
-      name: "分段4",
-      type: "口播",
-      video: "",
-      script: "4",
-      animatedText: "未设置",
-      sticker: "未设置",
-      audio: ""
-    },
-    {
-      id: "5",
-      name: "分段5",
-      type: "口播",
-      video: "",
-      script: "5",
+      script: "",
       animatedText: "未设置",
       sticker: "未设置",
       audio: ""
     }
   ]);
 
-  const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
-    type: 'animatedText' | 'sticker' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'voiceSelection' | 'scriptVariant' | 'audioSettings' | null;
+    type: 'digitalHuman' | 'bgm' | 'voiceSelection' | 'audioSettings' | null;
     segmentId: string | null;
   }>({ type: null, segmentId: null });
   
-  const [selectedVoiceId, setSelectedVoiceId] = useState<string>("");
   const [pendingAudioSettingsSegmentId, setPendingAudioSettingsSegmentId] = useState<string | null>(null);
   
   const [isAudioGenerated, setIsAudioGenerated] = useState(false);
@@ -164,22 +131,6 @@ const SegmentTable = ({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAudioGenerated, isGlobalSubtitleConfigured, isBgmConfigured]);
-
-  const handleSelectSegment = (segmentId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedSegments([...selectedSegments, segmentId]);
-    } else {
-      setSelectedSegments(selectedSegments.filter(id => id !== segmentId));
-    }
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedSegments(segments.map(s => s.id));
-    } else {
-      setSelectedSegments([]);
-    }
-  };
 
   const handleOpenAudioSettings = (segmentId: string) => {
     setActiveModal({ type: 'audioSettings', segmentId });
@@ -235,7 +186,7 @@ const SegmentTable = ({
             const newTrack = {
               id: Date.now().toString(),
               name: bgm.name,
-              duration: "3:24" // Mock duration
+              duration: "3:24"
             };
             return {
               ...segment,
@@ -264,7 +215,6 @@ const SegmentTable = ({
       }, 100);
     }
   };
-
 
   const renumberSegments = (segmentList: Segment[]) => {
     return segmentList.map((segment, index) => ({
@@ -309,132 +259,42 @@ const SegmentTable = ({
     }
   };
 
-  const handleBatchDelete = () => {
-    if (selectedSegments.length === 0) return;
-    const filteredSegments = segments.filter(segment => !selectedSegments.includes(segment.id));
+  const handleDeleteSegment = (segmentId: string) => {
+    const filteredSegments = segments.filter(s => s.id !== segmentId);
     const renumberedSegments = renumberSegments(filteredSegments);
     setSegments(renumberedSegments);
-    setSelectedSegments([]);
   };
 
-  const openModal = (type: 'animatedText' | 'sticker' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'scriptVariant' | 'audioSettings' | 'voiceSelection', segmentId?: string) => {
-    setActiveModal({ type, segmentId: segmentId || null });
+  const updateSegmentScript = (segmentId: string, script: string) => {
+    setSegments(prevSegments => 
+      prevSegments.map(segment => 
+        segment.id === segmentId 
+          ? { ...segment, script }
+          : segment
+      )
+    );
   };
 
-  const handleDigitalHumanClick = (segmentId: string) => {
-    // 切换分段的数字人启用/禁用状态
-    setSegments(prevSegments =>
-      prevSegments.map(s =>
-        s.id === segmentId
-          ? { ...s, enableDigitalHumans: !s.enableDigitalHumans }
-          : s
+  const updateSegmentVideo = (segmentId: string, video: string) => {
+    setSegments(prevSegments => 
+      prevSegments.map(segment => 
+        segment.id === segmentId 
+          ? { ...segment, video }
+          : segment
       )
     );
   };
 
   const handleGlobalDigitalHumanConfig = () => {
-    // 打开全局数字人配置modal
-    openModal('digitalHuman');
+    setActiveModal({ type: 'digitalHuman', segmentId: null });
   };
 
   const closeModal = () => {
     setActiveModal({ type: null, segmentId: null });
   };
 
-  const updateSegmentAnimatedText = (segmentId: string, data: any) => {
-    setSegments(prevSegments => 
-      prevSegments.map(segment => 
-        segment.id === segmentId 
-          ? { 
-              ...segment, 
-              animatedText: data.content || "未设置"
-            }
-          : segment
-      )
-    );
-  };
-
-  const updateSegmentScript = (segmentId: string, script: string) => {
-    setSegments(prevSegments => 
-      prevSegments.map(segment => {
-        if (segment.id === segmentId) {
-          // 检查文案长度与素材时长是否匹配
-          const estimatedScriptDuration = script.length * 0.3;
-          let materialWarning: string | undefined;
-          
-          if (segment.videoDuration && script.length > 0 && estimatedScriptDuration > segment.videoDuration) {
-            materialWarning = "素材时长过小，请重新选择素材！";
-          }
-          
-          return { ...segment, script, materialWarning };
-        }
-        return segment;
-      })
-    );
-  };
-
-  const updateSegmentName = (segmentId: string, name: string) => {
-    setSegments(prevSegments => 
-      prevSegments.map(segment => 
-        segment.id === segmentId 
-          ? { ...segment, name }
-          : segment
-      )
-    );
-  };
-
-  const updateSegmentVideo = (segmentId: string, material: {
-    id: string;
-    name: string;
-    type: string;
-    url: string;
-    thumbnail?: string;
-  }) => {
-    setSegments(prevSegments => 
-      prevSegments.map(segment => {
-        if (segment.id === segmentId) {
-          // 模拟素材时长（实际应从素材库获取）
-          const mockDuration = Math.random() * 5 + 2; // 2-7秒
-          
-          // 检查文案长度与素材时长是否匹配
-          // 假设每个字符需要0.3秒来朗读
-          const scriptLength = segment.script.length;
-          const estimatedScriptDuration = scriptLength * 0.3;
-          
-          let materialWarning: string | undefined;
-          if (scriptLength > 0 && estimatedScriptDuration > mockDuration) {
-            materialWarning = "素材时长过小，请重新选择素材！";
-          }
-          
-          return { 
-            ...segment, 
-            video: material.name,
-            videoDuration: mockDuration,
-            materialWarning
-          };
-        }
-        return segment;
-      })
-    );
-  };
-
   const updateSegmentDigitalHuman = (digitalHumans: DigitalHuman[]) => {
-    // 全局数字人配置更新
     onGlobalDigitalHumansChange(digitalHumans);
-  };
-
-  const updateSegmentScriptVariants = (segmentId: string, variants: ScriptVariant[]) => {
-    setSegments(prevSegments => 
-      prevSegments.map(segment => 
-        segment.id === segmentId 
-          ? { 
-              ...segment, 
-              scriptVariants: variants,
-              script: variants.length > 0 ? `已配置${variants.length}个变体` : segment.script
-            }
-          : segment
-      )
-    );
   };
 
   return (
@@ -452,206 +312,53 @@ const SegmentTable = ({
           </Button>
         </div>
         
-        {selectedSegments.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              已选择 {selectedSegments.length} 个分段
-            </span>
-            <Button variant="destructive" size="sm" onClick={handleBatchDelete}>
-              批量删除
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGlobalDigitalHumanConfig}
+            className="gap-2"
+          >
+            <User size={14} />
+            数字人配置
+            {globalDigitalHumans.length > 0 && (
+              <div className="flex gap-1 ml-1">
+                {globalDigitalHumans.map((_, index) => (
+                  <div 
+                    key={index}
+                    className="h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold"
+                  >
+                    {index + 1}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Button>
+        </div>
       </div>
 
-      {/* Table with ScrollArea */}
-      <div className="flex-1 bg-card rounded-lg border border-border overflow-hidden shadow-card">
-        {/* 全局配置区域 */}
-        <div className="bg-editor-grid border-b border-border px-4 py-3 flex items-center justify-between">
-          <div className="text-sm font-medium text-muted-foreground">
-            全局配置
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleGlobalDigitalHumanConfig}
-              className="gap-2"
-            >
-              <User size={14} />
-              数字人配置
-              {globalDigitalHumans.length > 0 && (
-                <div className="flex gap-1 ml-1">
-                  {globalDigitalHumans.map((_, index) => (
-                    <div 
-                      key={index}
-                      className="h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold"
-                    >
-                      {index + 1}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Button>
-          </div>
+      {/* Segment Cards */}
+      <ScrollArea className="flex-1">
+        <div className="space-y-4 pr-4">
+          {segments.map((segment, index) => (
+            <SegmentCard
+              key={segment.id}
+              id={segment.id}
+              index={index}
+              name={segment.name}
+              script={segment.script}
+              video={segment.video}
+              audioSettings={segment.audioSettings}
+              onScriptChange={(script) => updateSegmentScript(segment.id, script)}
+              onDelete={() => handleDeleteSegment(segment.id)}
+              onOpenAudioSettings={() => handleOpenAudioSettings(segment.id)}
+              onVideoSelect={(video) => updateSegmentVideo(segment.id, video)}
+            />
+          ))}
         </div>
-        
-        <div className="bg-editor-grid border-b border-border">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="w-12 p-4 text-left">
-                  <Checkbox
-                    checked={selectedSegments.length === segments.length}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </th>
-                <th className="w-12 px-4 py-4 text-left text-body-small font-semibold text-foreground">排序</th>
-                <th className="min-w-[120px] px-4 py-4 text-left text-body-small font-semibold text-foreground">分段名称</th>
-                <th className="min-w-[160px] px-4 py-4 text-left text-body-small font-semibold text-foreground">视频素材文件夹</th>
-                <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">花字/贴纸</th>
-                <th className="min-w-[280px] px-4 py-4 text-left text-body-small font-semibold text-foreground">字幕文案</th>
-                <th className="min-w-[120px] px-4 py-4 text-left text-body-small font-semibold text-foreground">字幕音频</th>
-                <th className="w-20 px-4 py-4 text-left text-body-small font-semibold text-foreground">操作</th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-        <ScrollArea className="h-[calc(100vh-300px)]">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <tbody>
-                {segments.map((segment, index) => (
-                  <tr 
-                    key={segment.id}
-                    className={cn(
-                      "border-b border-border hover:bg-editor-hover transition-colors",
-                      selectedSegments.includes(segment.id) && "bg-editor-selected/10"
-                    )}
-                  >
-                    <td className="w-12 p-4 border-r border-border/50">
-                      <Checkbox
-                        checked={selectedSegments.includes(segment.id)}
-                        onCheckedChange={(checked) => handleSelectSegment(segment.id, !!checked)}
-                      />
-                    </td>
-                    <td className="w-12 p-4 border-r border-border/50">
-                      <GripVertical size={16} className="text-muted-foreground cursor-grab" />
-                    </td>
-                    <td className="min-w-[120px] p-4 border-r border-border/50">
-                      <span className="text-sm text-foreground">{segment.name}</span>
-                    </td>
-                    <td className="min-w-[160px] p-4 border-r border-border/50">
-                      <div className="space-y-1">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="w-full justify-start text-muted-foreground hover:text-foreground"
-                          onClick={() => openModal('materialSelection', segment.id)}
-                        >
-                          <Upload size={14} className="mr-2" />
-                          {segment.video || "选择文件夹"}
-                        </Button>
-                        {segment.materialWarning && (
-                          <p className="text-xs text-destructive">
-                            {segment.materialWarning}
-                          </p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="min-w-[100px] p-4 border-r border-border/50">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full justify-start text-muted-foreground hover:text-foreground"
-                        onClick={() => openModal('sticker', segment.id)}
-                      >
-                        {segment.sticker === "未设置" ? "✏ 未设置" : segment.sticker}
-                      </Button>
-                    </td>
-                    <td className="min-w-[280px] p-4 border-r border-border/50">
-                      <div className="relative group">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className={cn(
-                            "w-full justify-start text-muted-foreground hover:text-foreground",
-                            segment.scriptVariants && segment.scriptVariants.length > 0 && "text-foreground"
-                          )}
-                          onClick={() => openModal('scriptVariant', segment.id)}
-                        >
-                          ✏ {segment.scriptVariants && segment.scriptVariants.length > 0 
-                            ? `点击添加字幕文案` 
-                            : "点击添加字幕文案"}
-                        </Button>
-                      </div>
-                    </td>
-                    <td className="min-w-[120px] p-4 border-r border-border/50">
-                      <span className={cn(
-                        "text-sm",
-                        segment.audioSettings ? "text-foreground" : "text-muted-foreground"
-                      )}>
-                        {segment.audioSettings ? (
-                          <Button 
-                            variant="ghost"
-                            size="sm"
-                            className="text-foreground"
-                            onClick={() => handleOpenAudioSettings(segment.id)}
-                          >
-                            {segment.audioSettings.voiceName} · {segment.audioSettings.speed}x
-                          </Button>
-                        ) : (
-                          <Button 
-                            variant="ghost"
-                            size="sm"
-                            className="text-muted-foreground hover:text-foreground"
-                            onClick={() => handleOpenAudioSettings(segment.id)}
-                          >
-                            未生成
-                          </Button>
-                        )}
-                      </span>
-                    </td>
-                    <td className="w-20 p-4">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => {
-                          const filteredSegments = segments.filter(s => s.id !== segment.id);
-                          const renumberedSegments = renumberSegments(filteredSegments);
-                          setSegments(renumberedSegments);
-                        }}
-                      >
-                        🗑 删除
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </ScrollArea>
-      </div>
+      </ScrollArea>
 
       {/* Modals */}
-      {activeModal.type === 'animatedText' && (
-        <AnimatedTextModal
-          isOpen={true}
-          onClose={closeModal}
-          segmentId={activeModal.segmentId!}
-          onSubmit={updateSegmentAnimatedText}
-        />
-      )}
-      
-      {activeModal.type === 'sticker' && (
-        <StickerModal
-          isOpen={true}
-          onClose={closeModal}
-          segmentId={activeModal.segmentId!}
-        />
-      )}
-      
       {activeModal.type === 'digitalHuman' && (
         <DigitalHumanModal
           isOpen={true}
@@ -707,7 +414,6 @@ const SegmentTable = ({
             }
           }}
           onConfirm={(voiceId) => {
-            // Find the voice name from the voice ID
             const voiceNames: Record<string, string> = {
               'xiaoxiao': '晓晓',
               'yunxi': '云溪',
@@ -741,38 +447,6 @@ const SegmentTable = ({
               setActiveModal({ type: 'bgm', segmentId: null });
             }, 100);
           }}
-        />
-      )}
-      
-      {activeModal.type === 'materialSelection' && (
-        <MaterialSelectionModal
-          isOpen={true}
-          onClose={closeModal}
-          onSelect={(folderId, folderName) => {
-            if (activeModal.segmentId) {
-              // Create a mock material object based on folder selection
-              const mockMaterial = {
-                id: folderId,
-                name: folderName,
-                type: 'folder',
-                url: '/placeholder.svg',
-                thumbnail: '/placeholder.svg'
-              };
-              updateSegmentVideo(activeModal.segmentId, mockMaterial);
-            }
-            closeModal();
-          }}
-        />
-      )}
-
-      {activeModal.type === 'scriptVariant' && activeModal.segmentId && (
-        <ScriptVariantModal
-          isOpen={true}
-          onClose={closeModal}
-          segmentId={activeModal.segmentId}
-          segmentName={segments.find(s => s.id === activeModal.segmentId)?.name || ""}
-          initialVariants={segments.find(s => s.id === activeModal.segmentId)?.scriptVariants}
-          onSubmit={updateSegmentScriptVariants}
         />
       )}
     </div>
