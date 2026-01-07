@@ -45,12 +45,10 @@ interface AudioSettings {
 interface AudioSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  segmentId?: string;
-  segmentIds?: string[];
+  segmentId: string;
   segmentName: string;
   currentSettings?: Partial<AudioSettings>;
   onSave: (segmentId: string, settings: AudioSettings) => void;
-  onBatchSave?: (segmentIds: string[], settings: AudioSettings) => void;
   onSelectVoice: () => void;
   onSelectBgm: () => void;
 }
@@ -72,15 +70,12 @@ export const AudioSettingsModal = ({
   isOpen,
   onClose,
   segmentId,
-  segmentIds,
   segmentName,
   currentSettings,
   onSave,
-  onBatchSave,
   onSelectVoice,
   onSelectBgm
 }: AudioSettingsModalProps) => {
-  const isBatchMode = !!(segmentIds && segmentIds.length > 0);
   const [settings, setSettings] = useState<AudioSettings>({
     ...DEFAULT_SETTINGS,
     ...currentSettings
@@ -107,11 +102,7 @@ export const AudioSettingsModal = ({
   };
 
   const handleSave = () => {
-    if (isBatchMode && segmentIds && onBatchSave) {
-      onBatchSave(segmentIds, settings);
-    } else if (segmentId) {
-      onSave(segmentId, settings);
-    }
+    onSave(segmentId, settings);
     onClose();
   };
 
@@ -128,7 +119,7 @@ export const AudioSettingsModal = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Volume2 size={20} className="text-primary" />
-            {isBatchMode ? `批量音频设置 - ${segmentIds?.length}个分段` : `音频设置 - ${segmentName}`}
+            音频设置 - {segmentName}
           </DialogTitle>
         </DialogHeader>
 
