@@ -105,7 +105,7 @@ const SegmentTable = ({
   ]);
 
   const [activeModal, setActiveModal] = useState<{
-    type: 'digitalHuman' | 'bgm' | 'voiceSelection' | 'audioSettings' | null;
+    type: 'digitalHuman' | 'bgm' | 'voiceSelection' | 'audioSettings' | 'batchTrim' | null;
     segmentId: string | null;
   }>({ type: null, segmentId: null });
   
@@ -289,6 +289,10 @@ const SegmentTable = ({
     setActiveModal({ type: 'digitalHuman', segmentId: null });
   };
 
+  const handleOpenBatchTrim = (segmentId: string) => {
+    setActiveModal({ type: 'batchTrim', segmentId });
+  };
+
   const closeModal = () => {
     setActiveModal({ type: null, segmentId: null });
   };
@@ -328,6 +332,7 @@ const SegmentTable = ({
               onScriptChange={(script) => updateSegmentScript(segment.id, script)}
               onDelete={() => handleDeleteSegment(segment.id)}
               onOpenAudioSettings={() => handleOpenAudioSettings(segment.id)}
+              onOpenBatchTrim={() => handleOpenBatchTrim(segment.id)}
               onVideoSelect={(video) => updateSegmentVideo(segment.id, video)}
             />
           ))}
@@ -424,6 +429,58 @@ const SegmentTable = ({
             }, 100);
           }}
         />
+      )}
+
+      {/* Batch Trim Modal */}
+      {activeModal.type === 'batchTrim' && activeModal.segmentId && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={closeModal}
+        >
+          <div 
+            className="bg-zinc-900 rounded-2xl p-6 max-w-2xl w-full mx-4 border border-white/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-white">批量裁剪</h2>
+              <button 
+                onClick={closeModal}
+                className="text-white/60 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-white/60">
+                选择裁剪比例，AI 将自动识别画面主体并智能裁剪
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { ratio: "9:16", label: "竖屏", desc: "TikTok / Reels" },
+                  { ratio: "16:9", label: "横屏", desc: "YouTube" },
+                  { ratio: "1:1", label: "方形", desc: "Instagram" }
+                ].map((item) => (
+                  <button
+                    key={item.ratio}
+                    className="p-4 rounded-xl border border-white/10 hover:border-primary/50 hover:bg-white/5 transition-all text-center"
+                  >
+                    <div className="text-lg font-medium text-white mb-1">{item.ratio}</div>
+                    <div className="text-xs text-white/60">{item.label}</div>
+                    <div className="text-[10px] text-white/40 mt-1">{item.desc}</div>
+                  </button>
+                ))}
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button variant="outline" onClick={closeModal} className="border-white/20 text-white hover:bg-white/10">
+                  取消
+                </Button>
+                <Button className="bg-primary hover:bg-primary/90">
+                  应用裁剪
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
