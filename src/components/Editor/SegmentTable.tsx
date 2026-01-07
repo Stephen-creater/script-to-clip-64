@@ -337,9 +337,9 @@ const SegmentTable = ({
         </div>
       </div>
 
-      {/* Segment Cards */}
+      {/* Segment Cards - Compact spacing */}
       <ScrollArea className="flex-1">
-        <div className="space-y-4 pr-4">
+        <div className="space-y-2 pr-4">
           {segments.map((segment, index) => (
             <SegmentCard
               key={segment.id}
