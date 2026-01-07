@@ -8,11 +8,12 @@ import {
   Sparkles, 
   RefreshCw, 
   Upload, 
-  Scissors,
-  Volume2,
   Trash2,
   Play,
-  Loader2,
+  Mic,
+  Music,
+  Volume2,
+  VolumeX,
   Type,
   Smile
 } from "lucide-react";
@@ -41,26 +42,29 @@ interface SegmentCardProps {
   onScriptChange: (script: string) => void;
   onDelete: () => void;
   onOpenAudioSettings: () => void;
+  onOpenBgmSettings?: () => void;
+  onOpenAnimatedText?: () => void;
+  onOpenSticker?: () => void;
   onVideoSelect: (video: string) => void;
 }
 
-// Mock video data for demo
+// Mock video data for demo - 9:16 vertical videos
 const MOCK_VIDEOS = [
   { 
     id: "1", 
-    thumbnail: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=400&h=225&fit=crop",
+    thumbnail: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=360&h=640&fit=crop",
     keywords: ["火车", "旅行", "交通"],
     matchScore: 98
   },
   { 
     id: "2", 
-    thumbnail: "https://images.unsplash.com/photo-1515165562839-978bbcf18277?w=400&h=225&fit=crop",
+    thumbnail: "https://images.unsplash.com/photo-1515165562839-978bbcf18277?w=360&h=640&fit=crop",
     keywords: ["车站", "人群", "城市"],
     matchScore: 92
   },
   { 
     id: "3", 
-    thumbnail: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400&h=225&fit=crop",
+    thumbnail: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=360&h=640&fit=crop",
     keywords: ["公交", "省钱", "通勤"],
     matchScore: 85
   }
@@ -78,6 +82,9 @@ const SegmentCard = ({
   onScriptChange,
   onDelete,
   onOpenAudioSettings,
+  onOpenBgmSettings,
+  onOpenAnimatedText,
+  onOpenSticker,
   onVideoSelect
 }: SegmentCardProps) => {
   const [isAiReady, setIsAiReady] = useState(false);
@@ -86,19 +93,18 @@ const SegmentCard = ({
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [speed, setSpeed] = useState(audioSettings?.speed || 1.0);
   const [isHovering, setIsHovering] = useState(false);
+  const [isCardHovering, setIsCardHovering] = useState(false);
   const [hasAnimatedText, setHasAnimatedText] = useState(false);
   const [hasSticker, setHasSticker] = useState(false);
+  const [bgmEnabled, setBgmEnabled] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Determine status: matched or not
   const isMatched = !!matchedVideo;
 
-  // Check if script contains matching keywords
   const hasMatchableKeywords = KEYWORDS_TO_MATCH.some(keyword => 
     script.toLowerCase().includes(keyword.toLowerCase())
   );
 
-  // Handle typing detection for AI Ready state
   useEffect(() => {
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
@@ -141,26 +147,44 @@ const SegmentCard = ({
     }, 800);
   };
 
-  const toggleAnimatedText = () => setHasAnimatedText(!hasAnimatedText);
-  const toggleSticker = () => setHasSticker(!hasSticker);
+  const handleLocalUpload = () => {
+    // Trigger file upload dialog
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/*,image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        // Simulate upload with mock data
+        setMatchedVideo(MOCK_VIDEOS[0]);
+        onVideoSelect(MOCK_VIDEOS[0].thumbnail);
+      }
+    };
+    input.click();
+  };
 
   return (
-    <div className={cn(
-      "bg-card rounded-lg border border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden",
-      "border-l-4",
-      isMatched ? "border-l-emerald-500" : "border-l-muted-foreground/30"
-    )}>
-      <div className="grid grid-cols-12 gap-4 p-3">
-        {/* Left Side: Script Area (5 cols) */}
-        <div className="col-span-5 flex flex-col">
+    <div 
+      className={cn(
+        "bg-card rounded-xl border transition-all duration-200 overflow-hidden",
+        isCardHovering ? "border-primary shadow-lg" : "border-border/60",
+        "border-l-4",
+        isMatched ? "border-l-emerald-500" : "border-l-muted-foreground/30"
+      )}
+      onMouseEnter={() => setIsCardHovering(true)}
+      onMouseLeave={() => setIsCardHovering(false)}
+    >
+      <div className="flex gap-3 p-3">
+        {/* Left Side: Control Panel */}
+        <div className="flex-1 flex flex-col min-w-0">
           {/* Compact Header */}
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <GripVertical size={14} className="text-muted-foreground/50 cursor-grab" />
-              <span className="text-sm text-muted-foreground font-medium">分段 #{index + 1}</span>
+              <span className="text-xs text-muted-foreground font-medium">分段 #{index + 1}</span>
               {isAiReady && (
-                <Badge variant="secondary" className="h-5 text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 animate-pulse px-1.5">
-                  <Sparkles size={10} className="mr-0.5" />
+                <Badge variant="secondary" className="h-4 text-[9px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 animate-pulse px-1">
+                  <Sparkles size={8} className="mr-0.5" />
                   Ready
                 </Badge>
               )}
@@ -168,65 +192,143 @@ const SegmentCard = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+              className="h-5 w-5 text-muted-foreground hover:text-destructive"
               onClick={onDelete}
             >
-              <Trash2 size={14} />
+              <Trash2 size={12} />
             </Button>
           </div>
 
-          {/* Script Textarea with Footer Tools */}
-          <div className="flex-1 flex flex-col bg-muted/30 rounded-md border border-border/50 overflow-hidden">
+          {/* Layer 1: Script Input */}
+          <div className="flex-1 mb-2">
             <Textarea
               value={script}
               onChange={(e) => onScriptChange(e.target.value)}
               placeholder="请输入口播文案，AI 将自动分析语义匹配画面..."
-              className="flex-1 min-h-[100px] max-h-[140px] resize-none border-0 bg-transparent text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="min-h-[120px] resize-none bg-muted/30 border-border/50 text-sm focus-visible:ring-1 focus-visible:ring-primary/50"
             />
-            
-            {/* Footer Toolbar */}
-            <div className="flex items-center justify-between px-2 py-1.5 border-t border-border/50 bg-muted/50">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onOpenAudioSettings}
-                className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-              >
-                <Volume2 size={12} />
-                {audioSettings?.voiceName || "配音"}
-              </Button>
-              
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-muted-foreground">语速</span>
+          </div>
+
+          {/* Layer 2: Audio Configuration - Split Controls */}
+          <div className="space-y-2 mb-2">
+            {/* Voice/TTS Settings */}
+            <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg border border-border/50">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Mic size={12} className="text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-muted-foreground">口播配音</p>
+                  <p className="text-xs font-medium truncate">{audioSettings?.voiceName || "选择音色"}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <span className="text-[9px] text-muted-foreground">语速</span>
                 <Slider
                   value={[speed]}
                   onValueChange={(value) => setSpeed(value[0])}
                   min={0.5}
                   max={2}
                   step={0.1}
-                  className="w-16"
+                  className="w-14"
                 />
-                <span className="text-[10px] font-medium text-muted-foreground w-6">{speed.toFixed(1)}x</span>
+                <span className="text-[9px] font-medium text-muted-foreground w-5">{speed.toFixed(1)}x</span>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onOpenAudioSettings}
+                className="h-6 px-2 text-[10px]"
+              >
+                设置
+              </Button>
             </div>
+
+            {/* BGM Settings */}
+            <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg border border-border/50">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                  <Music size={12} className="text-amber-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-muted-foreground">背景音乐</p>
+                  <p className="text-xs font-medium truncate">
+                    {bgmEnabled ? "已开启" : "未设置"}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "h-6 w-6",
+                  bgmEnabled ? "text-amber-600" : "text-muted-foreground"
+                )}
+                onClick={() => setBgmEnabled(!bgmEnabled)}
+              >
+                {bgmEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onOpenBgmSettings}
+                className="h-6 px-2 text-[10px]"
+              >
+                设置
+              </Button>
+            </div>
+          </div>
+
+          {/* Layer 3: Decoration Toolbar */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant={hasAnimatedText ? "default" : "secondary"}
+              size="sm"
+              onClick={() => {
+                setHasAnimatedText(!hasAnimatedText);
+                onOpenAnimatedText?.();
+              }}
+              className={cn(
+                "flex-1 h-8 text-xs gap-1.5",
+                hasAnimatedText && "bg-purple-500 hover:bg-purple-600 text-white"
+              )}
+            >
+              <Type size={14} />
+              添加花字
+            </Button>
+            <Button
+              variant={hasSticker ? "default" : "secondary"}
+              size="sm"
+              onClick={() => {
+                setHasSticker(!hasSticker);
+                onOpenSticker?.();
+              }}
+              className={cn(
+                "flex-1 h-8 text-xs gap-1.5",
+                hasSticker && "bg-amber-500 hover:bg-amber-600 text-white"
+              )}
+            >
+              <Smile size={14} />
+              添加贴纸
+            </Button>
           </div>
         </div>
 
-        {/* Right Side: Visual Area (7 cols) */}
-        <div className="col-span-7">
-          <div 
-            className="relative aspect-video rounded-lg overflow-hidden bg-muted/50"
-            onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => setIsHovering(false)}
-          >
+        {/* Right Side: 9:16 Visual Area */}
+        <div 
+          className="w-[253px] flex-shrink-0"
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+        >
+          <div className="relative aspect-[9/16] h-[450px] rounded-xl overflow-hidden bg-black">
             {/* Loading State */}
             {isMatching && (
-              <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-20">
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center z-20">
                 <div className="relative">
-                  <div className="w-10 h-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin"></div>
-                  <Sparkles size={16} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary" />
+                  <div className="w-12 h-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin"></div>
+                  <Sparkles size={18} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary" />
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">AI 正在搜索素材库...</p>
+                <p className="mt-3 text-xs text-white/70">AI 正在搜索素材库...</p>
               </div>
             )}
 
@@ -241,7 +343,7 @@ const SegmentCard = ({
                 />
                 
                 {/* Top Layer: Decoration Chips */}
-                <div className="absolute top-2 left-2 flex gap-1.5">
+                <div className="absolute top-3 left-3 flex gap-1.5">
                   {hasAnimatedText && (
                     <Badge className="h-5 text-[10px] bg-purple-500/90 text-white backdrop-blur-sm">
                       <Type size={10} className="mr-0.5" />
@@ -257,19 +359,19 @@ const SegmentCard = ({
                 </div>
 
                 {/* Match Score Badge */}
-                <div className="absolute top-2 right-2">
+                <div className="absolute top-3 right-3">
                   <Badge className="h-5 text-[10px] bg-emerald-500 text-white">
-                    {matchedVideo.matchScore}%
+                    {matchedVideo.matchScore}% Match
                   </Badge>
                 </div>
                 
                 {/* Keywords Overlay */}
-                <div className="absolute bottom-12 left-2 flex flex-wrap gap-1">
+                <div className="absolute bottom-16 left-3 flex flex-wrap gap-1 max-w-[90%]">
                   {matchedVideo.keywords.map((keyword, i) => (
                     <Badge 
                       key={i} 
                       variant="secondary" 
-                      className="h-5 text-[10px] bg-black/40 text-white backdrop-blur-sm border-0"
+                      className="h-5 text-[10px] bg-black/50 text-white backdrop-blur-sm border-0"
                     >
                       #{keyword}
                     </Badge>
@@ -281,76 +383,78 @@ const SegmentCard = ({
                   <Button
                     size="icon"
                     variant="secondary"
-                    className="h-10 w-10 rounded-full bg-white/80 hover:bg-white shadow-lg"
+                    className="h-12 w-12 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30"
                   >
-                    <Play size={16} className="text-foreground ml-0.5" />
+                    <Play size={20} className="text-white ml-0.5" />
                   </Button>
                 </div>
 
-                {/* Floating Dock Toolbar - iOS Style */}
+                {/* Hover Action Bar */}
                 <div className={cn(
-                  "absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-full",
-                  "bg-black/50 backdrop-blur-md border border-white/10",
-                  "transition-opacity duration-200",
-                  isHovering ? "opacity-100" : "opacity-0"
+                  "absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-full",
+                  "bg-black/60 backdrop-blur-md border border-white/20",
+                  "transition-all duration-200",
+                  isHovering ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
                 )}>
                   <Button
                     size="sm"
                     variant="ghost"
-                    className={cn(
-                      "h-7 px-2 text-[11px] gap-1 text-white/90 hover:text-white hover:bg-white/20",
-                      hasAnimatedText && "bg-white/20"
-                    )}
-                    onClick={toggleAnimatedText}
-                  >
-                    <Type size={12} />
-                    花字
-                  </Button>
-                  <div className="w-px h-4 bg-white/20" />
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className={cn(
-                      "h-7 px-2 text-[11px] gap-1 text-white/90 hover:text-white hover:bg-white/20",
-                      hasSticker && "bg-white/20"
-                    )}
-                    onClick={toggleSticker}
-                  >
-                    <Smile size={12} />
-                    贴纸
-                  </Button>
-                  <div className="w-px h-4 bg-white/20" />
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 px-2 text-[11px] gap-1 text-white/90 hover:text-white hover:bg-white/20"
+                    className="h-7 px-2.5 text-[11px] gap-1 text-white/90 hover:text-white hover:bg-white/20 rounded-full"
                     onClick={handleRefresh}
                   >
                     <RefreshCw size={12} />
                     换素材
                   </Button>
+                  <div className="w-px h-4 bg-white/20" />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2.5 text-[11px] gap-1 text-white/90 hover:text-white hover:bg-white/20 rounded-full"
+                    onClick={handleLocalUpload}
+                  >
+                    <Upload size={12} />
+                    上传
+                  </Button>
                 </div>
               </>
             ) : !isMatching && (
-              /* Empty State */
-              <div className="h-full border-2 border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center">
+              /* Empty State - Dual Action Buttons */
+              <div className="h-full flex flex-col items-center justify-center gap-4 p-6">
+                <div className="text-center mb-2">
+                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
+                    <Sparkles size={28} className="text-white/40" />
+                  </div>
+                  <p className="text-xs text-white/50">
+                    {script.trim() ? "选择素材来源" : "请先输入文案"}
+                  </p>
+                </div>
+                
+                {/* Primary: AI Match */}
                 <Button
                   onClick={handleSmartMatch}
                   disabled={!script.trim() || isMatching}
-                  size="sm"
+                  size="lg"
                   className={cn(
-                    "gap-1.5 shadow-md text-xs",
+                    "w-full gap-2 h-12 text-sm font-medium rounded-xl",
                     hasMatchableKeywords 
-                      ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white animate-pulse"
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-emerald-500/25 animate-pulse"
                       : "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
                   )}
                 >
-                  <Sparkles size={14} />
+                  <Sparkles size={18} />
                   智能匹配画面
                 </Button>
-                <p className="mt-1.5 text-[10px] text-muted-foreground">
-                  {script.trim() ? "点击让 AI 匹配最佳素材" : "请先输入文案"}
-                </p>
+
+                {/* Secondary: Local Upload */}
+                <Button
+                  onClick={handleLocalUpload}
+                  variant="outline"
+                  size="lg"
+                  className="w-full gap-2 h-11 text-sm rounded-xl border-white/20 text-white/80 hover:text-white hover:bg-white/10 hover:border-white/30 bg-transparent"
+                >
+                  <Upload size={16} />
+                  上传本地素材
+                </Button>
               </div>
             )}
           </div>
