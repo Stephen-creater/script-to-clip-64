@@ -13,7 +13,9 @@ import {
   FileText,
   Volume2,
   User,
-  Scissors
+  Scissors,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatedTextModal } from "./AnimatedTextModal";
@@ -27,6 +29,7 @@ import { ScriptVariantModal } from "./ScriptVariantModal";
 import { AudioSettingsModal } from "./AudioSettingsModal";
 import { AudioSelectionModal } from "./AudioSelectionModal";
 import { BatchTrimModal } from "./BatchTrimModal";
+import { EffectPreviewPanel } from "./EffectPreviewPanel";
 
 interface ScriptVariant {
   id: string;
@@ -160,6 +163,10 @@ const SegmentTable = ({
   const [isGlobalSubtitleConfigured, setIsGlobalSubtitleConfigured] = useState(false);
   const [isBgmConfigured, setIsBgmConfigured] = useState(false);
   const [selectedBgm, setSelectedBgm] = useState<{name: string, type: string, id?: string} | null>(null);
+  
+  // 效果预览面板状态
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [currentPreviewSegmentIndex, setCurrentPreviewSegmentIndex] = useState(0);
 
   // Notify parent component when segments change
   useEffect(() => {
@@ -463,79 +470,94 @@ const SegmentTable = ({
   };
 
   return (
-    <div className="flex-1 bg-background p-6 flex flex-col h-full">
-      {/* Action Buttons */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={handleAddNewSegment}>
-            <Plus size={16} className="mr-2" />
-            添加新分段
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => openModal('batchTrim')}>
-            <Scissors size={16} className="mr-2" />
-            批量裁剪素材
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleImportScript}>
-            <FileText size={16} className="mr-2" />
-            导入文案
-          </Button>
-        </div>
-        
-        {selectedSegments.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              已选择 {selectedSegments.length} 个分段
-            </span>
-            <Button variant="destructive" size="sm" onClick={handleBatchDelete}>
-              批量删除
+    <div className="flex-1 bg-background flex h-full">
+      {/* Main Table Area */}
+      <div className="flex-1 p-6 flex flex-col min-w-0">
+        {/* Action Buttons */}
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={handleAddNewSegment}>
+              <Plus size={16} className="mr-2" />
+              添加新分段
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => openModal('batchTrim')}>
+              <Scissors size={16} className="mr-2" />
+              批量裁剪素材
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleImportScript}>
+              <FileText size={16} className="mr-2" />
+              导入文案
             </Button>
           </div>
-        )}
-      </div>
-
-      {/* Table with ScrollArea */}
-      <div className="flex-1 bg-card rounded-lg border border-border overflow-hidden shadow-card">
-        {/* 全局配置区域 */}
-        <div className="bg-editor-grid border-b border-border px-4 py-3 flex items-center justify-between">
-          <div className="text-sm font-medium text-muted-foreground">
-            全局配置
-          </div>
+          
           <div className="flex items-center gap-2">
-            {isFixedMode ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => openModal('stickerAudioBgm')}
-                className="gap-2"
-              >
-                <Settings2 size={14} />
-                贴纸/音频/BGM设置
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleGlobalDigitalHumanConfig}
-                className="gap-2"
-              >
-                <User size={14} />
-                数字人配置
-                {globalDigitalHumans.length > 0 && (
-                  <div className="flex gap-1 ml-1">
-                    {globalDigitalHumans.map((_, index) => (
-                      <div 
-                        key={index}
-                        className="h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold"
-                      >
-                        {index + 1}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Button>
+            {selectedSegments.length > 0 && (
+              <>
+                <span className="text-sm text-muted-foreground">
+                  已选择 {selectedSegments.length} 个分段
+                </span>
+                <Button variant="destructive" size="sm" onClick={handleBatchDelete}>
+                  批量删除
+                </Button>
+              </>
             )}
+            
+            {/* 预览开关按钮 */}
+            <Button
+              variant={isPreviewOpen ? "default" : "outline"}
+              size="sm"
+              onClick={() => setIsPreviewOpen(!isPreviewOpen)}
+              className="gap-2"
+            >
+              {isPreviewOpen ? <EyeOff size={14} /> : <Eye size={14} />}
+              {isPreviewOpen ? "关闭预览" : "效果预览"}
+            </Button>
           </div>
         </div>
+
+        {/* Table with ScrollArea */}
+        <div className="flex-1 bg-card rounded-lg border border-border overflow-hidden shadow-card">
+          {/* 全局配置区域 */}
+          <div className="bg-editor-grid border-b border-border px-4 py-3 flex items-center justify-between">
+            <div className="text-sm font-medium text-muted-foreground">
+              全局配置
+            </div>
+            <div className="flex items-center gap-2">
+              {isFixedMode ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openModal('stickerAudioBgm')}
+                  className="gap-2"
+                >
+                  <Settings2 size={14} />
+                  贴纸/音频/BGM设置
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGlobalDigitalHumanConfig}
+                  className="gap-2"
+                >
+                  <User size={14} />
+                  数字人配置
+                  {globalDigitalHumans.length > 0 && (
+                    <div className="flex gap-1 ml-1">
+                      {globalDigitalHumans.map((_, index) => (
+                        <div 
+                          key={index}
+                          className="h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold"
+                        >
+                          {index + 1}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
         
         <div className="bg-editor-grid border-b border-border">
           <table className="w-full">
@@ -911,6 +933,16 @@ const SegmentTable = ({
           onTrim={handleBatchTrim}
         />
       )}
+      </div>
+
+      {/* Effect Preview Panel */}
+      <EffectPreviewPanel
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        currentSegmentIndex={currentPreviewSegmentIndex}
+        totalSegments={segments.length}
+        segment={segments[currentPreviewSegmentIndex]}
+      />
     </div>
   );
 };
