@@ -76,13 +76,14 @@ const StartCreation: React.FC = () => {
     }
     
     toast.success("任务创建成功！");
-    navigate('/editor', {
-      state: {
-        taskName: taskName.trim(),
-        templateId: selectedTemplate?.id,
-        durationMode
-      }
+    const params = new URLSearchParams({
+      taskName: taskName.trim(),
+      durationMode
     });
+    if (selectedTemplate?.id) {
+      params.set('templateId', selectedTemplate.id.toString());
+    }
+    navigate(`/editor?${params.toString()}`);
   };
 
   return (

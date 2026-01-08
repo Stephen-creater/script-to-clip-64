@@ -56,6 +56,7 @@ const Editor = () => {
   const [newTemplateName, setNewTemplateName] = useState('');
 
   const taskName = searchParams.get('taskName') || '未命名任务';
+  const durationMode = (searchParams.get('durationMode') as 'flexible' | 'fixed') || 'flexible';
 
   const handleSaveAsTemplate = () => {
     if (!newTemplateName.trim()) {
@@ -217,6 +218,7 @@ const Editor = () => {
         {/* Segment Table */}
         <div className={previewOpen ? "flex-1 min-h-0" : "w-full"}>
           <SegmentTable 
+            durationMode={durationMode}
             onSegmentsChange={handleSegmentsChange}
             onConfigurationChange={handleConfigurationChange}
             globalDigitalHumans={globalDigitalHumans}

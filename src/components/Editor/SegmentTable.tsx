@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -56,6 +57,7 @@ interface Segment {
   type: string;
   video: string;
   videoDuration?: number; // 素材时长（秒）
+  segmentDuration?: number; // 分段时长（秒）- 用于固定时长模式
   script: string;
   scriptVariants?: ScriptVariant[];
   animatedText: string;
@@ -68,6 +70,7 @@ interface Segment {
 }
 
 interface SegmentTableProps {
+  durationMode?: 'flexible' | 'fixed';
   onSegmentsChange?: (segments: Segment[]) => void;
   onConfigurationChange?: (config: {
     isAudioGenerated: boolean;
@@ -79,11 +82,14 @@ interface SegmentTableProps {
 }
 
 const SegmentTable = ({ 
+  durationMode = 'flexible',
   onSegmentsChange, 
   onConfigurationChange,
   globalDigitalHumans,
   onGlobalDigitalHumansChange 
 }: SegmentTableProps) => {
+  const isFixedMode = durationMode === 'fixed';
+  
   const [segments, setSegments] = useState<Segment[]>([
     {
       id: "1",
@@ -511,9 +517,17 @@ const SegmentTable = ({
                 <th className="w-12 px-4 py-4 text-left text-body-small font-semibold text-foreground">排序</th>
                 <th className="min-w-[120px] px-4 py-4 text-left text-body-small font-semibold text-foreground">分段名称</th>
                 <th className="min-w-[160px] px-4 py-4 text-left text-body-small font-semibold text-foreground">视频素材文件夹</th>
-                <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">花字/贴纸</th>
-                <th className="min-w-[280px] px-4 py-4 text-left text-body-small font-semibold text-foreground">字幕文案</th>
-                <th className="min-w-[120px] px-4 py-4 text-left text-body-small font-semibold text-foreground">字幕音频</th>
+                {isFixedMode ? (
+                  <>
+                    <th className="min-w-[120px] px-4 py-4 text-left text-body-small font-semibold text-foreground">分段时长</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">花字/贴纸</th>
+                    <th className="min-w-[280px] px-4 py-4 text-left text-body-small font-semibold text-foreground">字幕文案</th>
+                    <th className="min-w-[120px] px-4 py-4 text-left text-body-small font-semibold text-foreground">字幕音频</th>
+                  </>
+                )}
                 <th className="w-20 px-4 py-4 text-left text-body-small font-semibold text-foreground">操作</th>
               </tr>
             </thead>
@@ -561,59 +575,87 @@ const SegmentTable = ({
                         )}
                       </div>
                     </td>
-                    <td className="min-w-[100px] p-4 border-r border-border/50">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full justify-start text-muted-foreground hover:text-foreground"
-                        onClick={() => openModal('stickerAudioBgm', segment.id)}
-                      >
-                        {segment.sticker === "未设置" ? "✏ 未设置" : segment.sticker}
-                      </Button>
-                    </td>
-                    <td className="min-w-[280px] p-4 border-r border-border/50">
-                      <div className="relative group">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className={cn(
-                            "w-full justify-start text-muted-foreground hover:text-foreground",
-                            segment.scriptVariants && segment.scriptVariants.length > 0 && "text-foreground"
-                          )}
-                          onClick={() => openModal('scriptVariant', segment.id)}
-                        >
-                          ✏ {segment.scriptVariants && segment.scriptVariants.length > 0 
-                            ? `点击添加字幕文案` 
-                            : "点击添加字幕文案"}
-                        </Button>
-                      </div>
-                    </td>
-                    <td className="min-w-[120px] p-4 border-r border-border/50">
-                      <span className={cn(
-                        "text-sm",
-                        segment.audioSettings ? "text-foreground" : "text-muted-foreground"
-                      )}>
-                        {segment.audioSettings ? (
+                    {isFixedMode ? (
+                      <>
+                        <td className="min-w-[120px] p-4 border-r border-border/50">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              placeholder="请输入时长"
+                              value={segment.segmentDuration || ''}
+                              onChange={(e) => {
+                                const value = e.target.value ? parseInt(e.target.value) : undefined;
+                                setSegments(prevSegments =>
+                                  prevSegments.map(s =>
+                                    s.id === segment.id
+                                      ? { ...s, segmentDuration: value }
+                                      : s
+                                  )
+                                );
+                              }}
+                              className="w-24 h-8 text-sm"
+                            />
+                            <span className="text-sm text-muted-foreground">秒</span>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="min-w-[100px] p-4 border-r border-border/50">
                           <Button 
-                            variant="ghost"
-                            size="sm"
-                            className="text-foreground"
-                            onClick={() => handleOpenAudioSettings(segment.id)}
+                            variant="ghost" 
+                            size="sm" 
+                            className="w-full justify-start text-muted-foreground hover:text-foreground"
+                            onClick={() => openModal('stickerAudioBgm', segment.id)}
                           >
-                            {segment.audioSettings.voiceName} · {segment.audioSettings.speed}x
+                            {segment.sticker === "未设置" ? "✏ 未设置" : segment.sticker}
                           </Button>
-                        ) : (
-                          <Button 
-                            variant="ghost"
-                            size="sm"
-                            className="text-muted-foreground hover:text-foreground"
-                            onClick={() => handleOpenAudioSettings(segment.id)}
-                          >
-                            未生成
-                          </Button>
-                        )}
-                      </span>
-                    </td>
+                        </td>
+                        <td className="min-w-[280px] p-4 border-r border-border/50">
+                          <div className="relative group">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={cn(
+                                "w-full justify-start text-muted-foreground hover:text-foreground",
+                                segment.scriptVariants && segment.scriptVariants.length > 0 && "text-foreground"
+                              )}
+                              onClick={() => openModal('scriptVariant', segment.id)}
+                            >
+                              ✏ {segment.scriptVariants && segment.scriptVariants.length > 0 
+                                ? `点击添加字幕文案` 
+                                : "点击添加字幕文案"}
+                            </Button>
+                          </div>
+                        </td>
+                        <td className="min-w-[120px] p-4 border-r border-border/50">
+                          <span className={cn(
+                            "text-sm",
+                            segment.audioSettings ? "text-foreground" : "text-muted-foreground"
+                          )}>
+                            {segment.audioSettings ? (
+                              <Button 
+                                variant="ghost"
+                                size="sm"
+                                className="text-foreground"
+                                onClick={() => handleOpenAudioSettings(segment.id)}
+                              >
+                                {segment.audioSettings.voiceName} · {segment.audioSettings.speed}x
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="ghost"
+                                size="sm"
+                                className="text-muted-foreground hover:text-foreground"
+                                onClick={() => handleOpenAudioSettings(segment.id)}
+                              >
+                                未生成
+                              </Button>
+                            )}
+                          </span>
+                        </td>
+                      </>
+                    )}
                     <td className="w-20 p-4">
                       <Button 
                         variant="ghost" 
