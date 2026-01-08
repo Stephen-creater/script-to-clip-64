@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { AnimatedTextModal } from "./AnimatedTextModal";
 import { StickerModal } from "./StickerModal";
+import { StickerTextModal } from "./StickerTextModal";
 import { DigitalHumanModal } from "./DigitalHumanModal";
 import { BgmModal } from "./BgmModal";
 import { MaterialSelectionModal } from "./MaterialSelectionModal";
@@ -137,7 +138,7 @@ const SegmentTable = ({
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
-    type: 'animatedText' | 'sticker' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'voiceSelection' | 'scriptVariant' | 'audioSettings' | null;
+    type: 'animatedText' | 'sticker' | 'stickerText' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'voiceSelection' | 'scriptVariant' | 'audioSettings' | null;
     segmentId: string | null;
   }>({ type: null, segmentId: null });
   
@@ -317,7 +318,7 @@ const SegmentTable = ({
     setSelectedSegments([]);
   };
 
-  const openModal = (type: 'animatedText' | 'sticker' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'scriptVariant' | 'audioSettings' | 'voiceSelection', segmentId?: string) => {
+  const openModal = (type: 'animatedText' | 'sticker' | 'stickerText' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'scriptVariant' | 'audioSettings' | 'voiceSelection', segmentId?: string) => {
     setActiveModal({ type, segmentId: segmentId || null });
   };
 
@@ -564,7 +565,7 @@ const SegmentTable = ({
                         variant="ghost" 
                         size="sm" 
                         className="w-full justify-start text-muted-foreground hover:text-foreground"
-                        onClick={() => openModal('sticker', segment.id)}
+                        onClick={() => openModal('stickerText', segment.id)}
                       >
                         {segment.sticker === "未设置" ? "✏ 未设置" : segment.sticker}
                       </Button>
@@ -649,6 +650,29 @@ const SegmentTable = ({
           isOpen={true}
           onClose={closeModal}
           segmentId={activeModal.segmentId!}
+        />
+      )}
+
+      {activeModal.type === 'stickerText' && (
+        <StickerTextModal
+          isOpen={true}
+          onClose={closeModal}
+          segmentId={activeModal.segmentId!}
+          onSubmit={(segmentId, data) => {
+            // 更新分段的花字/贴纸设置
+            setSegments(prevSegments =>
+              prevSegments.map(segment =>
+                segment.id === segmentId
+                  ? { 
+                      ...segment, 
+                      sticker: `${data.animatedTexts.length}花字 ${data.stickers.length}贴纸`,
+                      animatedText: data.animatedTexts.length > 0 ? data.animatedTexts[0].content : "未设置"
+                    }
+                  : segment
+              )
+            );
+            closeModal();
+          }}
         />
       )}
       
