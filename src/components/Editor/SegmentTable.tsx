@@ -12,7 +12,8 @@ import {
   Settings2,
   FileText,
   Volume2,
-  User
+  User,
+  Scissors
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatedTextModal } from "./AnimatedTextModal";
@@ -25,6 +26,7 @@ import { VoiceSelectionModal } from "./VoiceSelectionModal";
 import { ScriptVariantModal } from "./ScriptVariantModal";
 import { AudioSettingsModal } from "./AudioSettingsModal";
 import { AudioSelectionModal } from "./AudioSelectionModal";
+import { BatchTrimModal } from "./BatchTrimModal";
 
 interface ScriptVariant {
   id: string;
@@ -145,7 +147,7 @@ const SegmentTable = ({
 
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [activeModal, setActiveModal] = useState<{
-    type: 'animatedText' | 'sticker' | 'stickerAudioBgm' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'voiceSelection' | 'scriptVariant' | 'audioSettings' | 'audioSelection' | null;
+    type: 'animatedText' | 'sticker' | 'stickerAudioBgm' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'voiceSelection' | 'scriptVariant' | 'audioSettings' | 'audioSelection' | 'batchTrim' | null;
     segmentId: string | null;
   }>({ type: null, segmentId: null });
   
@@ -325,8 +327,13 @@ const SegmentTable = ({
     setSelectedSegments([]);
   };
 
-  const openModal = (type: 'animatedText' | 'sticker' | 'stickerAudioBgm' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'scriptVariant' | 'audioSettings' | 'voiceSelection' | 'audioSelection', segmentId?: string | null) => {
+  const openModal = (type: 'animatedText' | 'sticker' | 'stickerAudioBgm' | 'digitalHuman' | 'bgm' | 'materialSelection' | 'scriptVariant' | 'audioSettings' | 'voiceSelection' | 'audioSelection' | 'batchTrim', segmentId?: string | null) => {
     setActiveModal({ type, segmentId: segmentId || null });
+  };
+
+  const handleBatchTrim = (settings: { mode: string; duration: number }) => {
+    console.log('Batch trim settings:', settings);
+    // TODO: Apply trim settings to all segments
   };
 
   const handleDigitalHumanClick = (segmentId: string) => {
@@ -453,6 +460,10 @@ const SegmentTable = ({
           <Button variant="outline" size="sm" onClick={handleAddNewSegment}>
             <Plus size={16} className="mr-2" />
             添加新分段
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => openModal('batchTrim')}>
+            <Scissors size={16} className="mr-2" />
+            批量裁剪素材
           </Button>
           <Button variant="outline" size="sm" onClick={handleImportScript}>
             <FileText size={16} className="mr-2" />
@@ -854,6 +865,14 @@ const SegmentTable = ({
           segmentName={segments.find(s => s.id === activeModal.segmentId)?.name || ""}
           initialVariants={segments.find(s => s.id === activeModal.segmentId)?.scriptVariants}
           onSubmit={updateSegmentScriptVariants}
+        />
+      )}
+
+      {activeModal.type === 'batchTrim' && (
+        <BatchTrimModal
+          isOpen={true}
+          onClose={closeModal}
+          onTrim={handleBatchTrim}
         />
       )}
     </div>
