@@ -12,8 +12,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Play, Pause, SkipBack, SkipForward, Save } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Save, Lock, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface DigitalHuman {
   id: string;
@@ -36,7 +37,7 @@ interface Segment {
 
 const Editor = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const { previewOpen, onConfigurationChange } = useOutletContext<{ 
     previewOpen: boolean;
@@ -54,9 +55,17 @@ const Editor = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
+  const [taskName, setTaskName] = useState(searchParams.get('taskName') || '请命名');
+  const [isEditingName, setIsEditingName] = useState(false);
 
-  const taskName = searchParams.get('taskName') || '未命名任务';
-  const durationMode = (searchParams.get('durationMode') as 'flexible' | 'fixed') || 'flexible';
+  const durationMode = (searchParams.get('durationMode') as 'flexible' | 'fixed') || 'fixed';
+
+  // 切换时长模式
+  const handleDurationModeChange = (mode: 'flexible' | 'fixed') => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('durationMode', mode);
+    setSearchParams(newParams, { replace: true });
+  };
 
   const handleSaveAsTemplate = () => {
     if (!newTemplateName.trim()) {
@@ -197,12 +206,60 @@ const Editor = () => {
 
   return (
     <div className="flex flex-col min-h-full">
-      {/* Top Header with Save as Template */}
+      {/* Top Header with Duration Mode Tabs */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card">
-        <div>
-          <h2 className="text-lg font-semibold">{decodeURIComponent(taskName)}</h2>
-          <p className="text-sm text-muted-foreground">编辑任务</p>
+        <div className="flex items-center gap-4">
+          {/* Duration Mode Tabs */}
+          <div className="flex p-1 bg-muted rounded-lg">
+            <button
+              onClick={() => handleDurationModeChange('fixed')}
+              className={cn(
+                "px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
+                durationMode === 'fixed'
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Lock size={14} />
+              固定时长
+            </button>
+            <button
+              onClick={() => handleDurationModeChange('flexible')}
+              className={cn(
+                "px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
+                durationMode === 'flexible'
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Clock size={14} />
+              灵活时长
+            </button>
+          </div>
+
+          {/* Task Name */}
+          <div>
+            {isEditingName ? (
+              <Input
+                value={taskName}
+                onChange={(e) => setTaskName(e.target.value)}
+                onBlur={() => setIsEditingName(false)}
+                onKeyDown={(e) => e.key === 'Enter' && setIsEditingName(false)}
+                className="h-8 w-48 text-lg font-semibold"
+                autoFocus
+              />
+            ) : (
+              <h2 
+                className="text-lg font-semibold cursor-pointer hover:text-primary transition-colors"
+                onClick={() => setIsEditingName(true)}
+              >
+                {taskName}
+              </h2>
+            )}
+            <p className="text-sm text-muted-foreground">编辑任务</p>
+          </div>
         </div>
+
         <Button 
           variant="outline" 
           size="sm"
