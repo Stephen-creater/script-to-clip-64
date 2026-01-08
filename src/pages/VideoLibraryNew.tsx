@@ -6,27 +6,23 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import { 
   Search, 
-  Play, 
-  Download, 
-  Trash2,
   Calendar,
-  Clock,
   Filter,
   User,
   ArrowLeft,
-  Video
+  Video,
+  Zap,
+  Sparkles
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import BatchDownloadModal from "@/components/VideoLibrary/BatchDownloadModal";
-
-interface VideoItem {
-  id: string;
-  name: string;
-  duration: string;
-  size: string;
-  createdAt: string;
-}
+import AIVideoCard, { VideoWithAI } from "@/components/VideoLibrary/AIVideoCard";
+import TieredVideoList from "@/components/VideoLibrary/TieredVideoList";
+import FloatingActionBar from "@/components/VideoLibrary/FloatingActionBar";
 
 interface TaskWithVideos {
   id: string;
@@ -35,22 +31,54 @@ interface TaskWithVideos {
   group: string;
   videoCount: number;
   createdAt: string;
-  videos: VideoItem[];
+  videos: VideoWithAI[];
 }
 
+// Helper to generate AI scores
+const generateAIData = (baseScore: number): Pick<VideoWithAI, 'aiScore' | 'aiGrade' | 'aiDetails'> => {
+  const score = Math.min(100, Math.max(0, baseScore + Math.floor(Math.random() * 10) - 5));
+  let grade: 'S' | 'A' | 'B' | 'C';
+  if (score >= 90) grade = 'S';
+  else if (score >= 75) grade = 'A';
+  else if (score >= 60) grade = 'B';
+  else grade = 'C';
+
+  const issues: string[] = [];
+  if (score < 70) {
+    const possibleIssues = ['素材重复', '遮挡', '画面模糊', '节奏不佳', '音画不同步'];
+    const numIssues = Math.floor(Math.random() * 2) + 1;
+    for (let i = 0; i < numIssues; i++) {
+      const issue = possibleIssues[Math.floor(Math.random() * possibleIssues.length)];
+      if (!issues.includes(issue)) issues.push(issue);
+    }
+  }
+
+  return {
+    aiScore: score,
+    aiGrade: grade,
+    aiDetails: {
+      scriptMatch: score >= 85 ? '高' : score >= 65 ? '中' : '低',
+      visualRichness: score >= 80 ? '高' : score >= 55 ? '中' : '低',
+      issues
+    }
+  };
+};
+
 const VideoLibraryNew = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTime, setFilterTime] = useState('all');
   const [filterGroup, setFilterGroup] = useState('all');
   const [selectedTask, setSelectedTask] = useState<TaskWithVideos | null>(null);
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [batchDownloadModalOpen, setBatchDownloadModalOpen] = useState(false);
+  const [superMode, setSuperMode] = useState(false);
 
   // Get today's date
   const today = new Date();
   const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
 
-  // Demo tasks with videos
+  // Demo tasks with videos - including AI scores
   const [tasks] = useState<TaskWithVideos[]>([
     {
       id: '1',
@@ -60,12 +88,12 @@ const VideoLibraryNew = () => {
       videoCount: 6,
       createdAt: '2024-12-17 09:30',
       videos: [
-        { id: 'v1', name: '英铁混剪_版本1', duration: '45.6秒', size: '12.5MB', createdAt: '2024-12-17 10:30' },
-        { id: 'v2', name: '英铁混剪_版本2', duration: '43.2秒', size: '11.8MB', createdAt: '2024-12-17 10:35' },
-        { id: 'v3', name: '英铁混剪_版本3', duration: '44.1秒', size: '12.1MB', createdAt: '2024-12-17 10:40' },
-        { id: 'v4', name: '英铁混剪_版本4', duration: '42.8秒', size: '11.5MB', createdAt: '2024-12-17 10:45' },
-        { id: 'v5', name: '英铁混剪_版本5', duration: '46.3秒', size: '12.9MB', createdAt: '2024-12-17 10:50' },
-        { id: 'v6', name: '英铁混剪_版本6', duration: '41.9秒', size: '11.2MB', createdAt: '2024-12-17 10:55' },
+        { id: 'v1', name: '英铁混剪_版本1', duration: '45.6秒', size: '12.5MB', createdAt: '2024-12-17 10:30', ...generateAIData(95) },
+        { id: 'v2', name: '英铁混剪_版本2', duration: '43.2秒', size: '11.8MB', createdAt: '2024-12-17 10:35', ...generateAIData(88) },
+        { id: 'v3', name: '英铁混剪_版本3', duration: '44.1秒', size: '12.1MB', createdAt: '2024-12-17 10:40', ...generateAIData(78) },
+        { id: 'v4', name: '英铁混剪_版本4', duration: '42.8秒', size: '11.5MB', createdAt: '2024-12-17 10:45', ...generateAIData(65) },
+        { id: 'v5', name: '英铁混剪_版本5', duration: '46.3秒', size: '12.9MB', createdAt: '2024-12-17 10:50', ...generateAIData(92) },
+        { id: 'v6', name: '英铁混剪_版本6', duration: '41.9秒', size: '11.2MB', createdAt: '2024-12-17 10:55', ...generateAIData(55) },
       ]
     },
     {
@@ -76,10 +104,10 @@ const VideoLibraryNew = () => {
       videoCount: 4,
       createdAt: '2024-12-16 14:20',
       videos: [
-        { id: 'v7', name: '西班牙旅行_版本1', duration: '52.3秒', size: '14.2MB', createdAt: '2024-12-16 15:00' },
-        { id: 'v8', name: '西班牙旅行_版本2', duration: '51.8秒', size: '13.9MB', createdAt: '2024-12-16 15:05' },
-        { id: 'v9', name: '西班牙旅行_版本3', duration: '53.1秒', size: '14.5MB', createdAt: '2024-12-16 15:10' },
-        { id: 'v10', name: '西班牙旅行_版本4', duration: '50.9秒', size: '13.6MB', createdAt: '2024-12-16 15:15' },
+        { id: 'v7', name: '西班牙旅行_版本1', duration: '52.3秒', size: '14.2MB', createdAt: '2024-12-16 15:00', ...generateAIData(91) },
+        { id: 'v8', name: '西班牙旅行_版本2', duration: '51.8秒', size: '13.9MB', createdAt: '2024-12-16 15:05', ...generateAIData(82) },
+        { id: 'v9', name: '西班牙旅行_版本3', duration: '53.1秒', size: '14.5MB', createdAt: '2024-12-16 15:10', ...generateAIData(70) },
+        { id: 'v10', name: '西班牙旅行_版本4', duration: '50.9秒', size: '13.6MB', createdAt: '2024-12-16 15:15', ...generateAIData(58) },
       ]
     },
     {
@@ -90,8 +118,8 @@ const VideoLibraryNew = () => {
       videoCount: 2,
       createdAt: '2024-12-17 10:15',
       videos: [
-        { id: 'v11', name: '产品介绍_版本1', duration: '38.5秒', size: '10.2MB', createdAt: '2024-12-17 11:00' },
-        { id: 'v12', name: '产品介绍_版本2', duration: '39.2秒', size: '10.5MB', createdAt: '2024-12-17 11:05' },
+        { id: 'v11', name: '产品介绍_版本1', duration: '38.5秒', size: '10.2MB', createdAt: '2024-12-17 11:00', ...generateAIData(97) },
+        { id: 'v12', name: '产品介绍_版本2', duration: '39.2秒', size: '10.5MB', createdAt: '2024-12-17 11:05', ...generateAIData(76) },
       ]
     }
   ]);
@@ -137,9 +165,57 @@ const VideoLibraryNew = () => {
   };
 
   const handleBatchDelete = () => {
-    console.log('Delete videos:', selectedVideos);
+    toast({
+      title: "删除成功",
+      description: `已删除 ${selectedVideos.length} 个视频`,
+    });
     setSelectedVideos([]);
   };
+
+  const handleDistribute = () => {
+    toast({
+      title: "分发任务已创建",
+      description: `${selectedVideos.length} 个视频将分发到矩阵账号`,
+    });
+    setSelectedVideos([]);
+  };
+
+  // Handle select by grade
+  const handleSelectGrade = (grade: 'S' | 'A' | 'B' | 'C') => {
+    if (!selectedTask) return;
+    const gradeVideos = selectedTask.videos.filter(v => 
+      grade === 'B' ? (v.aiGrade === 'B' || v.aiGrade === 'C') : v.aiGrade === grade
+    );
+    const gradeIds = gradeVideos.map(v => v.id);
+    const allSelected = gradeIds.every(id => selectedVideos.includes(id));
+    
+    if (allSelected) {
+      setSelectedVideos(prev => prev.filter(id => !gradeIds.includes(id)));
+    } else {
+      setSelectedVideos(prev => [...new Set([...prev, ...gradeIds])]);
+    }
+  };
+
+  // Calculate grade counts for selected videos
+  const getSelectedGradeCounts = () => {
+    if (!selectedTask) return { S: 0, A: 0, B: 0, C: 0 };
+    return selectedTask.videos.reduce((acc, video) => {
+      if (selectedVideos.includes(video.id)) {
+        acc[video.aiGrade]++;
+      }
+      return acc;
+    }, { S: 0, A: 0, B: 0, C: 0 });
+  };
+
+  // Calculate stats for current task
+  const getTaskStats = () => {
+    if (!selectedTask) return { total: 0, sCount: 0, aCount: 0 };
+    const sCount = selectedTask.videos.filter(v => v.aiGrade === 'S').length;
+    const aCount = selectedTask.videos.filter(v => v.aiGrade === 'A').length;
+    return { total: selectedTask.videos.length, sCount, aCount };
+  };
+
+  const taskStats = getTaskStats();
 
   return (
     <div className="p-6 max-w-7xl mx-auto min-h-full">
@@ -247,14 +323,24 @@ const VideoLibraryNew = () => {
       )}
 
       {/* Video Detail Dialog */}
-      <Dialog open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+      <Dialog open={!!selectedTask} onOpenChange={(open) => {
+        if (!open) {
+          setSelectedTask(null);
+          setSelectedVideos([]);
+          setSuperMode(false);
+        }
+      }}>
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-auto">
           <DialogHeader>
             <div className="flex items-center gap-3">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => setSelectedTask(null)}
+                onClick={() => {
+                  setSelectedTask(null);
+                  setSelectedVideos([]);
+                  setSuperMode(false);
+                }}
               >
                 <ArrowLeft size={16} />
               </Button>
@@ -264,101 +350,92 @@ const VideoLibraryNew = () => {
 
           {selectedTask && (
             <div className="space-y-4">
-              {/* Batch Actions */}
-              {selectedVideos.length > 0 && (
-                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                  <span className="text-sm text-muted-foreground">
-                    已选择 {selectedVideos.length} 个视频
-                  </span>
-                  <div className="flex-1" />
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={handleBatchDelete}
+              {/* AI Super Mode Control Bar */}
+              <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-primary/5 via-purple-500/5 to-primary/5 border border-primary/10">
+                <div className="flex items-center gap-4">
+                  {/* Super Mode Toggle */}
+                  <div 
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-2 rounded-full cursor-pointer transition-all duration-300",
+                      superMode 
+                        ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/25" 
+                        : "bg-muted hover:bg-muted/80"
+                    )}
+                    onClick={() => setSuperMode(!superMode)}
                   >
-                    <Trash2 size={14} className="mr-1" />
-                    批量删除
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleBatchDownload}
-                  >
-                    <Download size={14} className="mr-1" />
-                    批量下载
-                  </Button>
+                    <Zap className={cn("w-4 h-4", superMode && "animate-pulse")} />
+                    <span className="font-medium text-sm">
+                      {superMode ? "超级推荐已开启" : "开启超级推荐模式"}
+                    </span>
+                    <Switch 
+                      checked={superMode} 
+                      onCheckedChange={setSuperMode}
+                      className="ml-1"
+                    />
+                  </div>
                 </div>
-              )}
 
-              {/* Select All */}
-              <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                <Checkbox
-                  checked={selectedVideos.length === selectedTask.videos.length}
-                  onCheckedChange={handleSelectAll}
+                {/* Data Overview */}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Sparkles className="w-4 h-4 text-yellow-500" />
+                  <span>
+                    本批次共 <span className="font-semibold text-foreground">{taskStats.total}</span> 个视频，
+                    其中 <span className="font-semibold text-yellow-500">S级 {taskStats.sCount}</span> 个，
+                    <span className="font-semibold text-green-500">A级 {taskStats.aCount}</span> 个
+                  </span>
+                </div>
+              </div>
+
+              {/* Video Display - Conditional Rendering */}
+              {superMode ? (
+                // Tiered View with Accordion
+                <TieredVideoList
+                  videos={selectedTask.videos}
+                  selectedVideos={selectedVideos}
+                  onVideoSelect={handleVideoSelect}
+                  onSelectGrade={handleSelectGrade}
+                  superMode={superMode}
                 />
-                <span className="text-sm text-muted-foreground">全选</span>
-              </div>
+              ) : (
+                // Default Grid View
+                <>
+                  {/* Select All */}
+                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                    <Checkbox
+                      checked={selectedVideos.length === selectedTask.videos.length && selectedTask.videos.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                    <span className="text-sm text-muted-foreground">全选</span>
+                  </div>
 
-              {/* Video Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {selectedTask.videos.map((video) => (
-                  <Card key={video.id} className="group">
-                    <CardContent className="p-4">
-                      {/* Checkbox */}
-                      <div className="flex items-center justify-between mb-3">
-                        <Checkbox
-                          checked={selectedVideos.includes(video.id)}
-                          onCheckedChange={() => handleVideoSelect(video.id)}
-                        />
-                      </div>
-
-                      {/* Video Thumbnail */}
-                      <div className="aspect-video bg-muted rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
-                        <Play size={32} className="text-muted-foreground" />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                          <Button size="sm" variant="secondary">
-                            <Play size={16} className="mr-2" />
-                            预览
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Video Info */}
-                      <div className="space-y-2">
-                        <h3 className="font-medium text-sm truncate">{video.name}</h3>
-                        
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Clock size={12} />
-                            {video.duration}
-                          </div>
-                          <span>{video.size}</span>
-                        </div>
-
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Calendar size={12} />
-                          {video.createdAt}
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 pt-2">
-                          <Button size="sm" variant="outline" className="flex-1">
-                            <Download size={14} className="mr-1" />
-                            下载
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <Trash2 size={14} />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                  {/* Video Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {selectedTask.videos.map((video) => (
+                      <AIVideoCard
+                        key={video.id}
+                        video={video}
+                        isSelected={selectedVideos.includes(video.id)}
+                        onSelect={handleVideoSelect}
+                        superMode={superMode}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Floating Action Bar */}
+      <FloatingActionBar
+        selectedCount={selectedVideos.length}
+        selectedGrades={getSelectedGradeCounts()}
+        onDownload={handleBatchDownload}
+        onDistribute={handleDistribute}
+        onDelete={handleBatchDelete}
+        onClear={() => setSelectedVideos([])}
+      />
 
       {/* Batch Download Modal */}
       <BatchDownloadModal
