@@ -659,7 +659,7 @@ const SegmentTable = ({
                             variant="ghost" 
                             size="sm" 
                             className="w-full justify-start text-muted-foreground hover:text-foreground"
-                            onClick={() => openModal('stickerAudioBgm', segment.id)}
+                            onClick={() => openModal('sticker', segment.id)}
                           >
                             {segment.sticker === "未设置" ? "✏ 未设置" : segment.sticker}
                           </Button>
