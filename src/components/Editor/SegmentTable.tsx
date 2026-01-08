@@ -480,27 +480,39 @@ const SegmentTable = ({
             全局配置
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleGlobalDigitalHumanConfig}
-              className="gap-2"
-            >
-              <User size={14} />
-              数字人配置
-              {globalDigitalHumans.length > 0 && (
-                <div className="flex gap-1 ml-1">
-                  {globalDigitalHumans.map((_, index) => (
-                    <div 
-                      key={index}
-                      className="h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold"
-                    >
-                      {index + 1}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Button>
+            {isFixedMode ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openModal('stickerAudioBgm')}
+                className="gap-2"
+              >
+                <Settings2 size={14} />
+                贴纸/音频/BGM设置
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleGlobalDigitalHumanConfig}
+                className="gap-2"
+              >
+                <User size={14} />
+                数字人配置
+                {globalDigitalHumans.length > 0 && (
+                  <div className="flex gap-1 ml-1">
+                    {globalDigitalHumans.map((_, index) => (
+                      <div 
+                        key={index}
+                        className="h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold"
+                      >
+                        {index + 1}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Button>
+            )}
           </div>
         </div>
         
@@ -517,11 +529,8 @@ const SegmentTable = ({
                 <th className="w-12 px-4 py-4 text-left text-body-small font-semibold text-foreground">排序</th>
                 <th className="min-w-[120px] px-4 py-4 text-left text-body-small font-semibold text-foreground">分段名称</th>
                 <th className="min-w-[160px] px-4 py-4 text-left text-body-small font-semibold text-foreground">视频素材文件夹</th>
-                {isFixedMode ? (
-                  <>
-                    <th className="min-w-[120px] px-4 py-4 text-left text-body-small font-semibold text-foreground">分段时长</th>
-                  </>
-                ) : (
+                <th className="min-w-[120px] px-4 py-4 text-left text-body-small font-semibold text-foreground">分段时长</th>
+                {!isFixedMode && (
                   <>
                     <th className="min-w-[100px] px-4 py-4 text-left text-body-small font-semibold text-foreground">花字/贴纸</th>
                     <th className="min-w-[280px] px-4 py-4 text-left text-body-small font-semibold text-foreground">字幕文案</th>
@@ -575,31 +584,28 @@ const SegmentTable = ({
                         )}
                       </div>
                     </td>
-                    {isFixedMode ? (
-                      <>
-                        <td className="min-w-[120px] p-4 border-r border-border/50">
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              placeholder="请输入时长"
-                              value={segment.segmentDuration || ''}
-                              onChange={(e) => {
-                                const value = e.target.value ? parseInt(e.target.value) : undefined;
-                                setSegments(prevSegments =>
-                                  prevSegments.map(s =>
-                                    s.id === segment.id
-                                      ? { ...s, segmentDuration: value }
-                                      : s
-                                  )
-                                );
-                              }}
-                              className="w-24 h-8 text-sm"
-                            />
-                            <span className="text-sm text-muted-foreground">秒</span>
-                          </div>
-                        </td>
-                      </>
-                    ) : (
+                    <td className="min-w-[120px] p-4 border-r border-border/50">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          placeholder="请输入时长"
+                          value={segment.segmentDuration || ''}
+                          onChange={(e) => {
+                            const value = e.target.value ? parseInt(e.target.value) : undefined;
+                            setSegments(prevSegments =>
+                              prevSegments.map(s =>
+                                s.id === segment.id
+                                  ? { ...s, segmentDuration: value }
+                                  : s
+                              )
+                            );
+                          }}
+                          className="w-24 h-8 text-sm"
+                        />
+                        <span className="text-sm text-muted-foreground">秒</span>
+                      </div>
+                    </td>
+                    {!isFixedMode && (
                       <>
                         <td className="min-w-[100px] p-4 border-r border-border/50">
                           <Button 
