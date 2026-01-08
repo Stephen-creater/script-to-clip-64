@@ -60,6 +60,8 @@ interface Segment {
   video: string;
   videoDuration?: number; // 素材时长（秒）
   segmentDuration?: number; // 分段时长（秒）- 用于固定时长模式
+  trimDuration?: number; // 裁剪后时长（秒）
+  trimMode?: string; // 裁剪模式
   script: string;
   scriptVariants?: ScriptVariant[];
   animatedText: string;
@@ -332,8 +334,16 @@ const SegmentTable = ({
   };
 
   const handleBatchTrim = (settings: { mode: string; duration: number }) => {
-    console.log('Batch trim settings:', settings);
-    // TODO: Apply trim settings to all segments
+    // 如果有选中的分段，只裁剪选中的；否则裁剪所有分段
+    const targetIds = selectedSegments.length > 0 ? selectedSegments : segments.map(s => s.id);
+    
+    setSegments(prevSegments =>
+      prevSegments.map(segment =>
+        targetIds.includes(segment.id)
+          ? { ...segment, trimDuration: settings.duration, trimMode: settings.mode }
+          : segment
+      )
+    );
   };
 
   const handleDigitalHumanClick = (segmentId: string) => {
@@ -579,15 +589,22 @@ const SegmentTable = ({
                     </td>
                     <td className="min-w-[160px] p-4 border-r border-border/50">
                       <div className="space-y-1">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="w-full justify-start text-muted-foreground hover:text-foreground"
-                          onClick={() => openModal('materialSelection', segment.id)}
-                        >
-                          <Upload size={14} className="mr-2" />
-                          {segment.video || "选择文件夹"}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="justify-start text-muted-foreground hover:text-foreground"
+                            onClick={() => openModal('materialSelection', segment.id)}
+                          >
+                            <Upload size={14} className="mr-2" />
+                            {segment.video || "选择文件夹"}
+                          </Button>
+                          {segment.trimDuration && (
+                            <span className="text-xs text-primary whitespace-nowrap">
+                              此分段{segment.trimDuration.toFixed(2)}秒
+                            </span>
+                          )}
+                        </div>
                         {segment.materialWarning && (
                           <p className="text-xs text-destructive">
                             {segment.materialWarning}
