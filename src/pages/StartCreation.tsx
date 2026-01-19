@@ -75,17 +75,15 @@ const StartCreation: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   
   // Right panel state
-  const [templateTab, setTemplateTab] = useState<'team' | 'personal'>('team');
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredTemplates = useMemo(() => {
     return TEMPLATES.filter(template => {
-      const matchesTab = template.type === templateTab;
       const matchesSearch = template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         template.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchesTab && matchesSearch;
+      return matchesSearch;
     });
-  }, [templateTab, searchQuery]);
+  }, [searchQuery]);
 
   const handleSelectTemplate = (template: Template) => {
     setSelectedTemplate(template);
@@ -280,32 +278,10 @@ const StartCreation: React.FC = () => {
           <div className="flex items-center justify-between gap-4">
             {sourceMode === 'template' ? (
               <>
-                {/* Template Mode: Tabs */}
-                <div className="flex gap-1 p-1 bg-muted rounded-lg">
-                  <button
-                    onClick={() => setTemplateTab('team')}
-                    className={cn(
-                      "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
-                      templateTab === 'team'
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <Building2 size={16} />
-                    团队公共库
-                  </button>
-                  <button
-                    onClick={() => setTemplateTab('personal')}
-                    className={cn(
-                      "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
-                      templateTab === 'personal'
-                        ? "bg-card text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <User size={16} />
-                    个人专用库
-                  </button>
+                {/* Template Mode: Title */}
+                <div className="flex items-center gap-2">
+                  <FileText size={18} className="text-primary" />
+                  <span className="font-medium text-foreground">选择模板</span>
                 </div>
 
                 {/* Search */}
