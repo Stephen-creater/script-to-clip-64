@@ -540,7 +540,7 @@ const StartCreation: React.FC = () => {
 
           {/* Task Name */}
           <div className="space-y-3">
-            <label className="text-sm font-medium text-foreground">任务名称</label>
+            <label className="text-sm font-medium text-foreground">名称</label>
             <Input
               placeholder="例如：英铁混剪-2025..."
               value={taskName}
