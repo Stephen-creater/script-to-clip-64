@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Zap, 
-  Plus, 
+  Wand2, 
   FileText, 
   Rocket, 
   Clock, 
@@ -12,7 +12,10 @@ import {
   Building2,
   User,
   Check,
-  Layers
+  Layers,
+  Star,
+  Copy,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +38,31 @@ const TEMPLATES: Template[] = [
   { id: 2, title: '风景Vlog_舒缓', type: 'team', duration: '30s', segments: 3, tags: ['卡点', '空镜'], color: 'bg-emerald-100' },
   { id: 3, title: '口播_知识科普', type: 'team', duration: '60s', segments: 8, tags: ['字幕大', '安全区'], color: 'bg-blue-100' },
   { id: 4, title: '我的专用_英铁', type: 'personal', duration: '20s', segments: 4, tags: ['个人'], color: 'bg-purple-100' }
+];
+
+// Mock projects data for custom creation view
+interface Project {
+  id: number;
+  title: string;
+  duration: string;
+  segments: number;
+  createdAt: string;
+  thumbnail?: string;
+}
+
+const MOCK_PROJECTS: Project[] = [
+  { id: 1, title: '222', duration: '00:01', segments: 2, createdAt: '2026-01-12 14:50:27' },
+  { id: 2, title: '熊浩成-test', duration: '00:01', segments: 2, createdAt: '2025-12-29 10:57:25' },
+  { id: 3, title: '1111111', duration: '00:49', segments: 5, createdAt: '2025-12-26 17:41:29' },
+  { id: 4, title: '1226', duration: '00:55', segments: 15, createdAt: '2025-12-26 16:15:47' },
+  { id: 5, title: '12.26早上来了发', duration: '00:34', segments: 6, createdAt: '2025-12-25 17:19:42' },
+  { id: 6, title: '1224dzx', duration: '00:43', segments: 8, createdAt: '2025-12-24 17:56:30' },
+  { id: 7, title: '1229-syx-火车技巧', duration: '00:00', segments: 4, createdAt: '2025-12-23 18:08:19' },
+  { id: 8, title: 'zmy', duration: '00:00', segments: 3, createdAt: '2025-12-23 17:54:18' },
+  { id: 9, title: '12231', duration: '00:27', segments: 6, createdAt: '2025-12-23 17:44:19' },
+  { id: 10, title: '23日范1', duration: '00:00', segments: 6, createdAt: '2025-12-23 17:15:20' },
+  { id: 11, title: '12.233333', duration: '00:19', segments: 6, createdAt: '2025-12-23 16:36:23' },
+  { id: 12, title: 'zyq1223', duration: '00:23', segments: 15, createdAt: '2025-12-23 16:29:09' },
 ];
 
 const StartCreation: React.FC = () => {
@@ -118,8 +146,8 @@ const StartCreation: React.FC = () => {
                   setSelectedTemplate(null);
                 }}
               >
-                <Plus size={16} />
-                空白创建
+                <Wand2 size={16} />
+                自定义创作
               </Button>
               <Button
                 variant={sourceMode === 'template' ? 'default' : 'outline'}
@@ -250,121 +278,189 @@ const StartCreation: React.FC = () => {
         {/* Sticky Header */}
         <div className="p-4 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
           <div className="flex items-center justify-between gap-4">
-            {/* Tabs */}
-            <div className="flex gap-1 p-1 bg-muted rounded-lg">
-              <button
-                onClick={() => setTemplateTab('team')}
-                className={cn(
-                  "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
-                  templateTab === 'team'
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Building2 size={16} />
-                团队公共库
-              </button>
-              <button
-                onClick={() => setTemplateTab('personal')}
-                className={cn(
-                  "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
-                  templateTab === 'personal'
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <User size={16} />
-                个人专用库
-              </button>
-            </div>
+            {sourceMode === 'template' ? (
+              <>
+                {/* Template Mode: Tabs */}
+                <div className="flex gap-1 p-1 bg-muted rounded-lg">
+                  <button
+                    onClick={() => setTemplateTab('team')}
+                    className={cn(
+                      "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
+                      templateTab === 'team'
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Building2 size={16} />
+                    团队公共库
+                  </button>
+                  <button
+                    onClick={() => setTemplateTab('personal')}
+                    className={cn(
+                      "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
+                      templateTab === 'personal'
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <User size={16} />
+                    个人专用库
+                  </button>
+                </div>
 
-            {/* Search */}
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="搜索模板..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-10"
-              />
-            </div>
+                {/* Search */}
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="搜索模板..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-10"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Custom Mode: Title */}
+                <div className="flex items-center gap-2">
+                  <Wand2 size={18} className="text-primary" />
+                  <span className="font-medium text-foreground">选择历史项目作为参考</span>
+                </div>
+
+                {/* Search */}
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="搜索项目..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-10"
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Template Grid */}
+        {/* Content Grid */}
         <div className="flex-1 overflow-y-auto p-6">
-          {filteredTemplates.length > 0 ? (
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredTemplates.map((template) => {
-                const isSelected = selectedTemplate?.id === template.id;
-                return (
-                  <button
-                    key={template.id}
-                    onClick={() => handleSelectTemplate(template)}
-                    className={cn(
-                      "group relative bg-card rounded-xl border-2 overflow-hidden text-left transition-all duration-200 hover:shadow-lg",
-                      isSelected
-                        ? "border-primary shadow-md"
-                        : "border-border hover:border-primary/50"
-                    )}
-                  >
-                    {/* Selected Check */}
-                    {isSelected && (
-                      <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary flex items-center justify-center z-10">
-                        <Check size={14} className="text-primary-foreground" />
-                      </div>
-                    )}
+          {sourceMode === 'template' ? (
+            // Template Grid
+            filteredTemplates.length > 0 ? (
+              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filteredTemplates.map((template) => {
+                  const isSelected = selectedTemplate?.id === template.id;
+                  return (
+                    <button
+                      key={template.id}
+                      onClick={() => handleSelectTemplate(template)}
+                      className={cn(
+                        "group relative bg-card rounded-xl border-2 overflow-hidden text-left transition-all duration-200 hover:shadow-lg",
+                        isSelected
+                          ? "border-primary shadow-md"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      {/* Selected Check */}
+                      {isSelected && (
+                        <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary flex items-center justify-center z-10">
+                          <Check size={14} className="text-primary-foreground" />
+                        </div>
+                      )}
 
-                    {/* Color Header */}
-                    <div className={cn(
-                      "h-20 flex items-center justify-center relative",
-                      template.color
-                    )}>
-                      <Badge variant="secondary" className="bg-white/80 text-foreground gap-1">
-                        <Clock size={12} />
-                        {template.duration}
-                      </Badge>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-4 space-y-3">
-                      <h3 className="font-semibold text-foreground line-clamp-1">
-                        {template.title}
-                      </h3>
-                      
-                      {/* Tags */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {template.tags.map((tag, idx) => (
-                          <Badge 
-                            key={idx} 
-                            variant="outline" 
-                            className="text-xs px-2 py-0.5 text-muted-foreground"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
+                      {/* Color Header */}
+                      <div className={cn(
+                        "h-20 flex items-center justify-center relative",
+                        template.color
+                      )}>
+                        <Badge variant="secondary" className="bg-white/80 text-foreground gap-1">
+                          <Clock size={12} />
+                          {template.duration}
+                        </Badge>
                       </div>
 
-                      {/* Segments Info */}
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Layers size={12} />
-                        <span>{template.segments} 个分段</span>
+                      {/* Content */}
+                      <div className="p-4 space-y-3">
+                        <h3 className="font-semibold text-foreground line-clamp-1">
+                          {template.title}
+                        </h3>
+                        
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-1.5">
+                          {template.tags.map((tag, idx) => (
+                            <Badge 
+                              key={idx} 
+                              variant="outline" 
+                              className="text-xs px-2 py-0.5 text-muted-foreground"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+
+                        {/* Segments Info */}
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Layers size={12} />
+                          <span>{template.segments} 个分段</span>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                  <FileText size={24} className="text-muted-foreground" />
-                </div>
-                <p className="text-muted-foreground">
-                  {searchQuery ? '未找到匹配的模板' : '暂无模板'}
-                </p>
+                    </button>
+                  );
+                })}
               </div>
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                    <FileText size={24} className="text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground">
+                    {searchQuery ? '未找到匹配的模板' : '暂无模板'}
+                  </p>
+                </div>
+              </div>
+            )
+          ) : (
+            // Custom Creation: Project Grid (like reference image)
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
+              {MOCK_PROJECTS.filter(p => 
+                p.title.toLowerCase().includes(searchQuery.toLowerCase())
+              ).map((project) => (
+                <div
+                  key={project.id}
+                  className="group relative bg-card rounded-lg border border-border overflow-hidden hover:shadow-lg transition-all duration-200 hover:border-primary/50"
+                >
+                  {/* Thumbnail - 9:16 aspect ratio */}
+                  <div className="aspect-[9/16] bg-gradient-to-br from-violet-500 to-purple-600 relative">
+                    {/* Hover actions */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                      <button className="w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center transition-colors">
+                        <Star size={14} className="text-amber-500" />
+                      </button>
+                      <button className="w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center transition-colors">
+                        <Copy size={14} className="text-slate-600" />
+                      </button>
+                      <button className="w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center transition-colors">
+                        <Trash2 size={14} className="text-rose-500" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div className="p-2 space-y-1">
+                    <h4 className="font-medium text-sm text-foreground truncate">
+                      {project.title}
+                    </h4>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock size={10} />
+                      <span>{project.duration} ({project.segments} 分段)</span>
+                    </div>
+                    <p className="text-xs text-primary">
+                      {project.createdAt}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
