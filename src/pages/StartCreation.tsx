@@ -661,23 +661,6 @@ const StartCreation: React.FC = () => {
                 </div>
               </div>
               
-              {/* Category Tabs */}
-              <div className="flex gap-2">
-                {CATEGORIES.map(cat => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={cn(
-                      "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
-                      selectedCategory === cat.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-card text-muted-foreground hover:text-foreground border border-border"
-                    )}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* Split View Container */}
