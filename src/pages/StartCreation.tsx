@@ -371,6 +371,7 @@ const StartCreation: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [splitRatio, setSplitRatio] = useState(55); // Top area percentage
+  const [templateDurationMode, setTemplateDurationMode] = useState<'flexible' | 'fixed'>('flexible');
   
   // Video player state
   const [isPlaying, setIsPlaying] = useState(false);
@@ -648,7 +649,7 @@ const StartCreation: React.FC = () => {
           <>
             {/* Template Mode Header */}
             <div className="p-4 border-b border-border bg-card">
-              <div className="flex items-center justify-between gap-4 mb-4">
+              <div className="flex items-center justify-between gap-4 mb-3">
                 <span className="font-medium text-foreground">选择模板</span>
                 <div className="relative w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -661,6 +662,34 @@ const StartCreation: React.FC = () => {
                 </div>
               </div>
               
+              {/* Template Duration Mode */}
+              <div className="space-y-2">
+                <span className="text-xs text-muted-foreground">模板模式</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setTemplateDurationMode('flexible')}
+                    className={cn(
+                      "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
+                      templateDurationMode === 'flexible'
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-muted-foreground hover:text-foreground border border-border"
+                    )}
+                  >
+                    灵活时长
+                  </button>
+                  <button
+                    onClick={() => setTemplateDurationMode('fixed')}
+                    className={cn(
+                      "px-4 py-1.5 rounded-md text-sm font-medium transition-colors",
+                      templateDurationMode === 'fixed'
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-muted-foreground hover:text-foreground border border-border"
+                    )}
+                  >
+                    固定时长
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Split View Container */}
