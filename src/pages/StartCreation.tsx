@@ -810,8 +810,8 @@ const StartCreation: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Video Player */}
-                    <div className="relative aspect-video bg-black rounded-md overflow-hidden">
+                    {/* Video Player - 9:16 aspect ratio */}
+                    <div className="relative aspect-[9/16] max-h-[300px] bg-black rounded-md overflow-hidden mx-auto">
                       <video
                         ref={videoRef}
                         src={selectedTemplate.videoUrl}
@@ -895,35 +895,6 @@ const StartCreation: React.FC = () => {
                       </CollapsibleContent>
                     </Collapsible>
 
-                    {/* Production Tips Collapsible */}
-                    <Collapsible open={tipsOpen} onOpenChange={setTipsOpen}>
-                      <CollapsibleTrigger className="w-full flex items-center justify-between p-3 rounded-md bg-muted/50 hover:bg-muted transition-colors">
-                        <span className="text-sm font-medium text-foreground flex items-center gap-2">
-                          🎨 制作要点
-                        </span>
-                        {tipsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="mt-2">
-                        <div className="space-y-2 p-3 rounded-md border border-border text-sm">
-                          <div className="flex">
-                            <span className="text-muted-foreground w-20 flex-shrink-0">素材需求：</span>
-                            <span className="text-foreground">{selectedTemplate.tips.materials}</span>
-                          </div>
-                          <div className="flex">
-                            <span className="text-muted-foreground w-20 flex-shrink-0">花字风格：</span>
-                            <span className="text-foreground">{selectedTemplate.tips.captionStyle}</span>
-                          </div>
-                          <div className="flex">
-                            <span className="text-muted-foreground w-20 flex-shrink-0">BGM推荐：</span>
-                            <span className="text-foreground">{selectedTemplate.tips.bgm}</span>
-                          </div>
-                          <div className="flex">
-                            <span className="text-muted-foreground w-20 flex-shrink-0">转场效果：</span>
-                            <span className="text-foreground">{selectedTemplate.tips.transition}</span>
-                          </div>
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
                   </div>
                 ) : (
                   <div className="h-full flex items-center justify-center">
