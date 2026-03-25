@@ -1310,22 +1310,29 @@ const MaterialPreprocessing = () => {
       {/* Main Content - Three Modules */}
       <div className="flex-1 overflow-hidden p-6">
         <div className="h-full grid grid-cols-3 gap-6 min-w-[1200px]">
-          {modules.map(module => (
-            <ModuleCard
-              key={module.id}
-              module={module}
-              onUpload={handleUpload}
-              onStartProcess={handleStartProcess}
-              onStartAll={handleStartAll}
-              onCancel={handleCancel}
-              onDelete={handleDelete}
-              onRetry={handleRetry}
-              onDownload={handleDownload}
-              onDownloadAll={handleDownloadAll}
-              onBatchUpload={handleBatchUpload}
-              onConfigTask={handleConfigTask}
-            />
-          ))}
+          {modules.map(module => 
+            module.id === 'remove' ? (
+              <RemoveWatermarkModule
+                key={module.id}
+                onBatchUpload={() => handleBatchUpload(module.id)}
+              />
+            ) : (
+              <ModuleCard
+                key={module.id}
+                module={module}
+                onUpload={handleUpload}
+                onStartProcess={handleStartProcess}
+                onStartAll={handleStartAll}
+                onCancel={handleCancel}
+                onDelete={handleDelete}
+                onRetry={handleRetry}
+                onDownload={handleDownload}
+                onDownloadAll={handleDownloadAll}
+                onBatchUpload={handleBatchUpload}
+                onConfigTask={handleConfigTask}
+              />
+            )
+          )}
         </div>
       </div>
 
