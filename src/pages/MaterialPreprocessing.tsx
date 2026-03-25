@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import RemoveWatermarkModule from "@/components/Materials/RemoveWatermarkModule";
 import { 
   ArrowLeft, 
   Upload, 
